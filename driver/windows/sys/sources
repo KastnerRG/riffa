@@ -1,0 +1,40 @@
+TARGETNAME=riffa
+TARGETTYPE=DRIVER
+
+
+KMDF_VERSION_MAJOR=1
+
+INF_NAME=riffa
+NTTARGETFILE0=$(OBJ_PATH)\$(O)\$(INF_NAME).inf
+NTTARGETFILE2=POST
+PASS0_BINPLACE=$(NTTARGETFILE0)
+
+TARGETLIBS=$(TARGETLIBS) \
+           $(DDK_LIB_PATH)\ntstrsafe.lib
+
+PRECOMPILED_INCLUDE=precomp.h
+PRECOMPILED_PCH=precomp.pch
+PRECOMPILED_OBJ=precomp.obj
+
+#C_DEFINES = $(C_DEFINES) -DASSOC_WRITE_REQUEST_WITH_DMA_TRANSACTION=1
+
+SOURCES= riffa.rc  \
+         riffa.c
+         
+# Generate WPP tracing code
+# $(SOURCES)   -- run software preprocessor on files listed in SOURCES
+# -km          -- use kernel mode
+# -func        -- define function we'll use for tracing
+#                 This would map all TraceEvents calls to 
+#                 DoTraceMessage.
+#
+RUN_WPP= $(SOURCES)                             \
+         -km                                    \
+         -func:TraceEvents(LEVEL,FLAGS,MSG,...) \
+         -gen:{km-WdfDefault.tpl}*.tmh
+         
+TARGET_DESTINATION=wdf
+
+# Temporarily excuse usage of serviceability impairing macros in code...
+ALLOW_DATE_TIME=1
+

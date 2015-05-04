@@ -1,0 +1,5 @@
+No compilation is necessary. However to create a distribution simply execute:
+
+python setup.py sdist
+
+

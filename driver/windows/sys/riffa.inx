@@ -1,0 +1,108 @@
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=FPGA
+ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171}
+Provider=%UCSD%
+DriverVer=03/20/2003,6.00.3790
+CatalogFile=riffa.cat
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=FPGAClassReg     
+
+[FPGAClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5
+HKR,,DeviceCharacteristics,0x10001,0x100     ;Use same security checks on relative opens
+HKR,,Security,,"D:P(A;;GA;;;WD)" ;Allow generic all access to all. 
+;HKR,,Security,,"D:P(A;;GA;;;SY)(A;;GA;;;BA)" ;Allow generic all access to system and built-in Admin. 
+
+; ================= Device Install section =====================
+
+[ControlFlags]
+ExcludeFromSelect=*
+
+[Manufacturer]
+%UCSD%=UCSD,NT$ARCH$
+
+[SourceDisksFiles]
+riffa.sys=1
+
+[SourceDisksNames]
+1=%DISK_NAME%,
+
+; For Win2K
+[UCSD]
+; DisplayName                        Section           DeviceId           CompatibleId
+; -----------                        -------           --------           ------------
+%RIFFA.XILINXDESC%%RIFFA.DEBUG%=     RIFFA_Inst,       PCI\VEN_10EE,      PCI\VEN_10EE
+%RIFFA.ALTERADESC%%RIFFA.DEBUG%=     RIFFA_Inst,       PCI\VEN_1172,      PCI\VEN_1172
+
+; For XP and later
+[UCSD.NT$ARCH$]
+; DisplayName                        Section           DeviceId           CompatibleId
+; -----------                        -------           --------           ------------
+%RIFFA.XILINXDESC%%RIFFA.DEBUG%=     RIFFA_Inst,       PCI\VEN_10EE,      PCI\VEN_10EE
+%RIFFA.ALTERADESC%%RIFFA.DEBUG%=     RIFFA_Inst,       PCI\VEN_1172,      PCI\VEN_1172
+
+[RIFFA_Inst.NT]
+CopyFiles=RIFFA.CopyFiles
+
+[RIFFA.CopyFiles]
+riffa.sys
+
+[RIFFA_Inst.NT.HW]
+AddReg=RIFFA.HwReg 
+
+[RIFFA.HwReg]
+HKR,"Interrupt Management",,0x00000010
+HKR,"Interrupt Management\MessageSignaledInterruptProperties",,0x00000010
+HKR,"Interrupt Management\MessageSignaledInterruptProperties",MSISupported,0x00010001,1
+
+[RIFFA_Inst.NT.Services]
+AddService=RIFFA,0x00000002,RIFFA_Service 
+
+[RIFFA_Service]
+DisplayName    = %RIFFA.SVCDESC%                            
+ServiceType    = 1                  ; SERVICE_KERNEL_DRIVER
+StartType      = 3                  ; SERVICE_DEMAND_START
+ErrorControl   = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\riffa.sys                            
+AddReg         = RIFFA_Parameters_AddReg
+
+;-------------- Coinstaller installation
+[DestinationDirs]
+CoInstaller_CopyFiles = 11
+
+[RIFFA_Inst.NT.CoInstallers]
+AddReg=CoInstaller_AddReg
+CopyFiles=CoInstaller_CopyFiles
+
+[CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[SourceDisksFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+[CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[RIFFA_Inst.NT.Wdf]
+KmdfService = RIFFA, RIFFA_wdfsect
+
+[RIFFA_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+UCSD = "University of California, San Diego"
+ClassName = "RIFFA Devices"
+RIFFA.SVCDESC = "Driver Service for RIFFA FPGAs"
+RIFFA.XILINXDESC = "Xilinx(R) FPGA"
+RIFFA.ALTERADESC = "Altera(R) FPGA"
+DISK_NAME = "RIFFA Install Disk"
+

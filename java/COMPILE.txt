@@ -1,0 +1,68 @@
+Java JNI libraries have already been compiled for 32 and 64 bit versions of 
+Windows and Linux. However, if you want to build your own, see below.
+
+
+FOR LINUX
+=======================
+Compile the Java source:
+
+javac -source 1.4 -target 1.4 -bootclasspath jdk1.4_rt.jar:jdk1.4_tools.jar -extdirs "" edu/ucsd/cs/riffa/*.java
+javah -jni -o jriffa.h edu.ucsd.cs.riffa.Fpga
+
+The -source -target -bootclasspath -extdirs flags on the javac command are used
+to provide JDK 1.4 backwards compatibility. They are not needed if you are 
+compiling this for your own JDK version.
+
+Compile the JNI wrapper source:
+
+gcc -I/usr/lib/jvm/java-7-oracle/include -I/usr/lib/jvm/java-7-oracle/include/linux -fpic -c -ojriffa.o jriffa.c
+gcc -shared -o libjriffa.so jriffa.o -lriffa
+
+Note that the riffa C/C++ library must already be installed on the system. The 
+include directories may be different on your system. You'll need to adjust 
+accordingly. You will also want to determine what value your Java JVM provides 
+for system property os.arch. This will determine i386 (32 bit) or amd64 (64 bit) 
+for the path below.
+
+Create the riffa.jar:
+
+cp libjriffa.so native/[i386|amd64]/Linux
+
+jar cvf riffa.jar edu/ucsd/cs/riffa/*.class native/i386/Linux/* native/amd64/Linux/*
+
+You can include other libraries in the jar. These are just the Linux ones.
+
+
+FOR WINDOWS
+=======================
+Compile the Java source:
+
+javac -source 1.4 -target 1.4 -bootclasspath jdk1.4_rt.jar;jdk1.4_tools.jar -extdirs "" edu\ucsd\cs\riffa\*.java
+javah -jni -o jriffa.h edu.ucsd.cs.riffa.Fpga
+
+The -source -target -bootclasspath -extdirs flags on the javac command are used
+to provide JDK 1.4 backwards compatibility. They are not needed if you are 
+compiling this for your own JDK version.
+
+Compile the JNI wrapper source:
+
+gcc -I"C:\Program Files\Java\jdk1.7.0_21\include" -I"C:\Program Files\Java\jdk1.7.0_21\include\win32" -I<path to dir containing riffa.h> -fpic -c -ojriffa.o jriffa.c
+gcc -shared -o libjriffa.dll jriffa.o -L<path to dir containing riffa.dll or riffa.lib> -lriffa
+
+Use the mingw gcc compiler or Microsoft's Visual Studio. Do not use the cygwin 
+gcc compiler as it will add a dependency for the cygwin.dll.
+
+Note that the riffa C/C++ library must already be installed on the system. The 
+include directories may be different on your system. You'll need to adjust 
+accordingly. You will also want to determine what value your Java JVM provides 
+for system property os.arch. This will determine x86 (32 bit) or amd64 (64 bit)
+for the path below.
+
+Create the riffa.jar:
+
+copy libjriffa.dll native\[x86|amd64]\Windows
+
+jar cvf riffa.jar edu\ucsd\cs\riffa\*.class native\x86\Windows\* native\amd64\Windows\*
+
+You can include other libraries in the jar. These are just the Windows ones.
+
