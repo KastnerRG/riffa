@@ -77,13 +77,12 @@ typedef struct CHNL_DIR_STATE {
 	UINT64					Confirmed;
 	UINT64					ConfirmedPrev;
 	UINT64					SpillAfter;
+	PMDL					Mdl;
 	PSCATTER_GATHER_LIST	SgList;
 	UINT32					SgPos;
-	UINT32					ActiveCount;
-	UINT32					Cancel;
 	WDFSPINLOCK				SpinLock;
 	WDFTIMER				Timer;
-	WDFREQUEST				Request;
+	WDFQUEUE 				PendingQueue;
 	WDFDMATRANSACTION 		DmaTransaction;
 	WDFCOMMONBUFFER 		CommonBuffer;
 	PULONG 					CommonBufferBase;
@@ -165,10 +164,7 @@ VOID RiffaIoctlList(IN PDEVICE_EXTENSION DevExt, IN WDFREQUEST Request,
 	IN size_t OutputBufferLength, IN size_t InputBufferLength);
 VOID RiffaIoctlReset(IN PDEVICE_EXTENSION DevExt, IN WDFREQUEST Request);
 
-BOOLEAN RiffaThreadEnter(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl);
-BOOLEAN RiffaThreadExit(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl);
-VOID RiffaCompleteRequest(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl, IN NTSTATUS Status);
-EVT_WDF_REQUEST_CANCEL RiffaEvtRequestCancel;
+VOID RiffaCompleteRequest(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl, IN NTSTATUS Status, IN BOOLEAN TimedOut);
 EVT_WDF_TIMER RiffaEvtTimerFunc;
 
 VOID RiffaStartRecvTransaction(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl);

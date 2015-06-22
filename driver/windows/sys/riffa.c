@@ -1,24 +1,24 @@
 // ----------------------------------------------------------------------
 // Copyright (c) 2015, The Regents of the University of California All
 // rights reserved.
-//
+// 
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
-//
-// * Redistributions of source code must retain the above copyright
-// notice, this list of conditions and the following disclaimer.
-//
-// * Redistributions in binary form must reproduce the above
-// copyright notice, this list of conditions and the following
-// disclaimer in the documentation and/or other materials provided
-// with the distribution.
-//
-// * Neither the name of The Regents of the University of California
-// nor the names of its contributors may be used to endorse or
-// promote products derived from this software without specific
-// prior written permission.
-//
+// 
+//     * Redistributions of source code must retain the above copyright
+//       notice, this list of conditions and the following disclaimer.
+// 
+//     * Redistributions in binary form must reproduce the above
+//       copyright notice, this list of conditions and the following
+//       disclaimer in the documentation and/or other materials provided
+//       with the distribution.
+// 
+//     * Neither the name of The Regents of the University of California
+//       nor the names of its contributors may be used to endorse or
+//       promote products derived from this software without specific
+//       prior written permission.
+// 
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -269,6 +269,7 @@ NTSTATUS RiffaEvtDevicePrepareHardware(WDFDEVICE Device, WDFCMRESLIST Resources,
 	PDEVICE_EXTENSION devExt;
 	PTIMER_EXTENSION timerExt;
 	WDF_TIMER_CONFIG timerConfig;
+	WDF_IO_QUEUE_CONFIG queueConfig;
 	WDF_OBJECT_ATTRIBUTES attributes;
 	PCM_PARTIAL_RESOURCE_DESCRIPTOR desc;
 	BOOLEAN foundBar0 = FALSE;
@@ -384,8 +385,27 @@ NTSTATUS RiffaEvtDevicePrepareHardware(WDFDEVICE Device, WDFCMRESLIST Resources,
 		return STATUS_DEVICE_CONFIGURATION_ERROR;
 	}
 
-    // Allocate common buffers, DMA transactions, spin locks, timers for each channel.
+    // Allocate IO queues, common buffers, DMA transactions, spin locks, timers for each channel.
 	for (i = 0; i < devExt->NumChnls; i++) {
+		// Create a new manual IO Queue for pending requests.
+		WDF_IO_QUEUE_CONFIG_INIT(&queueConfig, WdfIoQueueDispatchManual);
+		status = WdfIoQueueCreate(Device, &queueConfig, WDF_NO_OBJECT_ATTRIBUTES,
+			&devExt->Chnl[i].PendingQueue);
+		if(!NT_SUCCESS(status)) {
+			DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
+				"riffa: WdfIoQueueCreate failed\n");
+			return status;
+		}
+
+		WDF_IO_QUEUE_CONFIG_INIT(&queueConfig, WdfIoQueueDispatchManual);
+		status = WdfIoQueueCreate(Device, &queueConfig, WDF_NO_OBJECT_ATTRIBUTES,
+			&devExt->Chnl[RIFFA_MAX_NUM_CHNLS + i].PendingQueue);
+		if(!NT_SUCCESS(status)) {
+			DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
+				"riffa: WdfIoQueueCreate failed\n");
+			return status;
+		}
+
 		// Common buffer creation, not cached.
 		status = WdfCommonBufferCreate(devExt->DmaEnabler, RIFFA_MIN_SG_BUF_SIZE*((info>>19) & 0xF),
 			WDF_NO_OBJECT_ATTRIBUTES, &devExt->Chnl[i].CommonBuffer);
@@ -779,6 +799,7 @@ VOID RiffaEvtInterruptDpc(IN WDFINTERRUPT Interrupt, IN WDFDEVICE Device) {
 	UINT32 tnfr;
 	UINT64 length;
 	LONG doneReqd;
+	WDFREQUEST request;
 
 	UNREFERENCED_PARAMETER(Device);
 
@@ -788,10 +809,8 @@ VOID RiffaEvtInterruptDpc(IN WDFINTERRUPT Interrupt, IN WDFDEVICE Device) {
 	WdfInterruptAcquireLock(Interrupt);
 
 	// Copy over the values and zero them out.
-	memcpy(&intrData, devExt->IntrData,
-		2 * RIFFA_MAX_NUM_CHNLS * sizeof(INTR_CHNL_DIR_DATA));
-	memset(devExt->IntrData, 0,
-		2 * RIFFA_MAX_NUM_CHNLS * sizeof(INTR_CHNL_DIR_DATA));
+	memcpy(&intrData, devExt->IntrData, 2 * RIFFA_MAX_NUM_CHNLS * sizeof(INTR_CHNL_DIR_DATA));
+	memset(devExt->IntrData, 0, 2 * RIFFA_MAX_NUM_CHNLS * sizeof(INTR_CHNL_DIR_DATA));
 
 	// Release our interrupt spinlock
 	WdfInterruptReleaseLock(Interrupt);
@@ -807,37 +826,35 @@ VOID RiffaEvtInterruptDpc(IN WDFINTERRUPT Interrupt, IN WDFDEVICE Device) {
 
 		// Finished with upstream transfer.
 		if (intrData[RIFFA_MAX_NUM_CHNLS + chnl].Done == TRUE) {
-			// Acquire the channel lock, check if request is null, release.
-			WdfSpinLockAcquire(devExt->Chnl[RIFFA_MAX_NUM_CHNLS + chnl].SpinLock);
-			cont = (devExt->Chnl[RIFFA_MAX_NUM_CHNLS + chnl].Request != NULL);
-			WdfSpinLockRelease(devExt->Chnl[RIFFA_MAX_NUM_CHNLS + chnl].SpinLock);
-			if (cont) {
-				// Check if we've requested a done (in the event of a split transaction)
-				doneReqd = InterlockedExchange(&devExt->Chnl[RIFFA_MAX_NUM_CHNLS + chnl].ReqdDone, 0);
-				// Indicate this DMA operation has completed. This might result in
-				// another transfer if there is still data to be transfered in the request.
-				txnComplete = WdfDmaTransactionDmaCompleted(
-					devExt->Chnl[RIFFA_MAX_NUM_CHNLS + chnl].DmaTransaction, &status);
-				if (txnComplete) {
-					// Read the actual transfer length
-					tnfr = READ_REGISTER_ULONG(devExt->Bar0 + CHNL_REG(chnl, RIFFA_TX_TNFR_LEN_REG));
+			// Check if we've requested a done (in the event of a split transaction)
+			doneReqd = InterlockedExchange(&devExt->Chnl[RIFFA_MAX_NUM_CHNLS + chnl].ReqdDone, 0);
+			// Check if this DMA operation has completed. We might need to start
+			// another transfer if there is still data to be transfered in the request.
+			txnComplete = WdfDmaTransactionDmaCompleted(
+				devExt->Chnl[RIFFA_MAX_NUM_CHNLS + chnl].DmaTransaction, &status);
+			if (txnComplete) {
+				KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_TRACE_LEVEL,
+					"riffa: fpga:%s chnl:%d, recv txn done\n", devExt->Name, chnl));
+
+				// Read the actual transfer length
+				tnfr = READ_REGISTER_ULONG(devExt->Bar0 + CHNL_REG(chnl, RIFFA_TX_TNFR_LEN_REG));
+				RiffaTransactionComplete(devExt, RIFFA_MAX_NUM_CHNLS + chnl, tnfr, status);
+			}
+			else {
+				if (doneReqd == 0) {
+					// Not complete and not expecting a done signal. Must be an error.
+					// End the transaction early.
 					KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_TRACE_LEVEL,
 						"riffa: fpga:%s chnl:%d, recv txn done\n", devExt->Name, chnl));
-					RiffaTransactionComplete(devExt, RIFFA_MAX_NUM_CHNLS + chnl, tnfr, status);
+
+					// Read the actual transfer length
+					tnfr = READ_REGISTER_ULONG(devExt->Bar0 + CHNL_REG(chnl, RIFFA_TX_TNFR_LEN_REG));
+					RiffaTransactionComplete(devExt, RIFFA_MAX_NUM_CHNLS + chnl, tnfr,
+						STATUS_TRANSACTION_ABORTED);
 				}
 				else {
-					if (doneReqd == 0) {
-						// Not complete and not expecting a done signal. Must be an error.
-						// End the transaction early. Read the actual transfer length
-						tnfr = READ_REGISTER_ULONG(devExt->Bar0 + CHNL_REG(chnl, RIFFA_TX_TNFR_LEN_REG));
-						KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_TRACE_LEVEL,
-							"riffa: fpga:%s chnl:%d, recv txn done\n", devExt->Name, chnl));
-						RiffaTransactionComplete(devExt, RIFFA_MAX_NUM_CHNLS + chnl, tnfr, STATUS_TRANSACTION_ABORTED);
-					}
-					else {
-						KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_TRACE_LEVEL,
-							"riffa: fpga:%s chnl:%d, recv txn split, registers remapped\n", devExt->Name, chnl));
-					}
+					KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_TRACE_LEVEL,
+						"riffa: fpga:%s chnl:%d, recv txn split, registers remapped\n", devExt->Name, chnl));
 				}
 			}
 		}
@@ -875,37 +892,30 @@ VOID RiffaEvtInterruptDpc(IN WDFINTERRUPT Interrupt, IN WDFDEVICE Device) {
 
 		// Finished with downstream transfer.
 		if (intrData[chnl].Done == TRUE) {
-			// Acquire the channel lock, check if request is null, release.
-			WdfSpinLockAcquire(devExt->Chnl[chnl].SpinLock);
-			cont = (devExt->Chnl[chnl].Request != NULL);
-			WdfSpinLockRelease(devExt->Chnl[chnl].SpinLock);
-			if (cont) {
-				// Check if we've requested a done (in the event of a split transaction)
-				doneReqd = InterlockedExchange(&devExt->Chnl[chnl].ReqdDone, 0);
-				// Indicate this DMA operation has completed. This may result in
-				// another transfer if there is still data to be transfered in the request.
-				txnComplete = WdfDmaTransactionDmaCompleted(
-					devExt->Chnl[chnl].DmaTransaction, &status);
-				if (txnComplete) {
-					// Read the actual transfer length
+			// Check if we've requested a done (in the event of a split transaction)
+			doneReqd = InterlockedExchange(&devExt->Chnl[chnl].ReqdDone, 0);
+			// Indicate this DMA operation has completed. This may result in
+			// another transfer if there is still data to be transfered in the request.
+			txnComplete = WdfDmaTransactionDmaCompleted(devExt->Chnl[chnl].DmaTransaction, &status);
+			if (txnComplete) {
+				// Read the actual transfer length
+				tnfr = READ_REGISTER_ULONG(devExt->Bar0 + CHNL_REG(chnl, RIFFA_RX_TNFR_LEN_REG));
+				KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_TRACE_LEVEL,
+					"riffa: fpga:%s chnl:%d, send txn done\n", devExt->Name, chnl));
+				RiffaTransactionComplete(devExt, chnl, tnfr, status);
+			}
+			else {
+				if (doneReqd == 0) {
+					// Not complete and not expecting a done signal. Must be an error.
+					// End the transaction early. Read the actual transfer length
 					tnfr = READ_REGISTER_ULONG(devExt->Bar0 + CHNL_REG(chnl, RIFFA_RX_TNFR_LEN_REG));
 					KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_TRACE_LEVEL,
 						"riffa: fpga:%s chnl:%d, send txn done\n", devExt->Name, chnl));
-					RiffaTransactionComplete(devExt, chnl, tnfr, status);
+					RiffaTransactionComplete(devExt, chnl, tnfr, STATUS_TRANSACTION_ABORTED);
 				}
 				else {
-					if (doneReqd == 0) {
-						// Not complete and not expecting a done signal. Must be an error.
-						// End the transaction early. Read the actual transfer length
-						tnfr = READ_REGISTER_ULONG(devExt->Bar0 + CHNL_REG(chnl, RIFFA_RX_TNFR_LEN_REG));
-						KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_TRACE_LEVEL,
-							"riffa: fpga:%s chnl:%d, send txn done\n", devExt->Name, chnl));
-						RiffaTransactionComplete(devExt, chnl, tnfr, STATUS_TRANSACTION_ABORTED);
-					}
-					else {
-						KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_TRACE_LEVEL,
-							"riffa: fpga:%s chnl:%d, send txn split, registers remapped\n", devExt->Name, chnl));
-					}
+					KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_TRACE_LEVEL,
+						"riffa: fpga:%s chnl:%d, send txn split, registers remapped\n", devExt->Name, chnl));
 				}
 			}
 		}
@@ -992,7 +1002,6 @@ VOID RiffaIoctlSend(IN PDEVICE_EXTENSION DevExt, IN WDFREQUEST Request,
     PRIFFA_FPGA_CHNL_IO io;
 	UINT64 length;
 	PCHAR buf = NULL;
-	LONG inUse;
 	size_t bufSize;
 
 	// Input should be non-zero
@@ -1037,6 +1046,19 @@ VOID RiffaIoctlSend(IN PDEVICE_EXTENSION DevExt, IN WDFREQUEST Request,
 		return;
 	}
 
+	// Check that this isn't an already running transaction
+	if (InterlockedExchange(&DevExt->Chnl[io->Chnl].InUse, 1) == 1) {
+		DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
+			"riffa: fpga:%s, ioctl send already in use on channel: %d\n",
+			DevExt->Name, io->Chnl);
+		WdfRequestCompleteWithInformation(Request, STATUS_INVALID_PARAMETER, 0);
+		return;
+	}
+
+	// Set the channel number in the request context for RiffaEvtRequestCancel.
+    reqExt = RiffaGetRequestContext(Request);
+    reqExt->Chnl = io->Chnl;
+
 	// Start a send transaction.
 	if (length) {
 		// Start a DMA transaction for sending.
@@ -1049,47 +1071,47 @@ VOID RiffaIoctlSend(IN PDEVICE_EXTENSION DevExt, IN WDFREQUEST Request,
 		DevExt->Chnl[io->Chnl].ProvidedPrev = 0;
 		DevExt->Chnl[io->Chnl].Confirmed = 0;
 		DevExt->Chnl[io->Chnl].ConfirmedPrev = 0;
-		DevExt->Chnl[io->Chnl].ActiveCount = 0;
-		DevExt->Chnl[io->Chnl].Cancel = 0;
-		DevExt->Chnl[io->Chnl].Request = Request;
-		InterlockedExchange(&DevExt->Chnl[io->Chnl].ReqdDone, 0);
-		status = RiffaStartDmaTransaction(DevExt, io->Chnl, (length<<2),
-			0, WdfDmaDirectionWriteToDevice);
+		DevExt->Chnl[io->Chnl].ReqdDone = 0;
+
+		// Get the user space memory.
+		status = WdfRequestRetrieveOutputWdmMdl(Request, &DevExt->Chnl[io->Chnl].Mdl);
 		if (!NT_SUCCESS(status)) {
 			DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-				"riffa: fpga:%s, unable to start DMA transaction on channel: %d\n",
-				DevExt->Name, io->Chnl);
+				"riffa: fpga:%s, WdfRequestRetrieveOutputWdmMdl failed\n", DevExt->Name);
 			WdfRequestCompleteWithInformation(Request, status, 0);
 			return;
 		}
-		else {
-			// Mark the WDFREQUEST as cancellable.
-			//status = WdfRequestMarkCancelableEx(Request, RiffaEvtRequestCancel);
-			//if (!NT_SUCCESS(status)) {
-			//	DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-			//		"riffa: fpga:%s, ioctl send WdfRequestMarkCancelableEx failed\n",
-			//		DevExt->Name);
-			//	WdfRequestCompleteWithInformation(Request, status, 0);
-			//}
-			//else {
-				// Set the channel number in the request context for RiffaEvtRequestCancel.
-				reqExt = RiffaGetRequestContext(Request);
-				reqExt->Chnl = io->Chnl;
-			//}
+
+		// Put the WDFREQUEST into our pending queue, complete later
+        status = WdfRequestForwardToIoQueue(Request, DevExt->Chnl[io->Chnl].PendingQueue);
+		if (!NT_SUCCESS(status)) {
+			DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
+				"riffa: fpga:%s, ioctl send WdfRequestForwardToIoQueue failed\n",
+				DevExt->Name);
+			WdfRequestCompleteWithInformation(Request, status, 0);
+			return;
+		}
+
+		// Actually start the transaction
+		status = RiffaStartDmaTransaction(DevExt, io->Chnl, (length<<2),
+			0, WdfDmaDirectionWriteToDevice);
+		if (!NT_SUCCESS(status)) {
+			WdfRequestCompleteWithInformation(Request, status, 0);
+			return;
 		}
 	}
 	else if (io->Last) {
 		// Program the device for zero length send (device RX) and complete
-		DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-			"riffa: fpga:%s, ioctl send zero length with last set\n", DevExt->Name);
 		RiffaProgramSend(DevExt, io->Chnl, (UINT32)length, io->Offset, io->Last);
 		WdfRequestCompleteWithInformation(Request, STATUS_SUCCESS, 0);
+		return;
 	}
 	else {
 		// Invalid request, results in no send
 		DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
 			"riffa: fpga:%s, ioctl send invalid, no length or last\n", DevExt->Name);
 		WdfRequestCompleteWithInformation(Request, STATUS_INVALID_PARAMETER, 0);
+		return;
 	}
 }
 
@@ -1153,6 +1175,19 @@ VOID RiffaIoctlRecv(IN PDEVICE_EXTENSION DevExt, IN WDFREQUEST Request,
 		return;
 	}
 
+	// Check that this isn't an already running transaction
+	if (InterlockedExchange(&DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].InUse, 1) == 1) {
+		DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
+			"riffa: fpga:%s, ioctl recv already in use on channel: %d\n",
+			DevExt->Name, io->Chnl);
+		WdfRequestCompleteWithInformation(Request, STATUS_INVALID_PARAMETER, 0);
+		return;
+	}
+
+	// Set the channel number in the request context for RiffaEvtRequestCancel.
+    reqExt = RiffaGetRequestContext(Request);
+    reqExt->Chnl = RIFFA_MAX_NUM_CHNLS + io->Chnl;
+
 	// Start a receive transaction. If an interrupt with the transaction
 	// info has already been received, start the transaction. If not, set
 	// this transaction request and the "ready" bit so that when the
@@ -1163,79 +1198,40 @@ VOID RiffaIoctlRecv(IN PDEVICE_EXTENSION DevExt, IN WDFREQUEST Request,
 	DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].ProvidedPrev = 0;
 	DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Confirmed = 0;
 	DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].ConfirmedPrev = 0;
-	DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].ActiveCount = 0;
-	DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Cancel = 0;
-	DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Request = Request;
-	InterlockedExchange(&DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].ReqdDone, 0);
+	DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].ReqdDone = 0;
+
+	// Get the user space memory.
+	status = WdfRequestRetrieveOutputWdmMdl(Request,
+		&DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Mdl);
+	if (!NT_SUCCESS(status)) {
+		DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
+			"riffa: fpga:%s, WdfRequestRetrieveOutputWdmMdl failed\n", DevExt->Name);
+		WdfRequestCompleteWithInformation(Request, status, 0);
+		return;
+	}
+
+	// Put the WDFREQUEST into our pending queue, complete later
+    status = WdfRequestForwardToIoQueue(Request,
+    	DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].PendingQueue);
+	if (!NT_SUCCESS(status)) {
+		DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
+			"riffa: fpga:%s, ioctl send WdfRequestForwardToIoQueue failed\n", DevExt->Name);
+		WdfRequestCompleteWithInformation(Request, status, 0);
+		return;
+	}
+
+	// Start the timer (if necessary)
+	if (DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Timeout > 0)
+		WdfTimerStart(DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Timer,
+			WDF_REL_TIMEOUT_IN_MS(DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Timeout));
+
+	// See if the FPGA set the Ready bit
 	if (InterlockedExchange(&DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Ready, 1) == 2) {
 		// Clear the "ready" bit and start the transaction
 		InterlockedExchange(&DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Ready, 0);
-
-		// Start a recv transaction.
-		if (DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Length) {
-			// Calculate room in the user space buffer and what needs to be spilled
-			if (DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Capacity >
-					DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Offset) {
-				// Some (possibly all) of the data can fit in the user buffer.
-				DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].SpillAfter =
-					DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Capacity -
-					DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Offset;
-				length = (DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Capacity <
-					DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Length ?
-					DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Capacity :
-					DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Length);
-				status = RiffaStartDmaTransaction(DevExt, RIFFA_MAX_NUM_CHNLS + io->Chnl,
-					length + DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Offset,
-					DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Offset,
-					WdfDmaDirectionReadFromDevice);
-				if (!NT_SUCCESS(status)) {
-					DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-						"riffa: fpga:%s, unable to start DMA transaction on channel: %d\n",
-						DevExt->Name, io->Chnl);
-					WdfRequestCompleteWithInformation(Request, status, 0);
-					return;
-				}
-			}
-			else {
-				// No room in user buffer, spill everything
-				DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].SpillAfter = 0;
-				RiffaProgramScatterGather(DevExt, RIFFA_MAX_NUM_CHNLS + io->Chnl);
-			}
-		}
-		else if (DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Last) {
-			// Recognize zero length receive and complete
-			DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-				"riffa: fpga:%s, ioctl recv zero length with last set\n", DevExt->Name);
-			WdfRequestCompleteWithInformation(Request, STATUS_SUCCESS, 0);
-			return;
-		}
-		else {
-			// Invalid request, should never happen
-			DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-				"riffa: fpga:%s, ioctl recv invalid, no length or last\n", DevExt->Name);
-			WdfRequestCompleteWithInformation(Request, STATUS_CANCELLED, 0);
-			return;
-		}
+		RiffaStartRecvTransaction(DevExt, RIFFA_MAX_NUM_CHNLS + io->Chnl);
+		return;
 	}
-	else {
-		// Start the timer (if necessary)
-		if (DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Timeout > 0)
-			WdfTimerStart(DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Timer,
-				WDF_REL_TIMEOUT_IN_MS(DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + io->Chnl].Timeout));
-	}
-
-	// Mark the WDFREQUEST as cancellable.
-	//status = WdfRequestMarkCancelableEx(Request, RiffaEvtRequestCancel);
-	//if (!NT_SUCCESS(status)) {
-	//	DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-	//		"riffa: fpga:%s, ioctl send WdfRequestMarkCancelableEx failed\n", DevExt->Name);
-	//	WdfRequestCompleteWithInformation(Request, status, 0);
-	//}
-	//else {
-		// Set the channel number in the request context for RiffaEvtRequestCancel.
-		reqExt = RiffaGetRequestContext(Request);
-		reqExt->Chnl = RIFFA_MAX_NUM_CHNLS + io->Chnl;
-	//}
 }
 
 
@@ -1327,8 +1323,6 @@ VOID RiffaIoctlList(IN PDEVICE_EXTENSION DevExt, IN WDFREQUEST Request,
 	strcpy_s(info->name[i], 16, DevExt->Name);
 	info->vendor_id[i] = DevExt->VendorId;
 	info->device_id[i] = DevExt->DeviceId;
-	DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-		"riffa: fpga:%s, ioctl list completed successfully\n", DevExt->Name);
 	WdfRequestCompleteWithInformation(Request, status, 0);
 }
 
@@ -1355,28 +1349,14 @@ VOID RiffaIoctlReset(IN PDEVICE_EXTENSION DevExt, IN WDFREQUEST Request) {
 
 	// Reset all the channels
 	for (i = 0; i < DevExt->NumChnls; i++) {
-		InterlockedExchange(&DevExt->Chnl[i].Ready, 0);
-		InterlockedExchange(&DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + i].Ready, 0);
-		InterlockedExchange(&DevExt->Chnl[i].ReqdDone, 0);
-		InterlockedExchange(&DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + i].ReqdDone, 0);
-		WdfTimerStop(DevExt->Chnl[i].Timer, FALSE);
-		WdfTimerStop(DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + i].Timer, FALSE);
-		DevExt->Chnl[i].ActiveCount = 0;
-		DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + i].ActiveCount = 0;
-		DevExt->Chnl[i].Cancel = 0;
-		DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + i].Cancel = 0;
-		WdfDmaTransactionRelease(DevExt->Chnl[i].DmaTransaction);
-		WdfDmaTransactionRelease(DevExt->Chnl[RIFFA_MAX_NUM_CHNLS + i].DmaTransaction);
-		RiffaCompleteRequest(DevExt, i, STATUS_CANCELLED);
-		RiffaCompleteRequest(DevExt, RIFFA_MAX_NUM_CHNLS + i, STATUS_CANCELLED);
+		RiffaCompleteRequest(DevExt, i, STATUS_CANCELLED, FALSE);
+		RiffaCompleteRequest(DevExt, RIFFA_MAX_NUM_CHNLS + i, STATUS_CANCELLED, FALSE);
 	}
 
 	// Reset the interrupt data
 	memset(DevExt->IntrData, 0, 2 * RIFFA_MAX_NUM_CHNLS * sizeof(INTR_CHNL_DIR_DATA));
 
 	// Finish this request
-	DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-		"riffa: fpga:%s, ioctl reset completed successfully\n", DevExt->Name);
 	WdfRequestCompleteWithInformation(Request, STATUS_SUCCESS, 0);
 }
 
@@ -1387,161 +1367,62 @@ VOID RiffaIoctlReset(IN PDEVICE_EXTENSION DevExt, IN WDFREQUEST Request) {
  *****************************************************************************/
 
 /**
- * Called at the entry point of functions after the DMA has started. If the
- * WDFREQUEST is still valid, increments the active count and returns TRUE. IF
- * the WDFREQUEST is not valid (i.e. is NULL'd out), then the request has been
- * cancelled (by timeout timer or by user process termination), and FALSE is
- * returned (active count is not incremented).
- *
- * DevExt - Pointer to the Device Extension
- *
- * Chnl - Channel number on which the DMA is taking place
- */
-BOOLEAN RiffaThreadEnter(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl) {
-	BOOLEAN cont;
-
-	// Acquire the channel lock, check if request is null, increment, release.
-	WdfSpinLockAcquire(DevExt->Chnl[Chnl].SpinLock);
-	cont = (DevExt->Chnl[Chnl].Request != NULL);
-	if (cont)
-		DevExt->Chnl[Chnl].ActiveCount++;
-	WdfSpinLockRelease(DevExt->Chnl[Chnl].SpinLock);
-
-	return cont;
-}
-
-
-
-/**
- * Called at the exit of functions where RiffaThreadEnter was called, after the
- * DMA has started. Decrements the active count. If this is the last thread, it
- * checks to see if a cancel request was set. If so, cancels the request (if
- * not already completed) and returns TRUE. Otherwise, returns FALSE.
- *
- * DevExt - Pointer to the Device Extension
- *
- * Chnl - Channel number on which the DMA is taking place
- *
- * IsSend - TRUE if the thread is operating on a send DMA, FALSE otherwise
- */
-BOOLEAN RiffaThreadExit(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl) {
-	BOOLEAN completed = FALSE;
-
-	// Acquire the channel lock, decrement, check for last exiting thread and a
-	// cancel request, cancel if necessary, release.
-	WdfSpinLockAcquire(DevExt->Chnl[Chnl].SpinLock);
-	DevExt->Chnl[Chnl].ActiveCount--;
-	if (DevExt->Chnl[Chnl].ActiveCount == 0 && DevExt->Chnl[Chnl].Cancel == 1) {
-		completed = TRUE;
-		RiffaCompleteRequest(DevExt, Chnl, STATUS_CANCELLED);
-	}
-	WdfSpinLockRelease(DevExt->Chnl[Chnl].SpinLock);
-	return completed;
-}
-
-
-
-/**
  * Called when the WDFREQUEST object for the specified channel should be
- * completed with the specified status. The WDFREQUEST has been marked
- * cancelable so it must first be unmarked cancelable. After completion, the
- * pointer to the WDFREQUEST is NULL'd out to indicate that the WDFREQUEST is
- * no longer valid.
+ * completed with the specified status.
  *
  * DevExt - Pointer to the Device Extension
  *
  * Chnl - Channel number on which the DMA is taking place
  *
  * Status - NTSTATUS to set for completion
+ *
+ * TimedOut - True if this is a timeout completion, false otherwise
  */
 VOID RiffaCompleteRequest(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl,
-	IN NTSTATUS Status) {
-	NTSTATUS status;
+	IN NTSTATUS Status, BOOLEAN TimedOut) {
 	WDFREQUEST request;
+	UINT64 total;
 
-	if ((request = DevExt->Chnl[Chnl].Request) != NULL) {
-		DevExt->Chnl[Chnl].Request = NULL;
-		// Try to complete the request
-		DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-			"riffa: fpga:%s chnl:%d, completing request\n",
-			DevExt->Name, (Chnl < RIFFA_MAX_NUM_CHNLS ? Chnl : Chnl - RIFFA_MAX_NUM_CHNLS));
-		//status = WdfRequestUnmarkCancelable(request);
-		//if (status != STATUS_CANCELLED) {
-			// Complete the request (nobody has done it yet)
-			WdfRequestCompleteWithInformation(request, Status,
-				(ULONG_PTR)(DevExt->Chnl[Chnl].ConfirmedPrev +
-				DevExt->Chnl[Chnl].Confirmed)>>2);
-		//}
-		//else {
-		//	DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-		//		"riffa: fpga:%s chnl:%d, request already cancelled\n",
-		//		DevExt->Name, (Chnl < RIFFA_MAX_NUM_CHNLS ? Chnl : Chnl - RIFFA_MAX_NUM_CHNLS));
-		//}
-	}
-	else {
-		DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-			"riffa: fpga:%s chnl:%d, request already nulled out\n",
-			DevExt->Name, (Chnl < RIFFA_MAX_NUM_CHNLS ? Chnl : Chnl - RIFFA_MAX_NUM_CHNLS));
-	}
-}
+	NTSTATUS status;
+	UINT32 i;
 
+	// Stop the timer
+	WdfTimerStop(DevExt->Chnl[Chnl].Timer, FALSE);
 
+	// Releas the transaction
+	WdfDmaTransactionRelease(DevExt->Chnl[Chnl].DmaTransaction);
 
-/**
- * EvtRequestCancel handler for WDFREQUEST objects for IOCTL sends/receives.
- * Called if the IO Manager or calling application needs to cancel the send.
- * In practice this should only happen when the user application hangs and the
- * user CTRL+C signals or Task Ends the application.
- *
- * Request - WDFREQUEST object from the IOCTL queue, representing the send
- */
-VOID RiffaEvtRequestCancel(IN WDFREQUEST Request) {
-	PDEVICE_EXTENSION devExt;
-	PREQUEST_EXTENSION reqExt;
-	UINT32 chnl;
-	BOOLEAN canCancel;
+	// Get the request (if not already cancelled).
+	WdfIoQueueRetrieveNextRequest(DevExt->Chnl[Chnl].PendingQueue, &request);
 
-    devExt = RiffaGetDeviceContext(WdfIoQueueGetDevice(WdfRequestGetIoQueue(Request)));
-    reqExt = RiffaGetRequestContext(Request);
+	// Quick calculation of total words
+	total = (DevExt->Chnl[Chnl].ConfirmedPrev + DevExt->Chnl[Chnl].Confirmed)>>2;
 
-	KdPrintEx((DPFLTR_IHVDRIVER_ID, DPFLTR_TRACE_LEVEL,
-		"riffa: fpga:%s chnl:%d, cancel requested\n", devExt->Name,
-		(reqExt->Chnl >= RIFFA_MAX_NUM_CHNLS ? reqExt->Chnl - RIFFA_MAX_NUM_CHNLS : reqExt->Chnl)));
+	// Clear the status bits
+	DevExt->Chnl[Chnl].InUse = 0;
+	DevExt->Chnl[Chnl].Ready = 0;
+	DevExt->Chnl[Chnl].ReqdDone = 0;
+	DevExt->Chnl[Chnl].Capacity = 0;
+	DevExt->Chnl[Chnl].Provided = 0;
+	DevExt->Chnl[Chnl].Length = 0;
+	DevExt->Chnl[Chnl].SpillAfter = 0;
+	DevExt->Chnl[Chnl].Timeout = 0;
 
-	// Acquire the channel lock
-	WdfSpinLockAcquire(devExt->Chnl[reqExt->Chnl].SpinLock);
-
-	// See if we can cancel right now.
-	canCancel = (devExt->Chnl[reqExt->Chnl].ActiveCount == 0);
-	if (canCancel) {
-		// NULL out the request so that no other threads use it
-		devExt->Chnl[reqExt->Chnl].Request = NULL;
-	}
-	else {
-		// Set the cancel flag so that the last active thread cancels for us.
-		devExt->Chnl[reqExt->Chnl].Cancel = 1;
-	}
-
-	// Release the channel lock
-	WdfSpinLockRelease(devExt->Chnl[reqExt->Chnl].SpinLock);
-
-	// Cancel the request
-	if (canCancel) {
-		DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-			"riffa: fpga:%s chnl:%d, request cancelled\n", devExt->Name,
-			(reqExt->Chnl >= RIFFA_MAX_NUM_CHNLS ? reqExt->Chnl - RIFFA_MAX_NUM_CHNLS : reqExt->Chnl));
-		InterlockedExchange(&devExt->Chnl[reqExt->Chnl].Ready, 0);
-		devExt->Chnl[reqExt->Chnl].ActiveCount = 0;
-		devExt->Chnl[reqExt->Chnl].Cancel = 0;
-		WdfDmaTransactionRelease(devExt->Chnl[reqExt->Chnl].DmaTransaction);
-		WdfTimerStop(devExt->Chnl[reqExt->Chnl].Timer, FALSE);
-		WdfRequestCompleteWithInformation(Request, STATUS_CANCELLED,
-			(ULONG_PTR)(devExt->Chnl[reqExt->Chnl].ConfirmedPrev +
-			devExt->Chnl[reqExt->Chnl].Confirmed)>>2);
+	if (request != NULL) {
+		if (TimedOut) {
+			if (Chnl < RIFFA_MAX_NUM_CHNLS) {
+				DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
+					"riffa: fpga:%s chnl:%d, send timed out\n", DevExt->Name, Chnl);
+			}
+			else {
+				DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
+					"riffa: fpga:%s chnl:%d, recv timed out\n", DevExt->Name,
+					Chnl - RIFFA_MAX_NUM_CHNLS);
+			}
+		}
+		WdfRequestCompleteWithInformation(request, Status, (ULONG_PTR)total);
 	}
 }
-
-
 
 /**
  * Called when the WDFTIMER expires. Used to handle timeouts from IOCTL calls.
@@ -1557,57 +1438,9 @@ VOID RiffaEvtTimerFunc(IN WDFTIMER Timer) {
 
     timerExt = RiffaGetTimerContext(Timer);
     devExt = RiffaGetDeviceContext(WdfIoQueueGetDevice(WdfTimerGetParentObject(Timer)));
-	DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-		"riffa: fpga:%s chnl:%d, request timed out\n", devExt->Name,
-		(timerExt->Chnl >= RIFFA_MAX_NUM_CHNLS ? timerExt->Chnl - RIFFA_MAX_NUM_CHNLS : timerExt->Chnl));
-
-	// Acquire the channel lock
-	WdfSpinLockAcquire(devExt->Chnl[timerExt->Chnl].SpinLock);
-
-	// See if we can cancel right now.
-	request = devExt->Chnl[timerExt->Chnl].Request;
-	if (request == NULL) {
-		canCancel = FALSE;
-	}
-	else {
-		canCancel = (devExt->Chnl[timerExt->Chnl].ActiveCount == 0);
-		if (canCancel) {
-			// NULL out the request so that no other threads use it
-			devExt->Chnl[timerExt->Chnl].Request = NULL;
-		}
-		else {
-			// Set the cancel flag so that the last active thread cancels for us.
-			devExt->Chnl[timerExt->Chnl].Cancel = 1;
-		}
-	}
-
-	// Release the channel lock
-	WdfSpinLockRelease(devExt->Chnl[timerExt->Chnl].SpinLock);
 
 	// Cancel the request
-	if (canCancel) {
-		if (timerExt->Chnl < RIFFA_MAX_NUM_CHNLS) {
-			DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-				"riffa: fpga:%s chnl:%d, cancelling timed out send\n", devExt->Name, timerExt->Chnl);
-		}
-		else {
-			DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-				"riffa: fpga:%s chnl:%d, cancelling timed out recv\n", devExt->Name,
-				timerExt->Chnl - RIFFA_MAX_NUM_CHNLS);
-		}
-		//status = WdfRequestUnmarkCancelable(request);
-		//if (status != STATUS_CANCELLED) {
-			// Complete the request (nobody has done it yet)
-			InterlockedExchange(&devExt->Chnl[timerExt->Chnl].Ready, 0);
-			devExt->Chnl[timerExt->Chnl].ActiveCount = 0;
-			devExt->Chnl[timerExt->Chnl].Cancel = 0;
-			WdfDmaTransactionRelease(devExt->Chnl[timerExt->Chnl].DmaTransaction);
-			WdfTimerStop(devExt->Chnl[timerExt->Chnl].Timer, FALSE);
-			WdfRequestCompleteWithInformation(request, STATUS_CANCELLED,
-				(ULONG_PTR)(devExt->Chnl[timerExt->Chnl].ConfirmedPrev +
-				devExt->Chnl[timerExt->Chnl].Confirmed)>>2);
-		//}
-	}
+	RiffaCompleteRequest(devExt, timerExt->Chnl, STATUS_CANCELLED, TRUE);
 }
 
 
@@ -1628,14 +1461,9 @@ VOID RiffaEvtTimerFunc(IN WDFTIMER Timer) {
 VOID RiffaStartRecvTransaction(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl) {
 	NTSTATUS status;
 	UINT64 length;
-	BOOLEAN complete = FALSE;
 
 	// Stop the timer (if set)
 	WdfTimerStop(DevExt->Chnl[Chnl].Timer, FALSE);
-
-	// Check that the request has not been cancelled.
-	if (!RiffaThreadEnter(DevExt, Chnl))
-		return;
 
 	// Start a recv transaction.
 	if (DevExt->Chnl[Chnl].Length) {
@@ -1650,7 +1478,7 @@ VOID RiffaStartRecvTransaction(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl) {
 				length + DevExt->Chnl[Chnl].Offset, DevExt->Chnl[Chnl].Offset,
 				WdfDmaDirectionReadFromDevice);
 			if (!NT_SUCCESS(status)) {
-				complete = TRUE;
+				RiffaCompleteRequest(DevExt, Chnl, status, FALSE);
 			}
 		}
 		else {
@@ -1661,21 +1489,11 @@ VOID RiffaStartRecvTransaction(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl) {
 	}
 	else if (DevExt->Chnl[Chnl].Last) {
 		// Recognize zero length receive and complete
-		status = STATUS_SUCCESS;
-		complete = TRUE;
+		RiffaCompleteRequest(DevExt, Chnl, STATUS_SUCCESS, FALSE);
 	}
 	else {
 		// Invalid request, should never happen
-		status = STATUS_CANCELLED;
-		complete = TRUE;
-	}
-
-	// Check for a cancel request and service it.
-	if (!RiffaThreadExit(DevExt, Chnl)) {
-		// Complete the request if necessary.
-		if (complete) {
-			RiffaCompleteRequest(DevExt, Chnl, status);
-		}
+		RiffaCompleteRequest(DevExt, Chnl, STATUS_CANCELLED, FALSE);
 	}
 }
 
@@ -1706,7 +1524,6 @@ VOID RiffaStartRecvTransaction(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl) {
 NTSTATUS RiffaStartDmaTransaction(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl,
 	IN UINT64 Length, IN UINT64 Offset, IN WDF_DMA_DIRECTION DmaDirection) {
 	NTSTATUS status = STATUS_SUCCESS;
-    PMDL mdl;
     PVOID vaddr;
     UINT64 length;
 
@@ -1715,26 +1532,18 @@ NTSTATUS RiffaStartDmaTransaction(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl,
 		DevExt->Name, (Chnl < RIFFA_MAX_NUM_CHNLS ? Chnl : Chnl - RIFFA_MAX_NUM_CHNLS),
 		Length>>2, Offset, DmaDirection == WdfDmaDirectionWriteToDevice);
 
-	// Get the user space memory.
-	status = WdfRequestRetrieveOutputWdmMdl(DevExt->Chnl[Chnl].Request, &mdl);
-	if (!NT_SUCCESS(status)) {
-		DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-			"riffa: fpga:%s chnl:%d, WdfRequestRetrieveOutputWdmMdl failed\n",
-			DevExt->Name, (Chnl < RIFFA_MAX_NUM_CHNLS ? Chnl : Chnl - RIFFA_MAX_NUM_CHNLS));
-		return status;
-	}
 	// Move the virtual address forward to the offset
-	vaddr = MmGetMdlVirtualAddress(mdl);
+	vaddr = MmGetMdlVirtualAddress(DevExt->Chnl[Chnl].Mdl);
 	vaddr = ((UINT32 *)vaddr) + Offset;
 
 	// Reduce the length by the offset amount
-	length = MmGetMdlByteCount(mdl);
+	length = MmGetMdlByteCount(DevExt->Chnl[Chnl].Mdl);
 	length = (Length < length ? Length : length);
 	length = length - Offset;
 
 	// Reuse the DMA Transaction
 	status = WdfDmaTransactionInitialize(DevExt->Chnl[Chnl].DmaTransaction,
-		RiffaEvtProgramDma, DmaDirection, mdl, vaddr, (size_t)length);
+		RiffaEvtProgramDma, DmaDirection, DevExt->Chnl[Chnl].Mdl, vaddr, (size_t)length);
 	if(!NT_SUCCESS(status)) {
 		DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
 			"riffa: fpga:%s chnl:%d, WdfDmaTransactionInitialize failed\n",
@@ -1781,10 +1590,6 @@ VOID RiffaProgramScatterGather(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl) {
 
 	// Stop the timer (if set)
 	WdfTimerStop(DevExt->Chnl[Chnl].Timer, FALSE);
-
-	// Check that the request has not been cancelled.
-	if (!RiffaThreadEnter(DevExt, Chnl))
-		return;
 
 	// OK, then get the variables.
 	sgList = DevExt->Chnl[Chnl].SgList;
@@ -1867,12 +1672,9 @@ VOID RiffaProgramScatterGather(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl) {
 		}
 	}
 
-	// Check for a cancel request and service it.
-	if (!RiffaThreadExit(DevExt, Chnl)) {
-		// Start the timer (if necessary)
-		if (DevExt->Chnl[Chnl].Timeout > 0)
-			WdfTimerStart(DevExt->Chnl[Chnl].Timer, WDF_REL_TIMEOUT_IN_MS(DevExt->Chnl[Chnl].Timeout));
-	}
+	// Start the timer (if necessary)
+	if (DevExt->Chnl[Chnl].Timeout > 0)
+		WdfTimerStart(DevExt->Chnl[Chnl].Timer, WDF_REL_TIMEOUT_IN_MS(DevExt->Chnl[Chnl].Timeout));
 }
 
 
@@ -1891,36 +1693,37 @@ VOID RiffaProgramScatterGather(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl) {
  */
 VOID RiffaTransactionComplete(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl,
 	IN UINT32 Transferred, IN NTSTATUS Status) {
-	BOOLEAN complete = FALSE;
+	WDFREQUEST request;
+	NTSTATUS status;
 
 	// Stop the timer (if set)
 	WdfTimerStop(DevExt->Chnl[Chnl].Timer, FALSE);
 
-	// Check that the request has not been cancelled.
-	if (!RiffaThreadEnter(DevExt, Chnl))
-		return;
-
-	// Release the DMA Transaction
+	// Release the DMA Transaction (ok to call this multiple times)
 	WdfDmaTransactionRelease(DevExt->Chnl[Chnl].DmaTransaction);
-	DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
-		"riffa: fpga:%s chnl:%d, words transferred: %lu\n", DevExt->Name,
-		(Chnl < RIFFA_MAX_NUM_CHNLS ? Chnl : Chnl - RIFFA_MAX_NUM_CHNLS), Transferred);
 
 	if (Chnl < RIFFA_MAX_NUM_CHNLS) {
+		DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
+			"riffa: fpga:%s chnl:%d, words transferred: %lu\n", DevExt->Name, Chnl, Transferred);
+
 		// Update the total confirmed data
 		DevExt->Chnl[Chnl].Confirmed = (((UINT64)Transferred)<<2);
 
 		// Complete the send request
-		complete = TRUE;
+		RiffaCompleteRequest(DevExt, Chnl, Status, FALSE);
 	}
 	else {
+		DbgPrintEx(DPFLTR_IHVDRIVER_ID, DPFLTR_ERROR_LEVEL,
+			"riffa: fpga:%s chnl:%d, words transferred: %lu\n", DevExt->Name,
+			Chnl - RIFFA_MAX_NUM_CHNLS, Transferred);
+
 		// Complete or repeat
 		if (DevExt->Chnl[Chnl].Last || !NT_SUCCESS(Status)) {
 			// Update the total confirmed data
 			DevExt->Chnl[Chnl].Confirmed = (((UINT64)Transferred)<<2);
 
 			// Complete the receive request
-			complete = TRUE;
+			RiffaCompleteRequest(DevExt, Chnl, Status, FALSE);
 		}
 		else {
 			// Not the "last" transaction. Save the transferred amount.
@@ -1932,19 +1735,11 @@ VOID RiffaTransactionComplete(IN PDEVICE_EXTENSION DevExt, IN UINT32 Chnl,
 			// Stay in the kernel and start another receive DMA transaction.
 			// If an interrupt with transaction info has already been received,
 			// start the transaction. If not, set the "ready" bit.
-			if (InterlockedExchange(&DevExt->Chnl[Chnl].Ready, 1)) {
+			if (InterlockedExchange(&DevExt->Chnl[Chnl].Ready, 1) == 2) {
 				// Clear the "ready" bit and start the transaction
 				InterlockedExchange(&DevExt->Chnl[Chnl].Ready, 0);
 				RiffaStartRecvTransaction(DevExt, Chnl);
 			}
-		}
-	}
-
-	// Check for a cancel request and service it.
-	if (!RiffaThreadExit(DevExt, Chnl)) {
-		// Complete the request if necessary.
-		if (complete) {
-			RiffaCompleteRequest(DevExt, Chnl, Status);
 		}
 	}
 }
