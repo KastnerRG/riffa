@@ -64,7 +64,7 @@ module counter
     assign VALUE = rCtrValue;
     always @(posedge CLK) begin
         if(RST_IN) begin
-            rCtrValue <= C_RST_VALUE;
+            rCtrValue <= C_RST_VALUE[clog2s(C_MAX_VALUE+1)-1:0];
         end else if(wEnable) begin
             rCtrValue <= rCtrValue + 1;
         end
