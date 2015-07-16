@@ -127,7 +127,7 @@ module engine_layer
      output [`SIG_LOWADDR_W-1:0]              RXC_META_ADDR,
      output [`SIG_TYPE_W-1:0]                 RXC_META_TYPE,
      output [`SIG_LEN_W-1:0]                  RXC_META_LENGTH,
-     output [`SIG_BYTECNT_W-1:0]                 RXC_META_BYTES_REMAINING,
+     output [`SIG_BYTECNT_W-1:0]              RXC_META_BYTES_REMAINING,
      output [`SIG_CPLID_W-1:0]                RXC_META_COMPLETER_ID,
      output                                   RXC_META_EP,
 
@@ -139,7 +139,7 @@ module engine_layer
      output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] RXR_DATA_START_OFFSET,
      output                                   RXR_DATA_END_FLAG,
      output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] RXR_DATA_END_OFFSET,
-     
+    
      output [`SIG_FBE_W-1:0]                  RXR_META_FDWBE,
      output [`SIG_LBE_W-1:0]                  RXR_META_LDWBE,
      output [`SIG_TC_W-1:0]                   RXR_META_TC,
@@ -167,7 +167,7 @@ module engine_layer
      input [`SIG_LOWADDR_W-1:0]               TXC_META_ADDR,
      input [`SIG_TYPE_W-1:0]                  TXC_META_TYPE,
      input [`SIG_LEN_W-1:0]                   TXC_META_LENGTH,
-     input [`SIG_BYTECNT_W-1:0]                  TXC_META_BYTE_COUNT,
+     input [`SIG_BYTECNT_W-1:0]               TXC_META_BYTE_COUNT,
      input [`SIG_TAG_W-1:0]                   TXC_META_TAG,
      input [`SIG_REQID_W-1:0]                 TXC_META_REQUESTER_ID,
      input [`SIG_TC_W-1:0]                    TXC_META_TC,
@@ -216,7 +216,7 @@ module engine_layer
             assign S_AXIS_RQ_TKEEP = 0;
             assign S_AXIS_RQ_TUSER = 0;
 
-        /* verilator lint_on WIDTH */
+            /* verilator lint_on WIDTH */
 	        rx_engine_classic
 	            #(/*AUTOINSTPARAM*/
                   // Parameters

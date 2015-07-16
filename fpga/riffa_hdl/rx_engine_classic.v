@@ -46,8 +46,7 @@
 `include "trellis.vh"
 `include "tlp.vh"
 module rx_engine_classic
-    #(
-      parameter C_VENDOR = "ALTERA",
+    #(parameter C_VENDOR = "ALTERA",
       parameter C_PCI_DATA_WIDTH = 128,
       parameter C_LOG_NUM_TAGS=6
       )
@@ -149,50 +148,50 @@ module rx_engine_classic
     // Shift register for input data with output taps for each delayed
     // cycle.  Shared by RXC and RXR engines.
     shiftreg
-        #(
-          // Parameters
-          .C_DEPTH                    (C_RX_PIPELINE_DEPTH),
-          .C_WIDTH                    (C_PCI_DATA_WIDTH))
+        #(// Parameters
+          .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
+          .C_WIDTH                      (C_PCI_DATA_WIDTH),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
     data_shiftreg_inst
-        (
-         // Outputs
-         .RD_DATA                     (wRxSrData),
+        (// Outputs
+         .RD_DATA                       (wRxSrData),
          // Inputs
-         .WR_DATA                     (RX_TLP),
+         .WR_DATA                       (RX_TLP),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     // Start Flag Shift Register. Data enables are derived from the
     // taps on this shift register.
     shiftreg 
-        #(
-          // Parameters
-          .C_DEPTH                     (C_RX_PIPELINE_DEPTH),
-          .C_WIDTH                    (1'b1))
+        #(// Parameters
+          .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
+          .C_WIDTH                      (1'b1),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
     sop_shiftreg_inst
-        (
-         // Outputs
-         .RD_DATA                      (wRxSrSop),
+        (// Outputs
+         .RD_DATA                       (wRxSrSop),
          // Inputs
          .WR_DATA                       (RX_TLP_START_FLAG & RX_TLP_VALID),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     // Start Flag Shift Register. Data enables are derived from the
     // taps on this shift register.
     shiftreg 
-        #(
-          // Parameters
-          .C_DEPTH                    (C_RX_PIPELINE_DEPTH),
-          .C_WIDTH                    (1'b1))
+        #(// Parameters
+          .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
+          .C_WIDTH                      (1'b1),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
     valid_shiftreg_inst
-        (
-         // Outputs
-         .RD_DATA                      (wRxSrDataValid),
+        (// Outputs
+         .RD_DATA                       (wRxSrDataValid),
          // Inputs
          .WR_DATA                       (RX_TLP_VALID),
          /*AUTOINST*/
@@ -204,56 +203,57 @@ module rx_engine_classic
     // End Flag Shift Register. Data valid is deasserted based on the
     // taps in this register
     shiftreg 
-        #(
-          // Parameters
-          .C_DEPTH                     (C_RX_PIPELINE_DEPTH),
-          .C_WIDTH                    (1'b1))
+        #(// Parameters
+          .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
+          .C_WIDTH                      (1'b1),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
     eop_shiftreg_inst
-        (
-         // Outputs
-         .RD_DATA                      (wRxSrEop),
+        (// Outputs
+         .RD_DATA                       (wRxSrEop),
          // Inputs
          .WR_DATA                       (RX_TLP_END_FLAG & RX_TLP_VALID),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     // End Flag Shift Register. Data valid is deasserted based on the
     // taps in this register
     shiftreg 
-        #(
-          // Parameters
-          .C_DEPTH                     (C_RX_PIPELINE_DEPTH),
-          .C_WIDTH                    (`SIG_OFFSET_W))
+        #(// Parameters
+          .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
+          .C_WIDTH                      (`SIG_OFFSET_W),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
     eoff_shiftreg_inst
-        (
-         // Outputs
-         .RD_DATA                      (wRxSrEoff),
+        (// Outputs
+         .RD_DATA                       (wRxSrEoff),
          // Inputs
          .WR_DATA                       (RX_TLP_END_OFFSET),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     // End Flag Shift Register. Data valid is deasserted based on the
     // taps in this register
     shiftreg 
-        #(
-          // Parameters
-          .C_DEPTH                     (C_RX_PIPELINE_DEPTH),
-          .C_WIDTH                     (`SIG_OFFSET_W))
+        #(// Parameters
+          .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
+          .C_WIDTH                      (`SIG_OFFSET_W),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
     soff_shiftreg_inst
         (
          // Outputs
-         .RD_DATA                      (wRxSrSoff),
+         .RD_DATA                       (wRxSrSoff),
          // Inputs
-         .WR_DATA                      (RX_TLP_START_OFFSET),
+         .WR_DATA                       (RX_TLP_START_OFFSET),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     generate
         if(C_VENDOR == "XILINX" && C_PCI_DATA_WIDTH == 128) begin

@@ -294,8 +294,9 @@ module rxc_engine_ultrascale
     shiftreg
         #(
           // Parameters
-          .C_DEPTH                     (C_RX_PIPELINE_DEPTH),
-          .C_WIDTH                     (C_PCI_DATA_WIDTH)
+          .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
+          .C_WIDTH                      (C_PCI_DATA_WIDTH),
+          .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     data_shiftreg_inst
         (
@@ -303,59 +304,56 @@ module rxc_engine_ultrascale
          .RD_DATA                       (wRxSrData),
          // Inputs
          .WR_DATA                       (M_AXIS_RC_TDATA),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     // Start Flag Shift Register. Data enables are derived from the
     // taps on this shift register.
     shiftreg 
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
-          .C_WIDTH                      (1'b1)
+          .C_WIDTH                      (1'b1),
+          .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     sop_shiftreg_inst
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wRxSrSop),
          // Inputs
          .WR_DATA                       (wMAxisRcSop & M_AXIS_RC_TVALID),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     // End Flag Shift Register. 
     shiftreg 
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
-          .C_WIDTH                      (1'b1)
+          .C_WIDTH                      (1'b1),
+          .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     eop_shiftreg_inst
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wRxSrEop),
          // Inputs
          .WR_DATA                       (wMAxisRcTlast),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     // Data Valid Shift Register. Data enables are derived from the
     // taps on this shift register.
     shiftreg 
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
-          .C_WIDTH                      (1'b1)
+          .C_WIDTH                      (1'b1),
+          .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     valid_shiftreg_inst
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wRxSrDataValid),
          // Inputs
          .WR_DATA                       (M_AXIS_RC_TVALID),
@@ -398,6 +396,7 @@ module rxc_engine_ultrascale
                  .WR_DATA               (wEndMask & wStartMask),
                  .WR_EN                 (1),
                  /*AUTOINST*/
+                 // Inputs
                  .CLK                   (CLK));
 
             pipeline
@@ -419,8 +418,8 @@ module rxc_engine_ultrascale
                  .RD_DATA_READY                 (1'b1),
                  /*AUTOINST*/
                  // Inputs
-                 .CLK                           (CLK),
-                 .RST_IN                        (RST_IN));
+                 .CLK                   (CLK),
+                 .RST_IN                (RST_IN));
         end
     endgenerate
 

@@ -200,8 +200,9 @@ module fifo
     shiftreg
         #(
           // Parameters
-          .C_DEPTH          (C_DELAY),
-          .C_WIDTH          (1'b1)
+          .C_DEPTH                      (C_DELAY),
+          .C_WIDTH                      (1'b1),
+          .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     shiftreg_wr_delay_inst
         (

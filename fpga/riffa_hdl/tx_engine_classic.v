@@ -93,7 +93,7 @@ module tx_engine_classic
      input [`SIG_LOWADDR_W-1:0]               TXC_META_ADDR,
      input [`SIG_TYPE_W-1:0]                  TXC_META_TYPE,
      input [`SIG_LEN_W-1:0]                   TXC_META_LENGTH,
-     input [`SIG_BYTECNT_W-1:0]                  TXC_META_BYTE_COUNT,
+     input [`SIG_BYTECNT_W-1:0]               TXC_META_BYTE_COUNT,
      input [`SIG_TAG_W-1:0]                   TXC_META_TAG,
      input [`SIG_REQID_W-1:0]                 TXC_META_REQUESTER_ID,
      input [`SIG_TC_W-1:0]                    TXC_META_TC,

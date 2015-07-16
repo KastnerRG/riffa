@@ -374,6 +374,7 @@ module rxc_engine_classic
                  .WR_DATA               (wEndMask & wStartMask),
                  .WR_EN                 (1),
                  /*AUTOINST*/
+                 // Inputs
                  .CLK                   (CLK));
 
             pipeline
@@ -395,8 +396,8 @@ module rxc_engine_classic
                  .RD_DATA_READY                 (1'b1),
                  /*AUTOINST*/
                  // Inputs
-                 .CLK                           (CLK),
-                 .RST_IN                        (RST_IN));
+                 .CLK                   (CLK),
+                 .RST_IN                (RST_IN));
 
         end
     endgenerate
@@ -422,24 +423,25 @@ module rxc_engine_classic
          // Inputs
          .CLK                           (CLK),
          .RST_IN                        (RST_IN));
+
     // Start Flag Shift Register. Data enables are derived from the
     // taps on this shift register.
     shiftreg 
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
-          .C_WIDTH                      (1'b1)
+          .C_WIDTH                      (1'b1),
+          .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     sop_shiftreg_inst
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wRxSrSop),
          // Inputs
-         .WR_DATA                       (RX_TLP_START_FLAG & RX_TLP_VALID & (RX_SR_DATA[`TLP_TYPE_R] == `TLP_TYPE_CPL)),
+         .WR_DATA                       (RX_TLP_START_FLAG & RX_TLP_VALID & 
+                                         (RX_SR_DATA[`TLP_TYPE_R] == `TLP_TYPE_CPL)),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
 endmodule
 module rxc_engine_128

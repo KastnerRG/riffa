@@ -298,6 +298,7 @@ module rxr_engine_classic
                  .WR_DATA               (wEndMask & wStartMask),
                  .WR_EN                 (1),
                  /*AUTOINST*/
+                 // Inputs
                  .CLK                   (CLK));
 
             pipeline
@@ -319,8 +320,8 @@ module rxr_engine_classic
                  .RD_DATA_READY                 (1'b1),
                  /*AUTOINST*/
                  // Inputs
-                 .CLK                           (CLK),
-                 .RST_IN                        (RST_IN));
+                 .CLK                   (CLK),
+                 .RST_IN                (RST_IN));
         end
     endgenerate
     
@@ -528,21 +529,20 @@ module rxr_engine_classic
     // Start Flag Shift Register. Data enables are derived from the
     // taps on this shift register.
     shiftreg 
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
-          .C_WIDTH                      (1'b1)
+          .C_WIDTH                      (1'b1),
+          .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     sop_shiftreg_inst
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wRxSrSop),
          // Inputs
          .WR_DATA                       (RX_TLP_START_FLAG & RX_TLP_VALID & (RX_SR_DATA[`TLP_TYPE_R] == `TLP_TYPE_REQ)),
+         .RST_IN                        (RST_IN),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
     
 endmodule
 module rxr_engine_128
@@ -596,8 +596,6 @@ module rxr_engine_128
      );
 
     /*AUTOWIRE*/
-    // Beginning of automatic wires (for undeclared instantiated-module outputs)
-    // End of automatics
     ///*AUTOOUTPUT*/
     // End of automatics
     localparam C_RX_BE_W = (`SIG_FBE_W+`SIG_LBE_W);
@@ -707,7 +705,7 @@ module rxr_engine_128
     assign __wRxrStraddledStartOffset = RX_SR_START_OFFSET[`SIG_OFFSET_W*(C_RX_INPUT_STAGES) +: `SIG_OFFSET_W];
     assign __wRxrHdrValid = __wRxrHdrSOP | ((rStraddledSOP | rStraddledSOPSplit) & RX_SR_VALID[C_RX_INPUT_STAGES]);
     assign __wRxrHdr4DWHWDataSF = (_wRxrHdr[`TLP_4DWHBIT_I] & _wRxrHdr[`TLP_PAYBIT_I] & RX_SR_VALID[C_RX_INPUT_STAGES] & _wRxrHdrDelayedSOP);
-                     
+    
 
     assign _wRxrHdrHdrLen = {_wRxrHdr[`TLP_4DWHBIT_I],~_wRxrHdr[`TLP_4DWHBIT_I],~_wRxrHdr[`TLP_4DWHBIT_I]};
     assign _wRxrHdrDataSoff = {1'b0,_wRxrHdrSOPStraddle,1'b0} + _wRxrHdrHdrLen;
@@ -788,7 +786,7 @@ module rxr_engine_128
         (
          // Outputs
          .RD_DATA                       ({_wRxrHdr[C_STRADDLE_W-1:0], _wRxrHdrValid}),
-                                          
+        
          // Inputs
          .WR_DATA                       ({__wRxrHdr[C_STRADDLE_W-1:0], __wRxrHdrValid}),
          .WR_EN                         (__wRxrHdrSOP | rStraddledSOP),
@@ -872,7 +870,7 @@ module rxr_engine_128
          .WR_EN                 (1),
          /*AUTOINST*/
          // Inputs
-         .CLK                   (CLK));
+         .CLK                           (CLK));
 
     register
         #(
@@ -910,7 +908,7 @@ module rxr_engine_128
          .WR_EN                 (1),
          /*AUTOINST*/
          // Inputs
-         .CLK                   (CLK));
+         .CLK                           (CLK));
 
     register
         #(
@@ -927,7 +925,7 @@ module rxr_engine_128
          .WR_EN                 (1),
          /*AUTOINST*/
          // Inputs
-         .CLK                   (CLK));
+         .CLK                           (CLK));
 
     offset_to_mask
         #(// Parameters

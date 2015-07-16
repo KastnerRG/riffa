@@ -33,7 +33,7 @@
 // DAMAGE.
 // ----------------------------------------------------------------------
 /*
- Filename: shiftreg.v
+ Filename: scsdp.v
  Version: 1.0
  Verilog Standard: Verilog-2001
 
