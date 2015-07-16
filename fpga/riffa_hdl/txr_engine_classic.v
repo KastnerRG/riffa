@@ -49,20 +49,19 @@
 `include "trellis.vh" // Defines the user-facing signal widths.
 `include "tlp.vh" // Defines the endpoint-facing field widths in a TLP
 module txr_engine_classic
-    #(
-      parameter C_PCI_DATA_WIDTH = 128,
+    #(parameter C_PCI_DATA_WIDTH = 128,
       parameter C_PIPELINE_INPUT = 1,
       parameter C_PIPELINE_OUTPUT = 0,
       parameter C_MAX_PAYLOAD_DWORDS = 64,
       parameter C_DEPTH_PACKETS = 10,
-      parameter C_VENDOR = "ALTERA"
-      )
-    (
-     // Interface: Clocks
+      parameter C_VENDOR = "ALTERA")
+    (// Interface: Clocks
      input                                    CLK,
 
      // Interface: Resets
-     input                                    RST_IN,
+     input                                    RST_BUS, // Replacement for generic RST_IN
+     input                                    RST_LOGIC, // Addition for RIFFA_RST
+     output                                   DONE_RST,
 
      // Interface: Configuration 
      input [`SIG_CPLID_W-1:0]                 CONFIG_COMPLETER_ID,
@@ -110,6 +109,9 @@ module txr_engine_classic
     
     /*AUTOWIRE*/
     /*AUTOINPUT*/
+    // Beginning of automatic inputs (from unused autoinst inputs)
+    input                                     RST_IN;                 // To txr_formatter_inst of txr_formatter_classic.v, ...
+    // End of automatics
     ///*AUTOOUTPUT*/
 
     wire                                      wTxHdrReady;

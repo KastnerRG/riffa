@@ -46,14 +46,14 @@
 `include "ultrascale.vh"
 `include "trellis.vh"
 module rx_engine_ultrascale
-    #(parameter C_PCI_DATA_WIDTH = 128
-      )
-    (
-     // Interface: Clocks
-     input                                    CLK,
+    #(parameter C_PCI_DATA_WIDTH = 128)
+    (// Interface: Clocks
+     input                                    CLK, // Replacement for generic CLK
 
      // Interface: Resets
-     input                                    RST_IN,
+     input                                    RST_BUS, // Replacement for generic RST_IN
+     input                                    RST_LOGIC, // Addition for RIFFA_RST
+     output                                   DONE_RST,
 
      // Interface: CQ
      input                                    M_AXIS_CQ_TVALID,
@@ -122,6 +122,7 @@ module rx_engine_ultrascale
     rxc_engine_inst
         (/*AUTOINST*/
          // Outputs
+         .DONE_RST                      (DONE_RST),
          .M_AXIS_RC_TREADY              (M_AXIS_RC_TREADY),
          .RXC_DATA                      (RXC_DATA[C_PCI_DATA_WIDTH-1:0]),
          .RXC_DATA_VALID                (RXC_DATA_VALID),
@@ -141,7 +142,8 @@ module rx_engine_ultrascale
          .RXC_META_EP                   (RXC_META_EP),
          // Inputs
          .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_BUS                       (RST_BUS),
+         .RST_LOGIC                     (RST_LOGIC),
          .M_AXIS_RC_TVALID              (M_AXIS_RC_TVALID),
          .M_AXIS_RC_TLAST               (M_AXIS_RC_TLAST),
          .M_AXIS_RC_TDATA               (M_AXIS_RC_TDATA[C_PCI_DATA_WIDTH-1:0]),
@@ -156,6 +158,7 @@ module rx_engine_ultrascale
     rxr_engine_inst
         (/*AUTOINST*/
          // Outputs
+         .DONE_RST                      (DONE_RST),
          .M_AXIS_CQ_TREADY              (M_AXIS_CQ_TREADY),
          .RXR_DATA                      (RXR_DATA[C_PCI_DATA_WIDTH-1:0]),
          .RXR_DATA_VALID                (RXR_DATA_VALID),
@@ -177,7 +180,8 @@ module rx_engine_ultrascale
          .RXR_META_EP                   (RXR_META_EP),
          // Inputs
          .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_BUS                       (RST_BUS),
+         .RST_LOGIC                     (RST_LOGIC),
          .M_AXIS_CQ_TVALID              (M_AXIS_CQ_TVALID),
          .M_AXIS_CQ_TLAST               (M_AXIS_CQ_TLAST),
          .M_AXIS_CQ_TDATA               (M_AXIS_CQ_TDATA[C_PCI_DATA_WIDTH-1:0]),

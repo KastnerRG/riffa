@@ -43,20 +43,19 @@
 `include "trellis.vh"
 `include "ultrascale.vh"
 module engine_layer
-    #(
-      parameter C_PCI_DATA_WIDTH = 128,
+    #(parameter C_PCI_DATA_WIDTH = 128,
       parameter C_LOG_NUM_TAGS=6,
       parameter C_PIPELINE_INPUT = 1,
       parameter C_PIPELINE_OUTPUT = 0,
       parameter C_MAX_PAYLOAD_DWORDS = 64,
-      parameter C_VENDOR="ULTRASCALE"
-      )
-    (
-     // Interface: Clocks
-     input                                    CLK,
+      parameter C_VENDOR="ULTRASCALE")
+    (// Interface: Clocks
+     input                                    CLK_BUS, // Replacement for generic CLK
 
      // Interface: Resets
-     input                                    RST_IN,
+     input                                    RST_BUS, // Replacement for generic RST_IN
+     input                                    RST_LOGIC, // Addition for RIFFA_RST
+     output                                   DONE_RST,
 
      // Interface: Configuration 
      input [`SIG_CPLID_W-1:0]                 CONFIG_COMPLETER_ID,
@@ -196,9 +195,12 @@ module engine_layer
      input [`SIG_TYPE_W-1:0]                  TXR_META_TYPE,
      input                                    TXR_META_EP,
      output                                   TXR_META_READY,
-     output                                   TXR_SENT
-     );
+     output                                   TXR_SENT);
 
+    wire                                      CLK;
+
+
+    assign CLK = CLK_BUS;    
     generate
         /* verilator lint_off WIDTH */
         if(C_VENDOR != "ULTRASCALE") begin
@@ -226,6 +228,7 @@ module engine_layer
 	        rx_engine_classic_inst
 	            (/*AUTOINST*/
                  // Outputs
+                 .DONE_RST              (DONE_RST),
                  .RX_TLP_READY          (RX_TLP_READY),
                  .RXC_DATA              (RXC_DATA[C_PCI_DATA_WIDTH-1:0]),
                  .RXC_DATA_VALID        (RXC_DATA_VALID),
@@ -263,7 +266,8 @@ module engine_layer
                  .RXR_META_EP           (RXR_META_EP),
                  // Inputs
                  .CLK                   (CLK),
-                 .RST_IN                (RST_IN),
+                 .RST_BUS               (RST_BUS),
+                 .RST_LOGIC             (RST_LOGIC),
                  .RX_TLP                (RX_TLP[C_PCI_DATA_WIDTH-1:0]),
                  .RX_TLP_VALID          (RX_TLP_VALID),
                  .RX_TLP_START_FLAG     (RX_TLP_START_FLAG),
@@ -283,6 +287,7 @@ module engine_layer
 	        tx_engine_classic_inst
 	            (/*AUTOINST*/
                  // Outputs
+                 .DONE_RST              (DONE_RST),
                  .TX_TLP                (TX_TLP[C_PCI_DATA_WIDTH-1:0]),
                  .TX_TLP_VALID          (TX_TLP_VALID),
                  .TX_TLP_START_FLAG     (TX_TLP_START_FLAG),
@@ -297,7 +302,8 @@ module engine_layer
                  .TXR_SENT              (TXR_SENT),
                  // Inputs
                  .CLK                   (CLK),
-                 .RST_IN                (RST_IN),
+                 .RST_BUS               (RST_BUS),
+                 .RST_LOGIC             (RST_LOGIC),
                  .CONFIG_COMPLETER_ID   (CONFIG_COMPLETER_ID[`SIG_CPLID_W-1:0]),
                  .TX_TLP_READY          (TX_TLP_READY),
                  .TXC_DATA_VALID        (TXC_DATA_VALID),
@@ -333,7 +339,8 @@ module engine_layer
                  .TXR_META_TC           (TXR_META_TC[`SIG_TC_W-1:0]),
                  .TXR_META_ATTR         (TXR_META_ATTR[`SIG_ATTR_W-1:0]),
                  .TXR_META_TYPE         (TXR_META_TYPE[`SIG_TYPE_W-1:0]),
-                 .TXR_META_EP           (TXR_META_EP));
+                 .TXR_META_EP           (TXR_META_EP),
+                 .RST_IN                (RST_IN));
 
         end else begin 
 
@@ -351,6 +358,7 @@ module engine_layer
 	        rx_engine_ultrascale_inst
 	            (/*AUTOINST*/
                  // Outputs
+                 .DONE_RST              (DONE_RST),
                  .M_AXIS_CQ_TREADY      (M_AXIS_CQ_TREADY),
                  .M_AXIS_RC_TREADY      (M_AXIS_RC_TREADY),
                  .RXC_DATA              (RXC_DATA[C_PCI_DATA_WIDTH-1:0]),
@@ -389,7 +397,8 @@ module engine_layer
                  .RXR_META_EP           (RXR_META_EP),
                  // Inputs
                  .CLK                   (CLK),
-                 .RST_IN                (RST_IN),
+                 .RST_BUS               (RST_BUS),
+                 .RST_LOGIC             (RST_LOGIC),
                  .M_AXIS_CQ_TVALID      (M_AXIS_CQ_TVALID),
                  .M_AXIS_CQ_TLAST       (M_AXIS_CQ_TLAST),
                  .M_AXIS_CQ_TDATA       (M_AXIS_CQ_TDATA[C_PCI_DATA_WIDTH-1:0]),
@@ -411,6 +420,7 @@ module engine_layer
 	        tx_engine_ultrascale_inst
 	            (/*AUTOINST*/
                  // Outputs
+                 .DONE_RST              (DONE_RST),
                  .S_AXIS_CC_TVALID      (S_AXIS_CC_TVALID),
                  .S_AXIS_CC_TLAST       (S_AXIS_CC_TLAST),
                  .S_AXIS_CC_TDATA       (S_AXIS_CC_TDATA[C_PCI_DATA_WIDTH-1:0]),
@@ -429,7 +439,8 @@ module engine_layer
                  .TXR_SENT              (TXR_SENT),
                  // Inputs
                  .CLK                   (CLK),
-                 .RST_IN                (RST_IN),
+                 .RST_BUS               (RST_BUS),
+                 .RST_LOGIC             (RST_LOGIC),
                  .CONFIG_COMPLETER_ID   (CONFIG_COMPLETER_ID[`SIG_CPLID_W-1:0]),
                  .S_AXIS_CC_TREADY      (S_AXIS_CC_TREADY),
                  .TXC_DATA_VALID        (TXC_DATA_VALID),

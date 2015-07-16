@@ -48,14 +48,14 @@
 module rx_engine_classic
     #(parameter C_VENDOR = "ALTERA",
       parameter C_PCI_DATA_WIDTH = 128,
-      parameter C_LOG_NUM_TAGS=6
-      )
-    (
-     // Interface: Clocks
+      parameter C_LOG_NUM_TAGS=6)
+    (// Interface: Clocks
      input                                    CLK,
 
      // Interface: Resets
-     input                                    RST_IN,
+     input                                    RST_BUS, // Replacement for generic RST_IN
+     input                                    RST_LOGIC, // Addition for RIFFA_RST
+     output                                   DONE_RST,
 
      // Interface: RX Classic
      input [C_PCI_DATA_WIDTH-1:0]             RX_TLP,
@@ -276,6 +276,7 @@ module rx_engine_classic
                  .RXR_DATA              (_RXR_DATA[C_PCI_DATA_WIDTH-1:0]),
                  /*AUTOINST*/
                  // Outputs
+                 .DONE_RST              (DONE_RST),
                  .RXR_DATA_VALID        (RXR_DATA_VALID),
                  .RXR_DATA_WORD_ENABLE  (RXR_DATA_WORD_ENABLE[(C_PCI_DATA_WIDTH/32)-1:0]),
                  .RXR_DATA_START_FLAG   (RXR_DATA_START_FLAG),
@@ -295,7 +296,8 @@ module rx_engine_classic
                  .RXR_META_EP           (RXR_META_EP),
                  // Inputs
                  .CLK                   (CLK),
-                 .RST_IN                (RST_IN),
+                 .RST_BUS               (RST_BUS),
+                 .RST_LOGIC             (RST_LOGIC),
                  .RX_TLP                (RX_TLP[C_PCI_DATA_WIDTH-1:0]),
                  .RX_TLP_VALID          (RX_TLP_VALID),
                  .RX_TLP_START_FLAG     (RX_TLP_START_FLAG),
@@ -322,6 +324,7 @@ module rx_engine_classic
                  .RXC_DATA              (_RXC_DATA[C_PCI_DATA_WIDTH-1:0]),
                  /*AUTOINST*/
                  // Outputs
+                 .DONE_RST              (DONE_RST),
                  .RXC_DATA_VALID        (RXC_DATA_VALID),
                  .RXC_DATA_WORD_ENABLE  (RXC_DATA_WORD_ENABLE[(C_PCI_DATA_WIDTH/32)-1:0]),
                  .RXC_DATA_START_FLAG   (RXC_DATA_START_FLAG),
@@ -339,7 +342,8 @@ module rx_engine_classic
                  .RXC_META_EP           (RXC_META_EP),
                  // Inputs
                  .CLK                   (CLK),
-                 .RST_IN                (RST_IN),
+                 .RST_BUS               (RST_BUS),
+                 .RST_LOGIC             (RST_LOGIC),
                  .RX_TLP                (RX_TLP[C_PCI_DATA_WIDTH-1:0]),
                  .RX_TLP_VALID          (RX_TLP_VALID),
                  .RX_TLP_START_FLAG     (RX_TLP_START_FLAG),
@@ -366,6 +370,7 @@ module rx_engine_classic
                  .RXR_DATA                      (_RXR_DATA[C_PCI_DATA_WIDTH-1:0]),
                  /*AUTOINST*/
                  // Outputs
+                 .DONE_RST              (DONE_RST),
                  .RXR_DATA_VALID        (RXR_DATA_VALID),
                  .RXR_DATA_WORD_ENABLE  (RXR_DATA_WORD_ENABLE[(C_PCI_DATA_WIDTH/32)-1:0]),
                  .RXR_DATA_START_FLAG   (RXR_DATA_START_FLAG),
@@ -385,7 +390,8 @@ module rx_engine_classic
                  .RXR_META_EP           (RXR_META_EP),
                  // Inputs
                  .CLK                   (CLK),
-                 .RST_IN                (RST_IN),
+                 .RST_BUS               (RST_BUS),
+                 .RST_LOGIC             (RST_LOGIC),
                  .RX_TLP                (RX_TLP[C_PCI_DATA_WIDTH-1:0]),
                  .RX_TLP_VALID          (RX_TLP_VALID),
                  .RX_TLP_START_FLAG     (RX_TLP_START_FLAG),
@@ -412,6 +418,7 @@ module rx_engine_classic
                  .RXC_DATA                      (_RXC_DATA[C_PCI_DATA_WIDTH-1:0]),
                  /*AUTOINST*/
                  // Outputs
+                 .DONE_RST              (DONE_RST),
                  .RXC_DATA_VALID        (RXC_DATA_VALID),
                  .RXC_DATA_WORD_ENABLE  (RXC_DATA_WORD_ENABLE[(C_PCI_DATA_WIDTH/32)-1:0]),
                  .RXC_DATA_START_FLAG   (RXC_DATA_START_FLAG),
@@ -429,7 +436,8 @@ module rx_engine_classic
                  .RXC_META_EP           (RXC_META_EP),
                  // Inputs
                  .CLK                   (CLK),
-                 .RST_IN                (RST_IN),
+                 .RST_BUS               (RST_BUS),
+                 .RST_LOGIC             (RST_LOGIC),
                  .RX_TLP                (RX_TLP[C_PCI_DATA_WIDTH-1:0]),
                  .RX_TLP_VALID          (RX_TLP_VALID),
                  .RX_TLP_START_FLAG     (RX_TLP_START_FLAG),

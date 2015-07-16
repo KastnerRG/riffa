@@ -48,17 +48,18 @@
 `include "trellis.vh"
 `include "ultrascale.vh"
 module tx_engine_ultrascale
-    #(
-      parameter C_PCI_DATA_WIDTH = 128,
+    #(parameter C_PCI_DATA_WIDTH = 128,
       parameter C_PIPELINE_INPUT = 1,
       parameter C_PIPELINE_OUTPUT = 0,
-      parameter C_MAX_PAYLOAD_DWORDS = 64
-      )
-    (
-     // Interface: Clocks
+      parameter C_MAX_PAYLOAD_DWORDS = 64)
+    (// Interface: Clocks
      input                                   CLK,
+
      // Interface: Resets
-     input                                   RST_IN,
+     input                                   RST_BUS, // Replacement for generic RST_IN
+     input                                   RST_LOGIC, // Addition for RIFFA_RST
+     output                                  DONE_RST,
+
      // Interface: Configuration
      input [`SIG_CPLID_W-1:0]                CONFIG_COMPLETER_ID,
 
@@ -85,7 +86,7 @@ module tx_engine_ultrascale
      input [`SIG_LOWADDR_W-1:0]              TXC_META_ADDR,
      input [`SIG_TYPE_W-1:0]                 TXC_META_TYPE,
      input [`SIG_LEN_W-1:0]                  TXC_META_LENGTH,
-     input [`SIG_BYTECNT_W-1:0]                 TXC_META_BYTE_COUNT,
+     input [`SIG_BYTECNT_W-1:0]              TXC_META_BYTE_COUNT,
      input [`SIG_TAG_W-1:0]                  TXC_META_TAG,
      input [`SIG_REQID_W-1:0]                TXC_META_REQUESTER_ID,
      input [`SIG_TC_W-1:0]                   TXC_META_TC,
@@ -153,6 +154,7 @@ module tx_engine_ultrascale
     txr_engine_inst
         (/*AUTOINST*/
          // Outputs
+         .DONE_RST                      (DONE_RST),
          .S_AXIS_RQ_TVALID              (S_AXIS_RQ_TVALID),
          .S_AXIS_RQ_TLAST               (S_AXIS_RQ_TLAST),
          .S_AXIS_RQ_TDATA               (S_AXIS_RQ_TDATA[C_PCI_DATA_WIDTH-1:0]),
@@ -162,7 +164,8 @@ module tx_engine_ultrascale
          .TXR_META_READY                (TXR_META_READY),
          // Inputs
          .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_BUS                       (RST_BUS),
+         .RST_LOGIC                     (RST_LOGIC),
          .CONFIG_COMPLETER_ID           (CONFIG_COMPLETER_ID[`SIG_CPLID_W-1:0]),
          .S_AXIS_RQ_TREADY              (S_AXIS_RQ_TREADY),
          .TXR_DATA_VALID                (TXR_DATA_VALID),
@@ -195,6 +198,7 @@ module tx_engine_ultrascale
     txc_engine_inst
         (/*AUTOINST*/
          // Outputs
+         .DONE_RST                      (DONE_RST),
          .S_AXIS_CC_TVALID              (S_AXIS_CC_TVALID),
          .S_AXIS_CC_TLAST               (S_AXIS_CC_TLAST),
          .S_AXIS_CC_TDATA               (S_AXIS_CC_TDATA[C_PCI_DATA_WIDTH-1:0]),
@@ -204,7 +208,8 @@ module tx_engine_ultrascale
          .TXC_META_READY                (TXC_META_READY),
          // Inputs
          .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_BUS                       (RST_BUS),
+         .RST_LOGIC                     (RST_LOGIC),
          .CONFIG_COMPLETER_ID           (CONFIG_COMPLETER_ID[`SIG_CPLID_W-1:0]),
          .S_AXIS_CC_TREADY              (S_AXIS_CC_TREADY),
          .TXC_DATA_VALID                (TXC_DATA_VALID),

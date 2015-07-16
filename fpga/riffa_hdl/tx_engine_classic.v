@@ -52,19 +52,18 @@
 `include "trellis.vh"
 `include "tlp.vh"
 module tx_engine_classic
-    #(
-      parameter C_PCI_DATA_WIDTH = 128,
+    #(parameter C_PCI_DATA_WIDTH = 128,
       parameter C_PIPELINE_INPUT = 1,
       parameter C_PIPELINE_OUTPUT = 1,
       parameter C_MAX_PAYLOAD_DWORDS = 256,
-      parameter C_VENDOR = "ALTERA"
-      )
-    (
-     // Interface: Clocks
+      parameter C_VENDOR = "ALTERA")
+    (// Interface: Clocks
      input                                    CLK,
 
      // Interface: Resets
-     input                                    RST_IN,
+     input                                    RST_BUS, // Replacement for generic RST_IN
+     input                                    RST_LOGIC, // Addition for RIFFA_RST
+     output                                   DONE_RST,
 
      // Interface: Configuration 
      input [`SIG_CPLID_W-1:0]                 CONFIG_COMPLETER_ID,
@@ -101,7 +100,7 @@ module tx_engine_classic
      input                                    TXC_META_EP,
      output                                   TXC_META_READY,
      output                                   TXC_SENT,
-     
+    
      // Interface: TXR Engine
      input                                    TXR_DATA_VALID,
      input [C_PCI_DATA_WIDTH-1:0]             TXR_DATA,
@@ -128,6 +127,9 @@ module tx_engine_classic
     localparam C_DEPTH_PACKETS = 10;
     /*AUTOWIRE*/
     /*AUTOINPUT*/
+    // Beginning of automatic inputs (from unused autoinst inputs)
+    input                                     RST_IN;                 // To txr_engine_inst of txr_engine_classic.v, ...
+    // End of automatics
 
     wire [C_PCI_DATA_WIDTH-1:0]               _TXC_DATA;
     wire [C_PCI_DATA_WIDTH-1:0]               _TXR_DATA;
@@ -155,7 +157,7 @@ module tx_engine_classic
 
     assign TXC_SENT = rTxcSent;
     assign TXR_SENT = rTxrSent;
-        
+    
     always @(posedge CLK) begin
         if(TX_TLP_START_FLAG) begin
             rTxType <= TX_TLP[`TLP_TYPE_R];
@@ -216,11 +218,13 @@ module tx_engine_classic
          .TXC_DATA                      (_TXC_DATA[C_PCI_DATA_WIDTH-1:0]),
          /*AUTOINST*/
          // Outputs
+         .DONE_RST                      (DONE_RST),
          .TXC_DATA_READY                (TXC_DATA_READY),
          .TXC_META_READY                (TXC_META_READY),
          // Inputs
          .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_BUS                       (RST_BUS),
+         .RST_LOGIC                     (RST_LOGIC),
          .CONFIG_COMPLETER_ID           (CONFIG_COMPLETER_ID[`SIG_CPLID_W-1:0]),
          .TXC_DATA_VALID                (TXC_DATA_VALID),
          .TXC_DATA_START_FLAG           (TXC_DATA_START_FLAG),
@@ -264,11 +268,13 @@ module tx_engine_classic
          .TXR_TLP_READY                 (wTxrTlpReady),
          /*AUTOINST*/
          // Outputs
+         .DONE_RST                      (DONE_RST),
          .TXR_DATA_READY                (TXR_DATA_READY),
          .TXR_META_READY                (TXR_META_READY),
          // Inputs
          .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_BUS                       (RST_BUS),
+         .RST_LOGIC                     (RST_LOGIC),
          .CONFIG_COMPLETER_ID           (CONFIG_COMPLETER_ID[`SIG_CPLID_W-1:0]),
          .TXR_DATA_VALID                (TXR_DATA_VALID),
          .TXR_DATA_START_FLAG           (TXR_DATA_START_FLAG),
@@ -284,7 +290,8 @@ module tx_engine_classic
          .TXR_META_TC                   (TXR_META_TC[`SIG_TC_W-1:0]),
          .TXR_META_ATTR                 (TXR_META_ATTR[`SIG_ATTR_W-1:0]),
          .TXR_META_TYPE                 (TXR_META_TYPE[`SIG_TYPE_W-1:0]),
-         .TXR_META_EP                   (TXR_META_EP));
+         .TXR_META_EP                   (TXR_META_EP),
+         .RST_IN                        (RST_IN));
 
     tx_mux
         #(

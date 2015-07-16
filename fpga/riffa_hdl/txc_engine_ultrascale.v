@@ -49,19 +49,18 @@
 `include "trellis.vh"
 `include "ultrascale.vh"
 module txc_engine_ultrascale
-    #(
-      parameter C_PCI_DATA_WIDTH = 128,
+    #(parameter C_PCI_DATA_WIDTH = 128,
       parameter C_PIPELINE_INPUT = 1,
       parameter C_PIPELINE_OUTPUT = 1,
       parameter C_DEPTH_PACKETS = 10,
-      parameter C_MAX_PAYLOAD_DWORDS = 256
-      )
-    (
-     // Interface: Clocks
+      parameter C_MAX_PAYLOAD_DWORDS = 256)
+    (// Interface: Clocks
      input                                   CLK,
 
      // Interface: Resets
-     input                                   RST_IN,
+     input                                   RST_BUS, // Replacement for generic RST_IN
+     input                                   RST_LOGIC, // Addition for RIFFA_RST
+     output                                  DONE_RST,
 
      // Interface: Configuration
      input [`SIG_CPLID_W-1:0]                CONFIG_COMPLETER_ID,

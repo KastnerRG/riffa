@@ -50,20 +50,19 @@
 `include "trellis.vh" // Defines the user-facing signal widths.
 `include "tlp.vh" // Defines the endpoint-facing field widths in a TLP
 module txc_engine_classic
-    #(
-      parameter C_PCI_DATA_WIDTH = 128,
+    #(parameter C_PCI_DATA_WIDTH = 128,
       parameter C_PIPELINE_INPUT = 1,
       parameter C_PIPELINE_OUTPUT = 0,
       parameter C_MAX_PAYLOAD_DWORDS = 64,
       parameter C_DEPTH_PACKETS = 10,
-      parameter C_VENDOR = "ALTERA"
-      )
-    (
-     // Interface: Clocks
+      parameter C_VENDOR = "ALTERA")
+    (// Interface: Clocks
      input                                    CLK,
 
      // Interface: Resets
-     input                                    RST_IN,
+     input                                    RST_BUS, // Replacement for generic RST_IN
+     input                                    RST_LOGIC, // Addition for RIFFA_RST
+     output                                   DONE_RST,
 
      // Interface: Configuration
      input [`SIG_CPLID_W-1:0]                 CONFIG_COMPLETER_ID,
@@ -92,7 +91,7 @@ module txc_engine_classic
      input [`SIG_LOWADDR_W-1:0]               TXC_META_ADDR,
      input [`SIG_TYPE_W-1:0]                  TXC_META_TYPE,
      input [`SIG_LEN_W-1:0]                   TXC_META_LENGTH,
-     input [`SIG_BYTECNT_W-1:0]                  TXC_META_BYTE_COUNT,
+     input [`SIG_BYTECNT_W-1:0]               TXC_META_BYTE_COUNT,
      input [`SIG_TAG_W-1:0]                   TXC_META_TAG,
      input [`SIG_REQID_W-1:0]                 TXC_META_REQUESTER_ID,
      input [`SIG_TC_W-1:0]                    TXC_META_TC,
@@ -231,7 +230,7 @@ module txc_formatter_classic
      input [`SIG_LBE_W-1:0]        TXC_META_LDWBE,
      input [`SIG_LOWADDR_W-1:0]    TXC_META_ADDR,
      input [`SIG_LEN_W-1:0]        TXC_META_LENGTH,
-     input [`SIG_BYTECNT_W-1:0]       TXC_META_BYTE_COUNT,
+     input [`SIG_BYTECNT_W-1:0]    TXC_META_BYTE_COUNT,
      input [`SIG_TAG_W-1:0]        TXC_META_TAG,
      input [`SIG_TYPE_W-1:0]       TXC_META_TYPE,
      input [`SIG_REQID_W-1:0]      TXC_META_REQUESTER_ID,
