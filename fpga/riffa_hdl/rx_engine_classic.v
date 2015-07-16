@@ -55,7 +55,8 @@ module rx_engine_classic
      // Interface: Resets
      input                                    RST_BUS, // Replacement for generic RST_IN
      input                                    RST_LOGIC, // Addition for RIFFA_RST
-     output                                   DONE_RST,
+     output                                   DONE_RXR_RST,
+     output                                   DONE_RXC_RST,
 
      // Interface: RX Classic
      input [C_PCI_DATA_WIDTH-1:0]             RX_TLP,
@@ -276,7 +277,7 @@ module rx_engine_classic
                  .RXR_DATA              (_RXR_DATA[C_PCI_DATA_WIDTH-1:0]),
                  /*AUTOINST*/
                  // Outputs
-                 .DONE_RST              (DONE_RST),
+                 .DONE_RXR_RST          (DONE_RXR_RST),
                  .RXR_DATA_VALID        (RXR_DATA_VALID),
                  .RXR_DATA_WORD_ENABLE  (RXR_DATA_WORD_ENABLE[(C_PCI_DATA_WIDTH/32)-1:0]),
                  .RXR_DATA_START_FLAG   (RXR_DATA_START_FLAG),
@@ -324,7 +325,7 @@ module rx_engine_classic
                  .RXC_DATA              (_RXC_DATA[C_PCI_DATA_WIDTH-1:0]),
                  /*AUTOINST*/
                  // Outputs
-                 .DONE_RST              (DONE_RST),
+                 .DONE_RXC_RST          (DONE_RXC_RST),
                  .RXC_DATA_VALID        (RXC_DATA_VALID),
                  .RXC_DATA_WORD_ENABLE  (RXC_DATA_WORD_ENABLE[(C_PCI_DATA_WIDTH/32)-1:0]),
                  .RXC_DATA_START_FLAG   (RXC_DATA_START_FLAG),
@@ -370,7 +371,7 @@ module rx_engine_classic
                  .RXR_DATA                      (_RXR_DATA[C_PCI_DATA_WIDTH-1:0]),
                  /*AUTOINST*/
                  // Outputs
-                 .DONE_RST              (DONE_RST),
+                 .DONE_RXR_RST          (DONE_RXR_RST),
                  .RXR_DATA_VALID        (RXR_DATA_VALID),
                  .RXR_DATA_WORD_ENABLE  (RXR_DATA_WORD_ENABLE[(C_PCI_DATA_WIDTH/32)-1:0]),
                  .RXR_DATA_START_FLAG   (RXR_DATA_START_FLAG),
@@ -418,7 +419,7 @@ module rx_engine_classic
                  .RXC_DATA                      (_RXC_DATA[C_PCI_DATA_WIDTH-1:0]),
                  /*AUTOINST*/
                  // Outputs
-                 .DONE_RST              (DONE_RST),
+                 .DONE_RXC_RST          (DONE_RXC_RST),
                  .RXC_DATA_VALID        (RXC_DATA_VALID),
                  .RXC_DATA_WORD_ENABLE  (RXC_DATA_WORD_ENABLE[(C_PCI_DATA_WIDTH/32)-1:0]),
                  .RXC_DATA_START_FLAG   (RXC_DATA_START_FLAG),

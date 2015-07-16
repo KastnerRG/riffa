@@ -54,7 +54,7 @@ module rxc_engine_classic
      // Interface: Resets
      input                                                RST_BUS, // Replacement for generic RST_IN
      input                                                RST_LOGIC, // Addition for RIFFA_RST
-     output                                               DONE_RST,
+     output                                               DONE_RXC_RST,
 
      // Interface: RX Classic
      input [C_PCI_DATA_WIDTH-1:0]                         RX_TLP,
@@ -89,8 +89,7 @@ module rxc_engine_classic
      input [C_RX_PIPELINE_DEPTH:0]                        RX_SR_EOP,
      input [(C_RX_PIPELINE_DEPTH+1)*`SIG_OFFSET_W-1:0]    RX_SR_END_OFFSET,
      input [C_RX_PIPELINE_DEPTH:0]                        RX_SR_SOP,
-     input [C_RX_PIPELINE_DEPTH:0]                        RX_SR_VALID
-     );
+     input [C_RX_PIPELINE_DEPTH:0]                        RX_SR_VALID);
 
 
     /*AUTOWIRE*/

@@ -60,7 +60,7 @@ module txr_engine_ultrascale
      // Interface: Resets
      input                                   RST_BUS, // Replacement for generic RST_IN
      input                                   RST_LOGIC, // Addition for RIFFA_RST
-     output                                  DONE_RST,
+     output                                  DONE_TXR_RST,
 
      // Interface: Configuration
      input [`SIG_CPLID_W-1:0]                CONFIG_COMPLETER_ID,
@@ -133,11 +133,41 @@ module txr_engine_ultrascale
     wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]   wTxrPktStartOffset;
     wire                                     wTxrPktValid;
     wire                                     wTxrPktReady;
-
-    wire                                     wTxrDataReady;
-
-    assign TXR_DATA_READY = wTxrDataReady;
+    wire                                     wNDoneRst;
     
+    reg                                      rRstSticky, _rRstSticky;
+    reg                                      rRST, _rRST;
+
+    assign DONE_TXR_RST = ~wNDoneRst;
+
+    // First-draft reset controller for the ultrascale engines 
+    // (This might be moved into the TX Engines eventually...)
+    always @(*) begin
+        _rRST = RST_BUS | ((RST_LOGIC | rRstSticky) & (~S_AXIS_RQ_TVALID | S_AXIS_RQ_TVALID & S_AXIS_RQ_TLAST));
+    end
+    
+    always @(posedge CLK) begin
+        rRST <= _rRST;
+        if(rRST)
+            rRstSticky <= 0;
+        else if(RST_LOGIC)
+            rRstSticky <= 1;
+    end
+
+    resetter
+        #(// Parameters
+          .C_RST_COUNT                  (10), // Arbitrary magic number
+          .C_RST_USE_SHREG              (1)
+          /*AUTOINSTPARAM*/)
+    rst_done
+        (// Outputs
+         .RST_OUT                       (wNDoneRst),
+         // Inputs
+         .RST_IN                        (rRST | rRstSticky | RST_BUS),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
+
     txr_formatter_ultrascale
         #(
           .C_PIPELINE_OUTPUT            (C_PIPELINE_FORMATTER_OUTPUT),
@@ -159,12 +189,12 @@ module txr_engine_ultrascale
          .TX_HDR_PACKET_LEN             (wTxHdrPacketLen[`SIG_PACKETLEN_W-1:0]),
          // Inputs
          .TX_HDR_READY                  (wTxHdrReady),
+         .RST_IN                        (rRST),
          /*AUTOINST*/
          // Outputs
          .TXR_META_READY                (TXR_META_READY),
          // Inputs
          .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
          .CONFIG_COMPLETER_ID           (CONFIG_COMPLETER_ID[`SIG_CPLID_W-1:0]),
          .TXR_META_VALID                (TXR_META_VALID),
          .TXR_META_FDWBE                (TXR_META_FDWBE[`SIG_FBE_W-1:0]),
@@ -193,7 +223,7 @@ module txr_engine_ultrascale
         (
          // Outputs
          .TX_HDR_READY                  (wTxHdrReady),
-         .TX_DATA_READY                 (wTxrDataReady),
+         .TX_DATA_READY                 (TXR_DATA_READY),
          .TX_PKT                        (wTxrPkt[C_DATA_WIDTH-1:0]),
          .TX_PKT_START_FLAG             (wTxrPktStartFlag),
          .TX_PKT_START_OFFSET           (wTxrPktStartOffset[clog2s(C_DATA_WIDTH/32)-1:0]),
@@ -214,10 +244,10 @@ module txr_engine_ultrascale
          .TX_DATA_END_FLAG              (TXR_DATA_END_FLAG),
          .TX_DATA_END_OFFSET            (TXR_DATA_END_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
          .TX_PKT_READY                  (wTxrPktReady),
+         .RST_IN                        (rRST),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     txr_translation_layer
         #(
@@ -243,10 +273,10 @@ module txr_engine_ultrascale
          .TXR_PKT_END_FLAG              (wTxrPktEndFlag),
          .TXR_PKT_END_OFFSET            (wTxrPktEndOffset),
          .S_AXIS_RQ_TREADY              (S_AXIS_RQ_TREADY),
+         .RST_IN                        (rRST),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 endmodule // txr_engine_ultrascale
 
 
@@ -436,6 +466,7 @@ module txr_translation_layer
     wire [C_PCI_DATA_WIDTH-1:0]              _wSAxisRqTData;
     wire [(C_PCI_DATA_WIDTH/32)-1:0]         _wSAxisRqTKeep;
 
+
     /*ASSIGN TXR -> RQ*/
     assign wTxrPktReady = _wSAxisRqTReady;
     assign _wSAxisRqTValid = wTxrPktValid;
@@ -447,10 +478,10 @@ module txr_translation_layer
     assign wSAxisRqTUser[7:4] = wTxrPkt[(`UPKT_TXR_LBE_I % C_PCI_DATA_WIDTH) +: `UPKT_TXR_LBE_W];
 
     assign wSAxisRqTUser[`SIG_RQ_TUSER_W-1:8] = 0;
+
     
     pipeline
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                         (C_INPUT_STAGES),
           .C_WIDTH                         (C_PCI_DATA_WIDTH + 2*(1+clog2s(C_PCI_DATA_WIDTH/32))),
           .C_USE_MEMORY                    (0)

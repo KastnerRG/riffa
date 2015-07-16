@@ -53,7 +53,7 @@ module rxr_engine_ultrascale
      // Interface: Resets
      input                                    RST_BUS, // Replacement for generic RST_IN
      input                                    RST_LOGIC, // Addition for RIFFA_RST
-     output                                   DONE_RST,
+     output                                   DONE_RXR_RST,
 
      // Interface: CQ
      input                                    M_AXIS_CQ_TVALID,
@@ -149,6 +149,9 @@ module rxr_engine_ultrascale
     
     wire [`SIG_TYPE_W-1:0]                              wType;
     reg                                                 rValid,_rValid;
+    reg                                                 rRST;
+
+    assign DONE_RST_RXR = ~rRST;
 
     assign wMAxisCqSop = M_AXIS_CQ_TUSER[`UPKT_CQ_TUSER_SOP_R];
     assign wMAxisCqTlast = M_AXIS_CQ_TLAST;
@@ -221,82 +224,96 @@ module rxr_engine_ultrascale
     end
     
     always @(posedge CLK) begin
-        if(RST_IN) begin
+        if(rRST) begin
 	        rValid <= 1'b0;
         end else begin
 	        rValid <= _rValid;
         end
     end
 
+    always @(posedge CLK) begin
+        rRST <= RST_BUS | RST_LOGIC;
+    end
+
     register
-        #(
-          // Parameters
-          .C_WIDTH                      (32))
+        #(// Parameters
+          .C_WIDTH                      (32),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
     meta_DW1_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wHdr[127:96]),
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_IN                        (0),
          .WR_DATA                       (wRxSrData[C_RX_METADW1_INDEX +: 32]),
-         .WR_EN                         (wRxSrSop[C_RX_METADW1_CYCLE]));
+         .WR_EN                         (wRxSrSop[C_RX_METADW1_CYCLE]),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
-          .C_WIDTH                      (32))
+        #(// Parameters
+          .C_WIDTH                      (32),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
     metadata_DW0_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wHdr[95:64]),
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_IN                        (0),
          .WR_DATA                       (wRxSrData[C_RX_METADW0_INDEX +: 32]),
-         .WR_EN                         (wRxSrSop[C_RX_METADW0_CYCLE]));
+         .WR_EN                         (wRxSrSop[C_RX_METADW0_CYCLE]),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
-          .C_WIDTH                      (32))
+        #(// Parameters
+          .C_WIDTH                      (32),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
     addr_DW1_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wHdr[63:32]),
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_IN                        (0),
          .WR_DATA                       (wRxSrData[C_RX_ADDRDW1_INDEX +: 32]),
-         .WR_EN                         (wRxSrSop[C_RX_ADDRDW1_CYCLE]));
+         .WR_EN                         (wRxSrSop[C_RX_ADDRDW1_CYCLE]),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
-          .C_WIDTH                      (32))
+        #(// Parameters
+          .C_WIDTH                      (32),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
     addr_DW0_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wHdr[31:0]),
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_IN                        (0),
          .WR_DATA                       (wRxSrData[C_RX_ADDRDW0_INDEX +: 32]),
-         .WR_EN                         (wRxSrSop[C_RX_ADDRDW0_CYCLE]));
+         .WR_EN                         (wRxSrSop[C_RX_ADDRDW0_CYCLE]),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
-          .C_WIDTH                      (C_RX_BE_W))
+        #(// Parameters
+          .C_WIDTH                      (C_RX_BE_W),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
     be_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wByteEnables),
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_IN                        (0),
          .WR_DATA                       (wRxSrBe[C_RX_BE_INDEX +: C_RX_BE_W]),
-         .WR_EN                         (wRxSrSop[C_RX_BE_CYCLE]));
+         .WR_EN                         (wRxSrSop[C_RX_BE_CYCLE]),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
 
     // Shift register for input data with output taps for each delayed
     // cycle. 
@@ -364,10 +381,10 @@ module rxr_engine_ultrascale
          .RD_DATA                       (wRxSrDataValid),
          // Inputs
          .WR_DATA                       (M_AXIS_CQ_TVALID),
+         .RST_IN                        (RST_BUS | RST_LOGIC),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
 
     // Shift register for input data with output taps for each delayed
@@ -422,8 +439,7 @@ module rxr_engine_ultrascale
             assign RXR_DATA_WORD_ENABLE = {wEndMask & wStartMask} & {C_PCI_DATA_WIDTH/32{~rValid | wHasPayload}};
         end else begin
             register
-                #(
-                  // Parameters
+                #(// Parameters
                   .C_WIDTH              (C_PCI_DATA_WIDTH/32),
                   .C_VALUE              (0)
                   /*AUTOINSTPARAM*/)
@@ -439,39 +455,37 @@ module rxr_engine_ultrascale
                  .CLK                   (CLK));
 
             pipeline
-                #(
-                  // Parameters
+                #(// Parameters
                   .C_DEPTH                      (C_RX_OUTPUT_STAGES-1),
                   .C_WIDTH                      (C_PCI_DATA_WIDTH/32),
                   .C_USE_MEMORY                 (0)
                   /*AUTOINSTPARAM*/)
             dw_pipeline
-                (
-                 // Outputs
-                 .WR_DATA_READY                 (), // Pinned to 1
-                 .RD_DATA                       (RXR_DATA_WORD_ENABLE),
-                 .RD_DATA_VALID                 (),
+                (// Outputs
+                 .WR_DATA_READY         (), // Pinned to 1
+                 .RD_DATA               (RXR_DATA_WORD_ENABLE),
+                 .RD_DATA_VALID         (),
                  // Inputs
-                 .WR_DATA                       (wRxrDataWordEnable),
-                 .WR_DATA_VALID                 (1),
-                 .RD_DATA_READY                 (1'b1),
+                 .WR_DATA               (wRxrDataWordEnable),
+                 .WR_DATA_VALID         (1),
+                 .RD_DATA_READY         (1'b1),
+                 .RST_IN                (0),
                  /*AUTOINST*/
                  // Inputs
-                 .CLK                   (CLK),
-                 .RST_IN                (RST_IN));
+                 .CLK                   (CLK));
         end
     endgenerate
 
     pipeline
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_RX_OUTPUT_STAGES),
-          .C_WIDTH                      (`UPKT_RXR_MAXHDR_W + 2*(1 + C_OFFSET_WIDTH) + `SIG_LBE_W + `SIG_FBE_W + `SIG_BARDECODE_W + `SIG_TYPE_W),
+          .C_WIDTH                      (`UPKT_RXR_MAXHDR_W + 2*(1 + C_OFFSET_WIDTH) +
+                                         `SIG_LBE_W + `SIG_FBE_W + `SIG_BARDECODE_W +
+                                         `SIG_TYPE_W),
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     output_pipeline
-        (
-         // Outputs
+        (// Outputs
          .WR_DATA_READY                 (), // Pinned to 1
          .RD_DATA                       ({wRxrHdr,wRxrBarDecoded,wRxrType,wRxrDataStartFlag,wRxrDataStartOffset,wRxrDataEndFlag,wRxrDataEndOffset,wRxrMetaLdwbe,wRxrMetaFdwbe}),
          .RD_DATA_VALID                 (wRxrDataValid),
@@ -479,10 +493,10 @@ module rxr_engine_ultrascale
          .WR_DATA                       ({wHdr,wBarDecoded,wType,wStartFlag,wStartOffset[C_OFFSET_WIDTH-1:0],wEndFlag,wEndOffset[C_OFFSET_WIDTH-1:0],wByteEnables}),
          .WR_DATA_VALID                 (rValid),
          .RD_DATA_READY                 (1'b1),
+         .RST_IN                        (RST_BUS | RST_LOGIC),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
 endmodule
 // Local Variables:

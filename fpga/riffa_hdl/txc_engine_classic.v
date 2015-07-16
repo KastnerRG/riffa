@@ -62,7 +62,7 @@ module txc_engine_classic
      // Interface: Resets
      input                                    RST_BUS, // Replacement for generic RST_IN
      input                                    RST_LOGIC, // Addition for RIFFA_RST
-     output                                   DONE_RST,
+     output                                   DONE_TXC_RST,
 
      // Interface: Configuration
      input [`SIG_CPLID_W-1:0]                 CONFIG_COMPLETER_ID,

@@ -55,7 +55,10 @@ module engine_layer
      // Interface: Resets
      input                                    RST_BUS, // Replacement for generic RST_IN
      input                                    RST_LOGIC, // Addition for RIFFA_RST
-     output                                   DONE_RST,
+     output                                   DONE_TXC_RST,
+     output                                   DONE_TXR_RST,
+     output                                   DONE_RXR_RST,
+     output                                   DONE_RXC_RST,
 
      // Interface: Configuration 
      input [`SIG_CPLID_W-1:0]                 CONFIG_COMPLETER_ID,
@@ -228,7 +231,8 @@ module engine_layer
 	        rx_engine_classic_inst
 	            (/*AUTOINST*/
                  // Outputs
-                 .DONE_RST              (DONE_RST),
+                 .DONE_RXR_RST          (DONE_RXR_RST),
+                 .DONE_RXC_RST          (DONE_RXC_RST),
                  .RX_TLP_READY          (RX_TLP_READY),
                  .RXC_DATA              (RXC_DATA[C_PCI_DATA_WIDTH-1:0]),
                  .RXC_DATA_VALID        (RXC_DATA_VALID),
@@ -287,7 +291,8 @@ module engine_layer
 	        tx_engine_classic_inst
 	            (/*AUTOINST*/
                  // Outputs
-                 .DONE_RST              (DONE_RST),
+                 .DONE_TXC_RST          (DONE_TXC_RST),
+                 .DONE_TXR_RST          (DONE_TXR_RST),
                  .TX_TLP                (TX_TLP[C_PCI_DATA_WIDTH-1:0]),
                  .TX_TLP_VALID          (TX_TLP_VALID),
                  .TX_TLP_START_FLAG     (TX_TLP_START_FLAG),
@@ -339,8 +344,7 @@ module engine_layer
                  .TXR_META_TC           (TXR_META_TC[`SIG_TC_W-1:0]),
                  .TXR_META_ATTR         (TXR_META_ATTR[`SIG_ATTR_W-1:0]),
                  .TXR_META_TYPE         (TXR_META_TYPE[`SIG_TYPE_W-1:0]),
-                 .TXR_META_EP           (TXR_META_EP),
-                 .RST_IN                (RST_IN));
+                 .TXR_META_EP           (TXR_META_EP));
 
         end else begin 
 
@@ -358,7 +362,8 @@ module engine_layer
 	        rx_engine_ultrascale_inst
 	            (/*AUTOINST*/
                  // Outputs
-                 .DONE_RST              (DONE_RST),
+                 .DONE_RXR_RST          (DONE_RXR_RST),
+                 .DONE_RXC_RST          (DONE_RXC_RST),
                  .M_AXIS_CQ_TREADY      (M_AXIS_CQ_TREADY),
                  .M_AXIS_RC_TREADY      (M_AXIS_RC_TREADY),
                  .RXC_DATA              (RXC_DATA[C_PCI_DATA_WIDTH-1:0]),
@@ -420,7 +425,8 @@ module engine_layer
 	        tx_engine_ultrascale_inst
 	            (/*AUTOINST*/
                  // Outputs
-                 .DONE_RST              (DONE_RST),
+                 .DONE_TXC_RST          (DONE_TXC_RST),
+                 .DONE_TXR_RST          (DONE_TXR_RST),
                  .S_AXIS_CC_TVALID      (S_AXIS_CC_TVALID),
                  .S_AXIS_CC_TLAST       (S_AXIS_CC_TLAST),
                  .S_AXIS_CC_TDATA       (S_AXIS_CC_TDATA[C_PCI_DATA_WIDTH-1:0]),

@@ -9,7 +9,7 @@ module rxr_engine_128
      // Interface: Resets
      input                                                RST_BUS, // Replacement for generic RST_IN
      input                                                RST_LOGIC, // Addition for RIFFA_RST
-     output                                               DONE_RST,
+     output                                               DONE_RXR_RST,
 
      // Interface: RX Classic
      input [C_PCI_DATA_WIDTH-1:0]                         RX_TLP,

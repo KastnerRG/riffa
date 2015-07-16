@@ -56,7 +56,7 @@ module rxc_engine_ultrascale
      // Interface: Resets
      input                                    RST_BUS, // Replacement for generic RST_IN
      input                                    RST_LOGIC, // Addition for RIFFA_RST
-     output                                   DONE_RST,
+     output                                   DONE_RXC_RST,
 
      // Interface: RC
      input                                    M_AXIS_RC_TVALID,
@@ -147,6 +147,9 @@ module rxc_engine_ultrascale
     wire [C_OFFSET_WIDTH-1:0]                           wOffsetMask;
 
     reg                                                 rValid,_rValid;
+    reg                                                 rRST;
+        
+    assign DONE_RST_RXC = ~rRST;
 
     assign wMAxisRcSop = M_AXIS_RC_TUSER[`UPKT_RC_TUSER_SOP_I];
     assign wMAxisRcTlast = M_AXIS_RC_TLAST;
@@ -214,92 +217,93 @@ module rxc_engine_ultrascale
     end
     
     always @(posedge CLK) begin
-        if(RST_IN) begin
+        if(RST_BUS | RST_LOGIC) begin
 	        rValid <= 1'b0;
         end else begin
 	        rValid <= _rValid;
         end
     end
 
+    always @(posedge CLK) begin
+        rRST <= RST_BUS | RST_LOGIC;
+    end
+
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH                      (1),
-          .C_VALUE                      (1'b0)
+          .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     start_flag_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wStartFlag),
          // Inputs
          .WR_DATA                       (_wStartFlag),
          .WR_EN                         (1),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
-          .C_WIDTH                      (32))
+        #(// Parameters
+          .C_WIDTH                      (32),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
     meta_DW2_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wHdr[95:64]),
          // Inputs
          .WR_DATA                       (wRxSrData[C_RX_METADW2_INDEX +: 32]),
          .WR_EN                         (wRxSrSop[C_RX_METADW2_CYCLE]),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
-          .C_WIDTH                      (32+1))
+        #(// Parameters
+          .C_WIDTH                      (32 + 1),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
     meta_DW1_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       ({wHdr[63:32],wHasPayload}),
          // Inputs
-         .WR_DATA                       ({wRxSrData[C_RX_METADW1_INDEX +: 32],wRxSrData[C_RX_METADW1_INDEX +: `UPKT_LEN_W] != 0}),
+         .WR_DATA                       ({wRxSrData[C_RX_METADW1_INDEX +: 32],
+                                          wRxSrData[C_RX_METADW1_INDEX +: `UPKT_LEN_W] != 0}),
          .WR_EN                         (wRxSrSop[C_RX_METADW1_CYCLE]),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
-          .C_WIDTH                      (32))
+        #(// Parameters
+          .C_WIDTH                      (32),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
     metadata_DW0_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wHdr[31:0]),
          // Inputs
          .WR_DATA                       (wRxSrData[C_RX_METADW0_INDEX +: 32]),
          .WR_EN                         (wRxSrSop[C_RX_METADW0_CYCLE]),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
 
     // Shift register for input data with output taps for each delayed
     // cycle. 
     shiftreg
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
           .C_WIDTH                      (C_PCI_DATA_WIDTH),
           .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     data_shiftreg_inst
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wRxSrData),
          // Inputs
          .WR_DATA                       (M_AXIS_RC_TDATA),
@@ -348,7 +352,7 @@ module rxc_engine_ultrascale
     shiftreg 
         #(// Parameters
           .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
-          .C_WIDTH                      (1'b1),
+          .C_WIDTH                      (1),
           .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     valid_shiftreg_inst
@@ -356,10 +360,10 @@ module rxc_engine_ultrascale
          .RD_DATA                       (wRxSrDataValid),
          // Inputs
          .WR_DATA                       (M_AXIS_RC_TVALID),
+         .RST_IN                        (RST_BUS | RST_LOGIC),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     assign wStartMask = {C_PCI_DATA_WIDTH/32{1'b1}} << ({C_OFFSET_WIDTH{wStartFlag}}& wStartOffset[C_OFFSET_WIDTH-1:0]);
 
@@ -369,8 +373,7 @@ module rxc_engine_ultrascale
           .C_MASK_WIDTH                 (C_PCI_DATA_WIDTH/32)
           /*AUTOINSTPARAM*/)
     o2m_ef
-        (
-         // Outputs
+        (// Outputs
          .MASK                          (wEndMask),
          // Inputs
          .OFFSET_ENABLE                 (wEndFlag),
@@ -382,8 +385,7 @@ module rxc_engine_ultrascale
             assign RXC_DATA_WORD_ENABLE = {wEndMask & wStartMask} & {C_PCI_DATA_WIDTH/32{~rValid | ~wHasPayload}};
         end else begin
             register
-                #(
-                  // Parameters
+                #(// Parameters
                   .C_WIDTH              (C_PCI_DATA_WIDTH/32),
                   .C_VALUE              (0)
                   /*AUTOINSTPARAM*/)
@@ -401,24 +403,23 @@ module rxc_engine_ultrascale
             pipeline
                 #(
                   // Parameters
-                  .C_DEPTH                      (C_RX_OUTPUT_STAGES-1),
-                  .C_WIDTH                      (C_PCI_DATA_WIDTH/32),
-                  .C_USE_MEMORY                 (0)
+                  .C_DEPTH              (C_RX_OUTPUT_STAGES-1),
+                  .C_WIDTH              (C_PCI_DATA_WIDTH/32),
+                  .C_USE_MEMORY         (0)
                   /*AUTOINSTPARAM*/)
             dw_pipeline
-                (
-                 // Outputs
-                 .WR_DATA_READY                 (), // Pinned to 1
-                 .RD_DATA                       (RXC_DATA_WORD_ENABLE),
-                 .RD_DATA_VALID                 (),
+                (// Outputs
+                 .WR_DATA_READY         (), // Pinned to 1
+                 .RD_DATA               (RXC_DATA_WORD_ENABLE),
+                 .RD_DATA_VALID         (),
                  // Inputs
-                 .WR_DATA                       (wRxcDataWordEnable),
-                 .WR_DATA_VALID                 (1),
-                 .RD_DATA_READY                 (1'b1),
+                 .WR_DATA               (wRxcDataWordEnable),
+                 .WR_DATA_VALID         (1),
+                 .RD_DATA_READY         (1'b1),
+                 .RST_IN                (0),
                  /*AUTOINST*/
                  // Inputs
-                 .CLK                   (CLK),
-                 .RST_IN                (RST_IN));
+                 .CLK                   (CLK));
         end
     endgenerate
 
@@ -428,23 +429,28 @@ module rxc_engine_ultrascale
         #(
           // Parameters
           .C_DEPTH                      (C_RX_OUTPUT_STAGES),
-          .C_WIDTH                      (`UPKT_RXC_MAXHDR_W + 2*(1 + clog2(C_PCI_DATA_WIDTH/32))+`SIG_TYPE_W),
+          .C_WIDTH                      (`UPKT_RXC_MAXHDR_W + 
+                                         2*(1 + clog2(C_PCI_DATA_WIDTH/32))+`SIG_TYPE_W),
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     output_pipeline
         (
          // Outputs
          .WR_DATA_READY                 (), // Pinned to 1
-         .RD_DATA                       ({wRxcHdr,wRxcDataStartFlag,wRxcDataStartOffset,wRxcDataEndFlag,wRxcDataEndOffset,wRxcType}),
+         .RD_DATA                       ({wRxcHdr, wRxcDataStartFlag,
+                                          wRxcDataStartOffset,wRxcDataEndFlag, 
+                                          wRxcDataEndOffset,wRxcType}),
          .RD_DATA_VALID                 (wRxcDataValid),
          // Inputs
-         .WR_DATA                       ({wHdr,wStartFlag,wStartOffset[C_OFFSET_WIDTH-1:0],wEndFlag,wEndOffset[C_OFFSET_WIDTH-1:0],wType}),
+         .WR_DATA                       ({wHdr,wStartFlag,
+                                          wStartOffset[C_OFFSET_WIDTH-1:0],
+                                          wEndFlag,wEndOffset[C_OFFSET_WIDTH-1:0],wType}),
          .WR_DATA_VALID                 (rValid),
          .RD_DATA_READY                 (1'b1),
+         .RST_IN                        (RST_BUS | RST_LOGIC),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 endmodule
 // Local Variables:
 // verilog-library-directories:("." "../../../common/")

@@ -63,7 +63,8 @@ module tx_engine_classic
      // Interface: Resets
      input                                    RST_BUS, // Replacement for generic RST_IN
      input                                    RST_LOGIC, // Addition for RIFFA_RST
-     output                                   DONE_RST,
+     output                                   DONE_TXC_RST,
+     output                                   DONE_TXR_RST,
 
      // Interface: Configuration 
      input [`SIG_CPLID_W-1:0]                 CONFIG_COMPLETER_ID,
@@ -128,7 +129,7 @@ module tx_engine_classic
     /*AUTOWIRE*/
     /*AUTOINPUT*/
     // Beginning of automatic inputs (from unused autoinst inputs)
-    input                                     RST_IN;                 // To txr_engine_inst of txr_engine_classic.v, ...
+    input               RST_IN;                 // To tx_mux_inst of tx_mux.v
     // End of automatics
 
     wire [C_PCI_DATA_WIDTH-1:0]               _TXC_DATA;
@@ -218,7 +219,7 @@ module tx_engine_classic
          .TXC_DATA                      (_TXC_DATA[C_PCI_DATA_WIDTH-1:0]),
          /*AUTOINST*/
          // Outputs
-         .DONE_RST                      (DONE_RST),
+         .DONE_TXC_RST                  (DONE_TXC_RST),
          .TXC_DATA_READY                (TXC_DATA_READY),
          .TXC_META_READY                (TXC_META_READY),
          // Inputs
@@ -268,7 +269,7 @@ module tx_engine_classic
          .TXR_TLP_READY                 (wTxrTlpReady),
          /*AUTOINST*/
          // Outputs
-         .DONE_RST                      (DONE_RST),
+         .DONE_TXR_RST                  (DONE_TXR_RST),
          .TXR_DATA_READY                (TXR_DATA_READY),
          .TXR_META_READY                (TXR_META_READY),
          // Inputs
@@ -290,8 +291,7 @@ module tx_engine_classic
          .TXR_META_TC                   (TXR_META_TC[`SIG_TC_W-1:0]),
          .TXR_META_ATTR                 (TXR_META_ATTR[`SIG_ATTR_W-1:0]),
          .TXR_META_TYPE                 (TXR_META_TYPE[`SIG_TYPE_W-1:0]),
-         .TXR_META_EP                   (TXR_META_EP),
-         .RST_IN                        (RST_IN));
+         .TXR_META_EP                   (TXR_META_EP));
 
     tx_mux
         #(

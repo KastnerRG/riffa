@@ -61,7 +61,7 @@ module txr_engine_classic
      // Interface: Resets
      input                                    RST_BUS, // Replacement for generic RST_IN
      input                                    RST_LOGIC, // Addition for RIFFA_RST
-     output                                   DONE_RST,
+     output                                   DONE_TXR_RST,
 
      // Interface: Configuration 
      input [`SIG_CPLID_W-1:0]                 CONFIG_COMPLETER_ID,
@@ -109,9 +109,6 @@ module txr_engine_classic
     
     /*AUTOWIRE*/
     /*AUTOINPUT*/
-    // Beginning of automatic inputs (from unused autoinst inputs)
-    input                                     RST_IN;                 // To txr_formatter_inst of txr_formatter_classic.v, ...
-    // End of automatics
     ///*AUTOOUTPUT*/
 
     wire                                      wTxHdrReady;

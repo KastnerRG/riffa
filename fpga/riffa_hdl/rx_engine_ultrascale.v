@@ -53,7 +53,8 @@ module rx_engine_ultrascale
      // Interface: Resets
      input                                    RST_BUS, // Replacement for generic RST_IN
      input                                    RST_LOGIC, // Addition for RIFFA_RST
-     output                                   DONE_RST,
+     output                                   DONE_RXR_RST,
+     output                                   DONE_RXC_RST,
 
      // Interface: CQ
      input                                    M_AXIS_CQ_TVALID,
@@ -122,7 +123,7 @@ module rx_engine_ultrascale
     rxc_engine_inst
         (/*AUTOINST*/
          // Outputs
-         .DONE_RST                      (DONE_RST),
+         .DONE_RXC_RST                  (DONE_RXC_RST),
          .M_AXIS_RC_TREADY              (M_AXIS_RC_TREADY),
          .RXC_DATA                      (RXC_DATA[C_PCI_DATA_WIDTH-1:0]),
          .RXC_DATA_VALID                (RXC_DATA_VALID),
@@ -158,7 +159,7 @@ module rx_engine_ultrascale
     rxr_engine_inst
         (/*AUTOINST*/
          // Outputs
-         .DONE_RST                      (DONE_RST),
+         .DONE_RXR_RST                  (DONE_RXR_RST),
          .M_AXIS_CQ_TREADY              (M_AXIS_CQ_TREADY),
          .RXR_DATA                      (RXR_DATA[C_PCI_DATA_WIDTH-1:0]),
          .RXR_DATA_VALID                (RXR_DATA_VALID),

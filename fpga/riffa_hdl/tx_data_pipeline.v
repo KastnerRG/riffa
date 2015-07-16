@@ -134,22 +134,23 @@ module tx_data_pipeline
           .C_MAX_PAYLOAD                (C_MAX_PAYLOAD),
           /*AUTOINSTPARAM*/
           // Parameters
-          .C_DATA_WIDTH             (C_DATA_WIDTH))
+          .C_DATA_WIDTH                 (C_DATA_WIDTH))
     txdf_inst
         (
          // Outputs
-         .WR_TX_DATA_READY            (wRdTxDataReady),
-         .RD_TX_DATA                  (RD_TX_DATA[C_DATA_WIDTH-1:0]),
-         .RD_TX_DATA_START_FLAG       (RD_TX_DATA_START_FLAG),
-         .RD_TX_DATA_WORD_VALID       (RD_TX_DATA_WORD_VALID[(C_DATA_WIDTH/32)-1:0]),
-         .RD_TX_DATA_END_FLAGS        (RD_TX_DATA_END_FLAGS[(C_DATA_WIDTH/32)-1:0]),
+         .WR_TX_DATA_READY              (wRdTxDataReady),
+         .RD_TX_DATA                    (RD_TX_DATA[C_DATA_WIDTH-1:0]),
+         .RD_TX_DATA_START_FLAG         (RD_TX_DATA_START_FLAG),
+         .RD_TX_DATA_WORD_VALID         (RD_TX_DATA_WORD_VALID[(C_DATA_WIDTH/32)-1:0]),
+         .RD_TX_DATA_END_FLAGS          (RD_TX_DATA_END_FLAGS[(C_DATA_WIDTH/32)-1:0]),
+         .RD_TX_DATA_PACKET_VALID       (),
          // Inputs
-         .WR_TX_DATA                  (wRdTxData),
-         .WR_TX_DATA_VALID            (wRdTxDataValid),
-         .WR_TX_DATA_START_FLAG       (wRdTxDataStartFlag),
-         .WR_TX_DATA_WORD_VALID       (wRdTxDataWordValid),
-         .WR_TX_DATA_END_FLAGS        (wRdTxDataEndFlags),
-         .RD_TX_DATA_WORD_READY       (RD_TX_DATA_WORD_READY),
+         .WR_TX_DATA                    (wRdTxData),
+         .WR_TX_DATA_VALID              (wRdTxDataValid),
+         .WR_TX_DATA_START_FLAG         (wRdTxDataStartFlag),
+         .WR_TX_DATA_WORD_VALID         (wRdTxDataWordValid),
+         .WR_TX_DATA_END_FLAGS          (wRdTxDataEndFlags),
+         .RD_TX_DATA_WORD_READY         (RD_TX_DATA_WORD_READY),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK),

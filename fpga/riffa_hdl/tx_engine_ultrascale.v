@@ -58,7 +58,8 @@ module tx_engine_ultrascale
      // Interface: Resets
      input                                   RST_BUS, // Replacement for generic RST_IN
      input                                   RST_LOGIC, // Addition for RIFFA_RST
-     output                                  DONE_RST,
+     output                                  DONE_TXC_RST,
+     output                                  DONE_TXR_RST,
 
      // Interface: Configuration
      input [`SIG_CPLID_W-1:0]                CONFIG_COMPLETER_ID,
@@ -130,6 +131,8 @@ module tx_engine_ultrascale
     /*AUTOWIRE*/
     /*AUTOINPUT*/
     /*AUTOOUTPUT*/
+    // Beginning of automatic outputs (from unused autoinst outputs)
+    // End of automatics
 
     reg                                      rTxcSent;
     reg                                      rTxrSent;
@@ -143,8 +146,7 @@ module tx_engine_ultrascale
     end                                  
     
     txr_engine_ultrascale
-        #(
-          /*AUTOINSTPARAM*/
+        #(/*AUTOINSTPARAM*/
           // Parameters
           .C_PCI_DATA_WIDTH             (C_PCI_DATA_WIDTH),
           .C_PIPELINE_INPUT             (C_PIPELINE_INPUT),
@@ -154,7 +156,7 @@ module tx_engine_ultrascale
     txr_engine_inst
         (/*AUTOINST*/
          // Outputs
-         .DONE_RST                      (DONE_RST),
+         .DONE_TXR_RST                  (DONE_TXR_RST),
          .S_AXIS_RQ_TVALID              (S_AXIS_RQ_TVALID),
          .S_AXIS_RQ_TLAST               (S_AXIS_RQ_TLAST),
          .S_AXIS_RQ_TDATA               (S_AXIS_RQ_TDATA[C_PCI_DATA_WIDTH-1:0]),
@@ -198,7 +200,7 @@ module tx_engine_ultrascale
     txc_engine_inst
         (/*AUTOINST*/
          // Outputs
-         .DONE_RST                      (DONE_RST),
+         .DONE_TXC_RST                  (DONE_TXC_RST),
          .S_AXIS_CC_TVALID              (S_AXIS_CC_TVALID),
          .S_AXIS_CC_TLAST               (S_AXIS_CC_TLAST),
          .S_AXIS_CC_TDATA               (S_AXIS_CC_TDATA[C_PCI_DATA_WIDTH-1:0]),
