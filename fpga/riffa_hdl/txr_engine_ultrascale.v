@@ -143,7 +143,7 @@ module txr_engine_ultrascale
     // First-draft reset controller for the ultrascale engines 
     // (This might be moved into the TX Engines eventually...)
     always @(*) begin
-        _rRST = RST_BUS | ((RST_LOGIC | rRstSticky) & (~S_AXIS_RQ_TVALID | S_AXIS_RQ_TVALID & S_AXIS_RQ_TLAST));
+        _rRST = RST_BUS | ((RST_LOGIC | rRstSticky) & (~S_AXIS_RQ_TVALID | S_AXIS_RQ_TVALID & S_AXIS_RQ_TLAST & S_AXIS_RQ_TREADY));
     end
     
     always @(posedge CLK) begin
