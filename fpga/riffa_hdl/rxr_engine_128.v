@@ -179,7 +179,7 @@ module rxr_engine_128
     assign _wRxrHdrMCP = (_wRxrHdrSF & ~_wRxrHdrEF & (_wRxrHdr[`TLP_TYPE_R] == `TLP_TYPE_REQ)) | 
                          (wRxrHdrMCP & ~wRxrHdrEF);
     
-    assign _wRxrHdrStartMask = 4'hf << (_wRxrHdrSF ? _wRxrHdrDataSoff[1:0] : 0);
+    assign _wRxrHdrStartMask = {4{_wRxrHdr[`TLP_PAYBIT_I]}} << (_wRxrHdrSF ? _wRxrHdrDataSoff[1:0] : 0);
 
     assign wRxrDataWordEnable = wRxrHdrEndMask & wRxrHdrStartMask & {4{wRxrDataValid}};
     assign wRxrDataValid = wRxrHdrSCP | wRxrHdrMCP;
