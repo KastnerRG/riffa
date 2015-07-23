@@ -236,6 +236,24 @@ module tx_data_fifo
                  .CLK                   (CLK),
                  .RST_IN                (RST_IN));
         end // for ( i = 0 ; i < C_NUM_FIFOS ; i = i + 1 )
+        pipeline
+            #(.C_DEPTH              (C_FIFO_OUTPUT_DEPTH),
+              .C_USE_MEMORY         (0),
+              .C_WIDTH              (1)
+              /*AUTOINSTPARAM*/)
+        packet_valid_reg
+            (// Outputs
+             .WR_DATA_READY         (),
+             .RD_DATA               (),
+             .RD_DATA_VALID         (RD_TX_DATA_PACKET_VALID),
+             // Inputs
+             .WR_DATA               (),
+             .WR_DATA_VALID         (wRdTxDataPacketValid),
+             .RD_DATA_READY         ((RD_TX_DATA_WORD_READY & RD_TX_DATA_END_FLAGS) !== 0),
+             /*AUTOINST*/
+             // Inputs
+             .CLK                   (CLK),
+             .RST_IN                (RST_IN));
     endgenerate
 endmodule
 // Local Variables:

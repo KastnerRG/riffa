@@ -113,6 +113,7 @@ module tx_engine
     wire [C_DATA_WIDTH-1:0]               wTxData;
     wire [clog2s(C_DATA_WIDTH/32)-1:0]    wTxDataEndOffset;
     wire                                  wTxDataStartFlag;
+    wire                                  wTxDataPacketValid;
     wire [(C_DATA_WIDTH/32)-1:0]          wTxDataEndFlags;
     wire [(C_DATA_WIDTH/32)-1:0]          wTxDataWordValid;
     wire [(C_DATA_WIDTH/32)-1:0]          wTxDataWordReady;
@@ -134,6 +135,7 @@ module tx_engine
          .RD_TX_DATA_WORD_VALID       (wTxDataWordValid[(C_DATA_WIDTH/32)-1:0]),
          .RD_TX_DATA_START_FLAG       (wTxDataStartFlag),
          .RD_TX_DATA_END_FLAGS        (wTxDataEndFlags[(C_DATA_WIDTH/32)-1:0]),
+         .RD_TX_DATA_PACKET_VALID     (wTxDataPacketValid),
          .WR_TX_DATA_READY            (TX_DATA_READY),
          // Inputs
          .RD_TX_DATA_WORD_READY       (wTxDataWordReady[(C_DATA_WIDTH/32)-1:0]),
@@ -155,7 +157,7 @@ module tx_engine
           .C_PIPELINE_INPUT             (C_PIPELINE_HDR_FIFO_INPUT),
           /*AUTOINSTPARAM*/
           // Parameters
-          .C_DEPTH_PACKETS              (C_ACTUAL_HDR_FIFO_DEPTH),
+          .C_DEPTH_PACKETS              (C_DEPTH_PACKETS),
           .C_MAX_HDR_WIDTH              (C_MAX_HDR_WIDTH),
           .C_VENDOR                     (C_VENDOR))
     txhf_inst
@@ -177,15 +179,13 @@ module tx_engine
          .WR_TX_HDR_PACKET_LEN          (TX_HDR_PACKET_LEN[`SIG_PACKETLEN_W-1:0]),
          .RD_TX_HDR_READY               (wTxHdrReady),
          /*AUTOINST*/
-         // Outputs
          // Inputs
          .CLK                           (CLK),
          .RST_IN                        (RST_IN));
 
     // TX Header Fifo
     tx_alignment_pipeline
-        #(
-          // Parameters
+        #(// Parameters
           .C_PIPELINE_OUTPUT            (1),
           .C_PIPELINE_DATA_INPUT        (1),
           .C_PIPELINE_HDR_INPUT         (C_PIPELINE_HDR_INPUT),
@@ -195,6 +195,7 @@ module tx_engine
           // Parameters
           .C_USE_COMPUTE_REG            (C_USE_COMPUTE_REG),
           .C_USE_READY_REG              (C_USE_READY_REG),
+          .C_MAX_HDR_WIDTH              (C_MAX_HDR_WIDTH),
           .C_VENDOR                     (C_VENDOR))
     tx_alignment_inst
         (
@@ -211,6 +212,7 @@ module tx_engine
          .TX_DATA_START_FLAG            (wTxDataStartFlag),
          .TX_DATA_END_FLAGS             (wTxDataEndFlags),
          .TX_DATA_WORD_VALID            (wTxDataWordValid[(C_DATA_WIDTH/32)-1:0]),
+         .TX_DATA_PACKET_VALID          (wTxDataPacketValid),
          .TX_DATA                       (wTxData[C_DATA_WIDTH-1:0]),
          .TX_HDR                        (wTxHdr[C_MAX_HDR_WIDTH-1:0]),
          .TX_HDR_VALID                  (wTxHdrValid),

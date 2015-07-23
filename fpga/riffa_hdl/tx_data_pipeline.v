@@ -81,7 +81,8 @@ module tx_data_pipeline
      output [C_DATA_WIDTH-1:0]           RD_TX_DATA,
      output [(C_DATA_WIDTH/32)-1:0]      RD_TX_DATA_END_FLAGS,
      output                              RD_TX_DATA_START_FLAG,
-     output [(C_DATA_WIDTH/32)-1:0]      RD_TX_DATA_WORD_VALID
+     output [(C_DATA_WIDTH/32)-1:0]      RD_TX_DATA_WORD_VALID,
+     output                              RD_TX_DATA_PACKET_VALID
      );
     
     wire                                 wRdTxDataValid;
@@ -143,7 +144,7 @@ module tx_data_pipeline
          .RD_TX_DATA_START_FLAG         (RD_TX_DATA_START_FLAG),
          .RD_TX_DATA_WORD_VALID         (RD_TX_DATA_WORD_VALID[(C_DATA_WIDTH/32)-1:0]),
          .RD_TX_DATA_END_FLAGS          (RD_TX_DATA_END_FLAGS[(C_DATA_WIDTH/32)-1:0]),
-         .RD_TX_DATA_PACKET_VALID       (),
+         .RD_TX_DATA_PACKET_VALID       (RD_TX_DATA_PACKET_VALID),
          // Inputs
          .WR_TX_DATA                    (wRdTxData),
          .WR_TX_DATA_VALID              (wRdTxDataValid),

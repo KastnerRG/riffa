@@ -106,6 +106,7 @@ module tx_alignment_pipeline
      input [(C_DATA_WIDTH/32)-1:0]        TX_DATA_WORD_VALID,
      input [C_DATA_WIDTH-1:0]             TX_DATA,
      input                                TX_DATA_START_FLAG,
+     input                                TX_DATA_PACKET_VALID,
      input [(C_DATA_WIDTH/32)-1:0]        TX_DATA_END_FLAGS,
      output [(C_DATA_WIDTH/32)-1:0]       TX_DATA_WORD_READY,
     
@@ -141,6 +142,7 @@ module tx_alignment_pipeline
 
     // Wires from the data interface input registers
     wire [(C_DATA_WIDTH/32)-1:0]          wTxDataWordValid;
+    wire                                  wTxDataPacketValid;
     wire [(C_DATA_WIDTH/32)-1:0]          wTxDataWordReady;
     wire [C_DATA_WIDTH-1:0]               wTxData;
     wire                                  wTxDataStartFlag;
@@ -239,13 +241,13 @@ module tx_alignment_pipeline
     // Assignments for the ready stage
     assign wTxHdrReady = (wTxMuxSelectDataEndFlag & wTxMuxSelectValid & wTxMuxSelectReady) | ~wTxMuxSelectValid;
     assign wTxMuxSelectReady = (wTxPktReady & wTxHdrNoPayload) | 
-                               (wTxPktReady & wTxDataWordValid != 0) | 
+                               (wTxPktReady & wTxDataPacketValid) | 
                                (~wTxMuxSelectValid);
     assign wTxPktStartFlag = wTxMuxSelectPktStartFlag;
     assign wTxPktEndFlag = wTxMuxSelectDataEndFlag;
     assign wTxPktEndOffset = wTxHdrPacketLen[C_OFFSET_WIDTH-1:0]-1; // TODO: Retime -1?
-    assign wTxPktValid = wTxMuxSelectValid & (wTxHdrNoPayload | (~wTxHdrNoPayload & (wTxDataWordValid != 0)));
-    assign wTxDataWordReady = wTxMuxSelectDataReady & {C_NUM_MUXES{wTxPktReady & wTxMuxSelectValid & ~wTxHdrNoPayload}};
+    assign wTxPktValid = wTxMuxSelectValid & (wTxHdrNoPayload | (~wTxHdrNoPayload & wTxDataPacketValid));
+    assign wTxDataWordReady = wTxMuxSelectDataReady & {C_NUM_MUXES{wTxPktReady & wTxMuxSelectValid  & wTxDataPacketValid & ~wTxHdrNoPayload}};
 
     // Assignments for the output stage
     assign TX_PKT_START_OFFSET = {C_OFFSET_WIDTH{1'b0}};
@@ -423,6 +425,27 @@ module tx_alignment_pipeline
             assign wAggregate[i] = wTxHdr[i*32 +: 32];
         end
 
+            pipeline
+                #(// Parameters
+                  .C_DEPTH                      (C_PIPELINE_DATA_INPUT?1:0),
+                  .C_WIDTH                      (1),
+                  .C_USE_MEMORY                 (0)
+                  /*AUTOINSTPARAM*/)
+            packet_valid_register
+                (// Outputs
+                 .WR_DATA_READY             (),
+                 .RD_DATA                   (),
+                 .RD_DATA_VALID             (wTxDataPacketValid),
+                 // Inputs
+                 .WR_DATA                   (),
+                 .WR_DATA_VALID             (TX_DATA_PACKET_VALID),
+                 .RD_DATA_READY             (~wTxDataPacketValid | 
+                                             ((wTxDataEndFlags & wTxDataWordReady) != 0)),
+                 // TODO: End flag read? This is odd, you want to read when there is not a valid packet 
+                 /*AUTOINST*/
+                 // Inputs
+                 .CLK                   (CLK),
+                 .RST_IN                (RST_IN));
         for( i = 0; i < C_NUM_MUXES ; i = i + 1) begin : gen_data_input_regs
             assign wAggregate[i + C_MAX_HDR_WIDTH/32] = wTxData[32*i +: 32];
             pipeline
@@ -434,10 +457,12 @@ module tx_alignment_pipeline
             data_register_
                 (// Outputs
                  .WR_DATA_READY             (TX_DATA_WORD_READY[i]),
-                 .RD_DATA                   ({wTxData[32*i +: 32],wTxDataEndFlags[i]}),
+                 .RD_DATA                   ({wTxData[32*i +: 32],
+                                              wTxDataEndFlags[i]}),
                  .RD_DATA_VALID             (wTxDataWordValid[i]),
                  // Inputs
-                 .WR_DATA                   ({TX_DATA[32*i +: 32],TX_DATA_END_FLAGS[i] & TX_DATA_WORD_VALID[i]}),
+                 .WR_DATA                   ({TX_DATA[32*i +: 32],
+                                              TX_DATA_END_FLAGS[i] & TX_DATA_WORD_VALID[i]}),
                  .WR_DATA_VALID             (TX_DATA_WORD_VALID[i]),
                  .RD_DATA_READY             (wTxDataWordReady[i]),
                  /*AUTOINST*/

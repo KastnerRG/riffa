@@ -105,10 +105,13 @@ module txc_engine_ultrascale
     localparam C_MAX_NONPAY_DWORDS = C_MAX_HDR_DWORDS + C_MAX_ALIGN_DWORDS;
     //
     localparam C_PIPELINE_FORMATTER_INPUT = C_PIPELINE_INPUT;
-    localparam C_PIPELINE_FORMATTER_OUTPUT = C_PIPELINE_OUTPUT;
-    localparam C_FORMATTER_DELAY = C_PIPELINE_FORMATTER_OUTPUT + C_PIPELINE_FORMATTER_INPUT;
-
+    localparam C_PIPELINE_FORMATTER_OUTPUT = 1;
+    localparam C_FORMATTER_DELAY = 1 + C_PIPELINE_FORMATTER_INPUT;
+    localparam C_RST_COUNT = 10;
     /*AUTOWIRE*/
+    // Beginning of automatic wires (for undeclared instantiated-module outputs)
+    wire                RST_OUT;                // From txc_trans_inst of txc_translation_layer.v
+    // End of automatics
     /*AUTOINPUT*/
     ///*AUTOOUTPUT*/
 
@@ -135,37 +138,29 @@ module txc_engine_ultrascale
     wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]   wTxcPktStartOffset;
     wire                                     wTxcPktValid;
     wire                                     wTxcPktReady;
-    wire                                     wNDoneRst;
+
+    wire                                     wTransDoneRst;
+    wire                                     wTransRstOut;
+    wire                                     wEngDoneRst;
+    wire                                     wRst;
+    wire [C_RST_COUNT:0]                     wShiftRegRst;
     
-    reg                                      rRstSticky, _rRstSticky;
-    reg                                      rRST, _rRST;
+    assign DONE_TXC_RST = wTransDoneRst & wEngDoneRst;
+    assign wRst = wShiftRegRst[C_RST_COUNT-3];
+    assign wEngDoneRst = ~wShiftRegRst[C_RST_COUNT];
 
-    assign DONE_TXC_RST = ~wNDoneRst;
-
-    // First-draft reset controller for the ultrascale engines 
-    // (This might be moved into the TX Engines eventually...)
-    always @(*) begin
-        _rRST = RST_BUS | ((RST_LOGIC | rRstSticky) & (~S_AXIS_CC_TVALID | S_AXIS_CC_TVALID & S_AXIS_CC_TVALID & S_AXIS_CC_TLAST));
-    end
-    
-    always @(posedge CLK) begin
-        rRST <= _rRST;
-        if(rRST)
-            rRstSticky <= 0;
-        else if(RST_LOGIC)
-            rRstSticky <= 1;
-    end
-
-    resetter
+    shiftreg
         #(// Parameters
-          .C_RST_COUNT                  (10), // Arbitrary magic number
-          .C_RST_USE_SHREG              (1)
+          .C_DEPTH                      (C_RST_COUNT),
+          .C_WIDTH                      (1),
+          .C_VALUE                      (1)
           /*AUTOINSTPARAM*/)
-    rst_done
+    rst_shiftreg
         (// Outputs
-         .RST_OUT                       (wNDoneRst),
+         .RD_DATA                       (wShiftRegRst),
          // Inputs
-         .RST_IN                        (rRST | rRstSticky | RST_BUS),
+         .RST_IN                        (RST_BUS),
+         .WR_DATA                       (wTransRstOut),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));
@@ -188,7 +183,7 @@ module txc_engine_ultrascale
          .TX_HDR_PACKET_LEN             (wTxHdrPacketLen[`SIG_PACKETLEN_W-1:0]),
          // Inputs
          .TX_HDR_READY                  (wTxHdrReady),
-         .RST_IN                        (rRST),
+         .RST_IN                        (wRst),
          /*AUTOINST*/
          // Outputs
          .TXC_META_READY                (TXC_META_READY),
@@ -243,37 +238,40 @@ module txc_engine_ultrascale
          .TX_DATA_END_FLAG              (TXC_DATA_END_FLAG),
          .TX_DATA_END_OFFSET            (TXC_DATA_END_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
          .TX_PKT_READY                  (wTxcPktReady),
-         .RST_IN                        (rRST),
+         .RST_IN                        (wRst),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));
 
     txc_translation_layer
-        #(// Parameters
+        #(/*AUTOINSTPARAM*/
+          // Parameters
           .C_PCI_DATA_WIDTH             (C_PCI_DATA_WIDTH),
-          .C_PIPELINE_INPUT             (C_PIPELINE_INPUT),
-          .C_PIPELINE_OUTPUT            (C_PIPELINE_OUTPUT)
-          /*AUTOINSTPARAM*/)
+          .C_PIPELINE_INPUT             (C_PIPELINE_INPUT))
     txc_trans_inst
         (// Outputs
          .TXC_PKT_READY                 (wTxcPktReady),
-         .S_AXIS_CC_TVALID              (S_AXIS_CC_TVALID),
-         .S_AXIS_CC_TLAST               (S_AXIS_CC_TLAST),
-         .S_AXIS_CC_TDATA               (S_AXIS_CC_TDATA[C_PCI_DATA_WIDTH-1:0]),
-         .S_AXIS_CC_TKEEP               (S_AXIS_CC_TKEEP[(C_PCI_DATA_WIDTH/32)-1:0]),
-         .S_AXIS_CC_TUSER               (S_AXIS_CC_TUSER[`SIG_CC_TUSER_W-1:0]),
+         .DONE_RST                      (wTransDoneRst),
+         .RST_OUT                       (wTransRstOut),
          // Inputs
-         .RST_IN                        (rRST),
          .TXC_PKT                       (wTxcPkt),
          .TXC_PKT_VALID                 (wTxcPktValid),
          .TXC_PKT_START_FLAG            (wTxcPktStartFlag),
          .TXC_PKT_START_OFFSET          (wTxcPktStartOffset),
          .TXC_PKT_END_FLAG              (wTxcPktEndFlag),
          .TXC_PKT_END_OFFSET            (wTxcPktEndOffset),
-         .S_AXIS_CC_TREADY              (S_AXIS_CC_TREADY),
          /*AUTOINST*/
+         // Outputs
+         .S_AXIS_CC_TVALID              (S_AXIS_CC_TVALID),
+         .S_AXIS_CC_TLAST               (S_AXIS_CC_TLAST),
+         .S_AXIS_CC_TDATA               (S_AXIS_CC_TDATA[C_PCI_DATA_WIDTH-1:0]),
+         .S_AXIS_CC_TKEEP               (S_AXIS_CC_TKEEP[(C_PCI_DATA_WIDTH/32)-1:0]),
+         .S_AXIS_CC_TUSER               (S_AXIS_CC_TUSER[`SIG_CC_TUSER_W-1:0]),
          // Inputs
-         .CLK                           (CLK));
+         .CLK                           (CLK),
+         .RST_BUS                       (RST_BUS),
+         .RST_LOGIC                     (RST_LOGIC),
+         .S_AXIS_CC_TREADY              (S_AXIS_CC_TREADY));
 
 endmodule // txc_engine_ultrascale
 
@@ -359,20 +357,20 @@ module txc_formatter_ultrascale
     pipeline
         #(
           // Parameters
-          .C_DEPTH                         (C_PIPELINE_INPUT?1:0),
-          .C_WIDTH                         (C_MAX_HDR_WIDTH + `SIG_TYPE_W),
-          .C_USE_MEMORY                    (0)
+          .C_DEPTH                      (C_PIPELINE_INPUT?1:0),
+          .C_WIDTH                      (C_MAX_HDR_WIDTH + `SIG_TYPE_W),
+          .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     input_inst
         (
          // Outputs
-         .WR_DATA_READY                  (TXC_META_READY),
-         .RD_DATA                        ({wTxHdr,wTxType}),
-         .RD_DATA_VALID                  (wTxHdrValid),
+         .WR_DATA_READY                 (TXC_META_READY),
+         .RD_DATA                       ({wTxHdr,wTxType}),
+         .RD_DATA_VALID                 (wTxHdrValid),
          // Inputs
-         .WR_DATA                        ({32'b0,wHdr,TXC_META_TYPE}),
-         .WR_DATA_VALID                  (TXC_META_VALID),
-         .RD_DATA_READY                  (wTxHdrReady),
+         .WR_DATA                       ({32'b0,wHdr,TXC_META_TYPE}),
+         .WR_DATA_VALID                 (TXC_META_VALID),
+         .RD_DATA_READY                 (wTxHdrReady),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK),
@@ -381,20 +379,20 @@ module txc_formatter_ultrascale
     pipeline
         #(
           // Parameters
-          .C_DEPTH                         (C_PIPELINE_OUTPUT?1:0),
-          .C_WIDTH                         (C_MAX_HDR_WIDTH+ 1 + `SIG_PACKETLEN_W + `SIG_LEN_W + `SIG_NONPAY_W),
-          .C_USE_MEMORY                    (0)
+          .C_DEPTH                      (C_PIPELINE_OUTPUT?1:0),
+          .C_WIDTH                      (C_MAX_HDR_WIDTH+ 1 + `SIG_PACKETLEN_W + `SIG_LEN_W + `SIG_NONPAY_W),
+          .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     output_inst
         (
          // Outputs
-         .WR_DATA_READY                  (wTxHdrReady),
-         .RD_DATA                        ({TX_HDR,TX_HDR_NOPAYLOAD,TX_HDR_PACKET_LEN,TX_HDR_PAYLOAD_LEN,TX_HDR_NONPAY_LEN}),
-         .RD_DATA_VALID                  (TX_HDR_VALID),
+         .WR_DATA_READY                 (wTxHdrReady),
+         .RD_DATA                       ({TX_HDR,TX_HDR_NOPAYLOAD,TX_HDR_PACKET_LEN,TX_HDR_PAYLOAD_LEN,TX_HDR_NONPAY_LEN}),
+         .RD_DATA_VALID                 (TX_HDR_VALID),
          // Inputs
-         .WR_DATA                        ({wTxHdr,wTxHdrNopayload,wTxHdrPacketLen,wTxHdrPayloadLen,wTxHdrNonpayLen}),
-         .WR_DATA_VALID                  (wTxHdrValid),
-         .RD_DATA_READY                  (TX_HDR_READY),
+         .WR_DATA                       ({wTxHdr,wTxHdrNopayload,wTxHdrPacketLen,wTxHdrPayloadLen,wTxHdrNonpayLen}),
+         .WR_DATA_VALID                 (wTxHdrValid),
+         .RD_DATA_READY                 (TX_HDR_READY),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK),
@@ -402,19 +400,16 @@ module txc_formatter_ultrascale
 endmodule
 
 module txc_translation_layer
-    #(
-      parameter C_PCI_DATA_WIDTH = 10'd128,
-      parameter C_PIPELINE_INPUT = 1,
-      parameter C_PIPELINE_OUTPUT = 0
-    
-      )
-    (
-     // Interface: Clocks
+    #(parameter C_PCI_DATA_WIDTH = 10'd128,
+      parameter C_PIPELINE_INPUT = 1)
+    (// Interface: Clocks
      input                                   CLK,
 
      // Interface: Resets
-     input                                   RST_IN,
-
+     input                                   RST_BUS, // Replacement for generic RST_IN
+     input                                   RST_LOGIC, // Addition for RIFFA_RST
+     output                                  DONE_RST,
+     output                                  RST_OUT,
      // Interface: TXC Classic
      output                                  TXC_PKT_READY,
      input [C_PCI_DATA_WIDTH-1:0]            TXC_PKT,
@@ -434,8 +429,8 @@ module txc_translation_layer
      );
 
     localparam C_INPUT_STAGES = C_PIPELINE_INPUT != 0? 1:0;
-    localparam C_OUTPUT_STAGES = C_PIPELINE_OUTPUT != 0? 1:0;
-
+    localparam C_OUTPUT_STAGES = 1;
+    localparam C_RST_COUNT = 10;
     wire                                     wTxcPktReady;
     wire [C_PCI_DATA_WIDTH-1:0]              wTxcPkt;
     wire                                     wTxcPktValid;
@@ -451,46 +446,65 @@ module txc_translation_layer
     wire [(C_PCI_DATA_WIDTH/32)-1:0]         wSAxisCcTKeep;
     wire [`SIG_CC_TUSER_W-1:0]               wSAxisCcTUser;
 
+    wire                                     wRst;
+    wire                                     wRstWaiting;
     /*ASSIGN TXC -> CC*/
     assign wTxcPktReady = wSAxisCcTReady;
     assign wSAxisCcTValid = wTxcPktValid;
     assign wSAxisCcTLast = wTxcPktEndFlag;
     assign wSAxisCcTData = wTxcPkt;
-    assign S_AXIS_CC_TUSER = `SIG_CC_TUSER_W'd0; // Do not enable parity bits, and no discontinues
+    // Do not enable parity bits, and no discontinues
+    assign S_AXIS_CC_TUSER = `SIG_CC_TUSER_W'd0;
+    assign RST_OUT = wRst;
+
+    // This reset controller assumes there is always an output stage
+    reset_controller
+        #(/*AUTOINSTPARAM*/
+          // Parameters
+          .C_RST_COUNT                  (C_RST_COUNT))
+    rc
+        (// Outputs
+         .RST_OUT                       (wRst),
+         .WAITING_RESET                 (wRstWaiting),
+         // Inputs
+         .RST_IN                        (RST_BUS),
+         .SIGNAL_RST                    (RST_LOGIC),
+         .WAIT_RST                      (S_AXIS_CC_TVALID),
+         .NEXT_CYC_RST                  (S_AXIS_CC_TREADY & S_AXIS_CC_TLAST),
+         /*AUTOINST*/
+         // Outputs
+         .DONE_RST                      (DONE_RST),
+         // Inputs
+         .CLK                           (CLK));
     
     pipeline
-        #(
-          // Parameters
-          .C_DEPTH                         (C_INPUT_STAGES),
-          .C_WIDTH                         (C_PCI_DATA_WIDTH + 2*(1+clog2s(C_PCI_DATA_WIDTH/32))),
-          .C_USE_MEMORY                    (0)
+        #(// Parameters
+          .C_DEPTH                      (C_INPUT_STAGES),
+          .C_WIDTH                      (C_PCI_DATA_WIDTH + 2*(1+clog2s(C_PCI_DATA_WIDTH/32))),
+          .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     input_inst
-        (
-         // Outputs
-         .WR_DATA_READY                  (TXC_PKT_READY),
-         .RD_DATA                        ({wTxcPkt,wTxcPktStartFlag,wTxcPktStartOffset,wTxcPktEndFlag,wTxcPktEndOffset}),
-         .RD_DATA_VALID                  (wTxcPktValid),
+        (// Outputs
+         .WR_DATA_READY                 (TXC_PKT_READY),
+         .RD_DATA                       ({wTxcPkt,wTxcPktStartFlag,wTxcPktStartOffset,wTxcPktEndFlag,wTxcPktEndOffset}),
+         .RD_DATA_VALID                 (wTxcPktValid),
          // Inputs
-         .WR_DATA                        ({TXC_PKT,TXC_PKT_START_FLAG,TXC_PKT_START_OFFSET,
-                                           TXC_PKT_END_FLAG,TXC_PKT_END_OFFSET}),
-         .WR_DATA_VALID                  (TXC_PKT_VALID),
-         .RD_DATA_READY                  (wTxcPktReady),
+         .WR_DATA                       ({TXC_PKT,TXC_PKT_START_FLAG,TXC_PKT_START_OFFSET,
+                                          TXC_PKT_END_FLAG,TXC_PKT_END_OFFSET}),
+         .WR_DATA_VALID                 (TXC_PKT_VALID),
+         .RD_DATA_READY                 (wTxcPktReady),
+         .RST_IN                        (wRst),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
-
+         .CLK                           (CLK));
 
     offset_to_mask
-        #(
-          // Parameters
+        #(// Parameters
           .C_MASK_SWAP                  (0),
           .C_MASK_WIDTH                 (C_PCI_DATA_WIDTH/32)
           /*AUTOINSTPARAM*/)
     otom_inst
-        (
-         // Outputs
+        (// Outputs
          .MASK                          (wSAxisCcTKeep),
          // Inputs
          .OFFSET_ENABLE                 (wTxcPktEndFlag),
@@ -498,26 +512,25 @@ module txc_translation_layer
          /*AUTOINST*/);
     
     pipeline
-        #(
-          // Parameters
-          .C_DEPTH                         (C_OUTPUT_STAGES),
-          .C_WIDTH                         (C_PCI_DATA_WIDTH + 1 + (C_PCI_DATA_WIDTH/32)),
-          .C_USE_MEMORY                    (0)
+        #(// Parameters
+          .C_DEPTH                      (C_OUTPUT_STAGES),
+          .C_WIDTH                      (C_PCI_DATA_WIDTH + 1 + (C_PCI_DATA_WIDTH/32)),
+          .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     output_inst
         (
          // Outputs
-         .WR_DATA_READY                  (wSAxisCcTReady),
-         .RD_DATA                        ({S_AXIS_CC_TDATA,S_AXIS_CC_TLAST,S_AXIS_CC_TKEEP}),
-         .RD_DATA_VALID                  (S_AXIS_CC_TVALID),
+         .WR_DATA_READY                 (wSAxisCcTReady),
+         .RD_DATA                       ({S_AXIS_CC_TDATA,S_AXIS_CC_TLAST,S_AXIS_CC_TKEEP}),
+         .RD_DATA_VALID                 (S_AXIS_CC_TVALID),
          // Inputs
-         .WR_DATA                        ({wSAxisCcTData,wSAxisCcTLast,wSAxisCcTKeep}),
-         .WR_DATA_VALID                  (wSAxisCcTValid),
-         .RD_DATA_READY                  (S_AXIS_CC_TREADY),
+         .WR_DATA                       ({wSAxisCcTData,wSAxisCcTLast,wSAxisCcTKeep}),
+         .WR_DATA_VALID                 (wSAxisCcTValid & ~wRstWaiting),
+         .RD_DATA_READY                 (S_AXIS_CC_TREADY),
+         .RST_IN                        (wRst),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
 endmodule
 // Local Variables:
