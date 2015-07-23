@@ -141,13 +141,13 @@ module txc_engine_ultrascale
 
     wire                                     wTransDoneRst;
     wire                                     wTransRstOut;
-    wire                                     wEngDoneRst;
+    wire                                     wDoneEngRst;
     wire                                     wRst;
     wire [C_RST_COUNT:0]                     wShiftRegRst;
     
-    assign DONE_TXC_RST = wTransDoneRst & wEngDoneRst;
+    assign DONE_TXC_RST = wTransDoneRst & wDoneEngRst;
     assign wRst = wShiftRegRst[C_RST_COUNT-3];
-    assign wEngDoneRst = ~wShiftRegRst[C_RST_COUNT];
+    assign wDoneEngRst = ~wShiftRegRst[C_RST_COUNT];
 
     shiftreg
         #(// Parameters

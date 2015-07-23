@@ -60,8 +60,7 @@ module txc_engine_classic
      input                                    CLK,
 
      // Interface: Resets
-     input                                    RST_BUS, // Replacement for generic RST_IN
-     input                                    RST_LOGIC, // Addition for RIFFA_RST
+     input                                    RST_IN, // Addition for RIFFA_RST
      output                                   DONE_TXC_RST,
 
      // Interface: Configuration
@@ -120,6 +119,8 @@ module txc_engine_classic
     wire [`SIG_PACKETLEN_W-1:0]               wTxHdrPacketLen;
     wire [`SIG_LEN_W-1:0]                     wTxHdrPayloadLen; 
     wire                                      wTxHdrNopayload;
+
+    assign DONE_TXC_RST = ~RST_IN;
 
     txc_formatter_classic
         #(

@@ -122,15 +122,13 @@ module tx_engine_classic
      input [`SIG_TYPE_W-1:0]                  TXR_META_TYPE,
      input                                    TXR_META_EP,
      output                                   TXR_META_READY,
-     output                                   TXR_SENT
-     );
+     output                                   TXR_SENT);
+    
     localparam C_MUX_TYPE = "SHIFT";
     localparam C_DEPTH_PACKETS = 10;
+    localparam C_RST_COUNT = 10;
     /*AUTOWIRE*/
     /*AUTOINPUT*/
-    // Beginning of automatic inputs (from unused autoinst inputs)
-    input               RST_IN;                 // To tx_mux_inst of tx_mux.v
-    // End of automatics
 
     wire [C_PCI_DATA_WIDTH-1:0]               _TXC_DATA;
     wire [C_PCI_DATA_WIDTH-1:0]               _TXR_DATA;
@@ -150,14 +148,35 @@ module tx_engine_classic
     wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxrTlpStartOffset;
     wire                                      wTxrTlpValid;
 
+    wire [C_PCI_DATA_WIDTH-1:0]               wTxTlp;
+    wire                                      wTxTlpEndFlag;
+    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxTlpEndOffset;
+    wire                                      wTxTlpReady;
+    wire                                      wTxTlpStartFlag;
+    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxTlpStartOffset;
+    wire                                      wTxTlpValid;
+
+    wire                                      wDoneTxcEngRst;
+    wire                                      wDoneTxrEngRst;
+    wire                                      wDoneRst;                                      
+    wire                                      wRstWaiting;
+    wire                                      wRstRc;
+    wire                                      wRstEng;
+    wire [C_RST_COUNT:0]                      wShiftRst;
+
     reg                                       rTxValid;
     reg [`TLP_TYPE_W-1:0]                     rTxType;
     reg                                       rTxEndFlag;
     reg                                       rTxrSent;
     reg                                       rTxcSent;
 
+    assign DONE_TXC_RST = wDoneRst & wDoneTxcEngRst;
+    assign DONE_TXR_RST = wDoneRst & wDoneTxrEngRst;
     assign TXC_SENT = rTxcSent;
     assign TXR_SENT = rTxrSent;
+
+    assign wRstEng = wShiftRst[C_RST_COUNT-3];
+    assign wDoneEngRst = ~wShiftRst[C_RST_COUNT];
     
     always @(posedge CLK) begin
         if(TX_TLP_START_FLAG) begin
@@ -196,8 +215,7 @@ module tx_engine_classic
     endgenerate
 
     txc_engine_classic
-        #(
-          .C_PIPELINE_OUTPUT            (0),
+        #(.C_PIPELINE_OUTPUT            (0),
           /*AUTOINSTPARAM*/
           // Parameters
           .C_PCI_DATA_WIDTH             (C_PCI_DATA_WIDTH),
@@ -206,26 +224,24 @@ module tx_engine_classic
           .C_DEPTH_PACKETS              (C_DEPTH_PACKETS),
           .C_VENDOR                     (C_VENDOR))
     txc_engine_inst
-        (
-         // Outputs
+        (// Outputs
          .TXC_TLP                       (wTxcTlp[C_PCI_DATA_WIDTH-1:0] ),
          .TXC_TLP_VALID                 (wTxcTlpValid),
          .TXC_TLP_START_FLAG            (wTxcTlpStartFlag),
          .TXC_TLP_START_OFFSET          (wTxcTlpStartOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXC_TLP_END_FLAG              (wTxcTlpEndFlag),
          .TXC_TLP_END_OFFSET            (wTxcTlpEndOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .DONE_TXC_RST                  (wDoneTxcEngRst),
          // Inputs
          .TXC_TLP_READY                 (wTxcTlpReady),
          .TXC_DATA                      (_TXC_DATA[C_PCI_DATA_WIDTH-1:0]),
+         .RST_IN                        (wRstEng),
          /*AUTOINST*/
          // Outputs
-         .DONE_TXC_RST                  (DONE_TXC_RST),
          .TXC_DATA_READY                (TXC_DATA_READY),
          .TXC_META_READY                (TXC_META_READY),
          // Inputs
          .CLK                           (CLK),
-         .RST_BUS                       (RST_BUS),
-         .RST_LOGIC                     (RST_LOGIC),
          .CONFIG_COMPLETER_ID           (CONFIG_COMPLETER_ID[`SIG_CPLID_W-1:0]),
          .TXC_DATA_VALID                (TXC_DATA_VALID),
          .TXC_DATA_START_FLAG           (TXC_DATA_START_FLAG),
@@ -246,8 +262,7 @@ module tx_engine_classic
          .TXC_META_EP                   (TXC_META_EP));
 
     txr_engine_classic
-        #(
-          .C_PIPELINE_OUTPUT            (0),
+        #(.C_PIPELINE_OUTPUT            (0),
           /*AUTOINSTPARAM*/
           // Parameters
           .C_PCI_DATA_WIDTH             (C_PCI_DATA_WIDTH),
@@ -256,8 +271,7 @@ module tx_engine_classic
           .C_DEPTH_PACKETS              (C_DEPTH_PACKETS),
           .C_VENDOR                     (C_VENDOR))
     txr_engine_inst
-        (
-         // Outputs
+        (// Outputs
          .TXR_TLP                       (wTxrTlp[C_PCI_DATA_WIDTH-1:0]),
          .TXR_TLP_VALID                 (wTxrTlpValid),
          .TXR_TLP_START_FLAG            (wTxrTlpStartFlag),
@@ -265,17 +279,16 @@ module tx_engine_classic
          .TXR_TLP_END_FLAG              (wTxrTlpEndFlag),
          .TXR_TLP_END_OFFSET            (wTxrTlpEndOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXR_DATA                      (_TXR_DATA[C_PCI_DATA_WIDTH-1:0]),
+         .DONE_TXR_RST                  (wDoneTxrEngRst),
          // Inputs
          .TXR_TLP_READY                 (wTxrTlpReady),
+         .RST_IN                        (wRstEng),
          /*AUTOINST*/
          // Outputs
-         .DONE_TXR_RST                  (DONE_TXR_RST),
          .TXR_DATA_READY                (TXR_DATA_READY),
          .TXR_META_READY                (TXR_META_READY),
          // Inputs
          .CLK                           (CLK),
-         .RST_BUS                       (RST_BUS),
-         .RST_LOGIC                     (RST_LOGIC),
          .CONFIG_COMPLETER_ID           (CONFIG_COMPLETER_ID[`SIG_CPLID_W-1:0]),
          .TXR_DATA_VALID                (TXR_DATA_VALID),
          .TXR_DATA_START_FLAG           (TXR_DATA_START_FLAG),
@@ -294,8 +307,7 @@ module tx_engine_classic
          .TXR_META_EP                   (TXR_META_EP));
 
     tx_mux
-        #(
-          .C_PIPELINE_INPUT             (0),
+        #(.C_PIPELINE_INPUT             (0),
           /*AUTOINSTPARAM*/
           // Parameters
           .C_PCI_DATA_WIDTH             (C_PCI_DATA_WIDTH),
@@ -303,8 +315,7 @@ module tx_engine_classic
           .C_MUX_TYPE                   (C_MUX_TYPE),
           .C_VENDOR                     (C_VENDOR))
     tx_mux_inst
-        (
-         // Inputs
+        (// Inputs
          .TXC_TLP                       (wTxcTlp[C_PCI_DATA_WIDTH-1:0]),
          .TXC_TLP_VALID                 (wTxcTlpValid),
          .TXC_TLP_START_FLAG            (wTxcTlpStartFlag),
@@ -317,21 +328,81 @@ module tx_engine_classic
          .TXR_TLP_START_OFFSET          (wTxrTlpStartOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXR_TLP_END_FLAG              (wTxrTlpEndFlag),
          .TXR_TLP_END_OFFSET            (wTxrTlpEndOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .RST_IN                        (wRstEng),
          // Outputs
          .TXC_TLP_READY                 (wTxcTlpReady),
          .TXR_TLP_READY                 (wTxrTlpReady),
+         .TX_TLP                        (wTxTlp[C_PCI_DATA_WIDTH-1:0]),
+         .TX_TLP_VALID                  (wTxTlpValid),
+         .TX_TLP_START_FLAG             (wTxTlpStartFlag),
+         .TX_TLP_START_OFFSET           (wTxTlpStartOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TX_TLP_END_FLAG               (wTxTlpEndFlag),
+         .TX_TLP_END_OFFSET             (wTxTlpEndOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TX_TLP_READY                  (wTxTlpReady),
          /*AUTOINST*/
-         // Outputs
-         .TX_TLP                        (TX_TLP[C_PCI_DATA_WIDTH-1:0]),
-         .TX_TLP_VALID                  (TX_TLP_VALID),
-         .TX_TLP_START_FLAG             (TX_TLP_START_FLAG),
-         .TX_TLP_START_OFFSET           (TX_TLP_START_OFFSET[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
-         .TX_TLP_END_FLAG               (TX_TLP_END_FLAG),
-         .TX_TLP_END_OFFSET             (TX_TLP_END_OFFSET[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
-         .TX_TLP_READY                  (TX_TLP_READY));
+         .CLK                           (CLK));
+
+    shiftreg
+        #(// Parameters
+          .C_DEPTH                      (C_RST_COUNT),
+          .C_WIDTH                      (1),
+          .C_VALUE                      (1)
+          /*AUTOINSTPARAM*/)
+    rst_shiftreg
+        (// Outputs
+         .RD_DATA                       (wShiftRst),
+         // Inputs
+         .RST_IN                        (RST_BUS),
+         .WR_DATA                       (wRstRc),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
+
+    reset_controller
+        #(// Parameters
+          .C_RST_COUNT                  (C_RST_COUNT)
+          /*AUTOINSTPARAM*/)
+    rc_inst
+        (// Outputs
+         .DONE_RST                      (wDoneRst),
+         .WAITING_RESET                 (wRstWaiting),
+         .RST_OUT                       (wRstRc),
+         // Inputs
+         .RST_IN                        (RST_BUS),
+         .SIGNAL_RST                    (RST_LOGIC),
+         .WAIT_RST                      (TX_TLP_VALID),
+         .NEXT_CYC_RST                  (TX_TLP_END_FLAG & TX_TLP_READY),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
+    
+    pipeline
+        #(// Parameters
+          .C_DEPTH                      (1),
+          .C_WIDTH                      (C_PCI_DATA_WIDTH + 
+                                         2*(1 + clog2s(C_PCI_DATA_WIDTH/32))),
+          .C_USE_MEMORY                 (0)
+          /*AUTOINSTPARAM*/)
+    output_reg_inst
+        (// Outputs
+         .WR_DATA_READY                 (wTxTlpReady),
+         .RD_DATA                       ({TX_TLP, 
+                                          TX_TLP_START_FLAG, TX_TLP_START_OFFSET,
+                                          TX_TLP_END_FLAG, TX_TLP_END_OFFSET}),
+         .RD_DATA_VALID                 (TX_TLP_VALID),
+         // Inputs
+         .RST_IN                        (wRstRc),
+         .WR_DATA                       ({wTxTlp, 
+                                          wTxTlpStartFlag, wTxTlpStartOffset,
+                                          wTxTlpEndFlag, wTxTlpEndOffset}),
+         .WR_DATA_VALID                 (wTxTlpValid & ~wRstWaiting),
+         .RD_DATA_READY                 (TX_TLP_READY),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
+
+    // Put output pipeline stage here, OR, at TX Engine outputs
 endmodule
 // Local Variables:
 // verilog-library-directories:("." "../../common/")
@@ -363,15 +434,12 @@ endmodule
 `timescale 1ns/1ns
 `include "trellis.vh"
 module tx_mux
-    #(
-      parameter C_PCI_DATA_WIDTH = 128,
+    #(parameter C_PCI_DATA_WIDTH = 128,
       parameter C_PIPELINE_INPUT = 1,
       parameter C_PIPELINE_OUTPUT = 1,
       parameter C_MUX_TYPE = "SHIFT",
-      parameter C_VENDOR = "ALTERA"
-      )
-    (
-     // Interface: Clocks
+      parameter C_VENDOR = "ALTERA")
+    (// Interface: Clocks
      input                                    CLK,
 
      // Interface: Resets
@@ -402,8 +470,8 @@ module tx_mux
      output                                   TX_TLP_START_FLAG,
      output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_START_OFFSET,
      output                                   TX_TLP_END_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_END_OFFSET
-     );
+     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_END_OFFSET);
+    
     localparam C_WIDTH = (C_PCI_DATA_WIDTH + 2 * (clog2s(C_PCI_DATA_WIDTH/32) + 1));
     localparam C_TXC_PRIORITY = 1;
     localparam C_TXR_PRIORITY = 2;
@@ -438,50 +506,48 @@ module tx_mux
     wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxTlpEndOffset;
 
     pipeline
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_PIPELINE_INPUT?1:0),
           .C_USE_MEMORY                 (0),
           /*AUTOINSTPARAM*/
           // Parameters
           .C_WIDTH                      (C_WIDTH))
     txr_capture_inst
-        (
-         // Outputs
+        (// Outputs
          .WR_DATA_READY                 (TXR_TLP_READY),
          .RD_DATA                       ({wTxrTlp, wTxrTlpStartFlag, wTxrTlpStartOffset,
                                           wTxrTlpEndFlag, wTxrTlpEndOffset}),
          .RD_DATA_VALID                 (wTxrTlpValid),
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
          .WR_DATA                       ({TXR_TLP, 
                                           TXR_TLP_START_FLAG, TXR_TLP_START_OFFSET, 
                                           TXR_TLP_END_FLAG, TXR_TLP_END_OFFSET}),
          .WR_DATA_VALID                 (TXR_TLP_VALID),
-         .RD_DATA_READY                 (wTxrTlpReady));
+         .RD_DATA_READY                 (wTxrTlpReady),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK),
+         .RST_IN                        (RST_IN));
     
     pipeline
-        #(
-          // Parameters
-          .C_DEPTH                         (C_PIPELINE_INPUT?1:0),
-          .C_USE_MEMORY                    (0),
+        #(// Parameters
+          .C_DEPTH                      (C_PIPELINE_INPUT?1:0),
+          .C_USE_MEMORY                 (0),
           /*AUTOINSTPARAM*/
           // Parameters
           .C_WIDTH                      (C_WIDTH))
     txc_capture_inst
-        (
-         // Outputs
-         .WR_DATA_READY                    (TXC_TLP_READY),
-         .RD_DATA                          ({wTxcTlp, wTxcTlpStartFlag, wTxcTlpStartOffset,
-                                             wTxcTlpEndFlag, wTxcTlpEndOffset}),
-         .RD_DATA_VALID                    (wTxcTlpValid),
+        (// Outputs
+         .WR_DATA_READY                 (TXC_TLP_READY),
+         .RD_DATA                       ({wTxcTlp, wTxcTlpStartFlag, wTxcTlpStartOffset,
+                                          wTxcTlpEndFlag, wTxcTlpEndOffset}),
+         .RD_DATA_VALID                 (wTxcTlpValid),
          // Inputs
-         .WR_DATA                          ({TXC_TLP, 
-                                             TXC_TLP_START_FLAG, TXC_TLP_START_OFFSET, 
-                                             TXC_TLP_END_FLAG, TXC_TLP_END_OFFSET}),
-         .WR_DATA_VALID                    (TXC_TLP_VALID),
-         .RD_DATA_READY                    (wTxcTlpReady),
+         .WR_DATA                       ({TXC_TLP, 
+                                          TXC_TLP_START_FLAG, TXC_TLP_START_OFFSET, 
+                                          TXC_TLP_END_FLAG, TXC_TLP_END_OFFSET}),
+         .WR_DATA_VALID                 (TXC_TLP_VALID),
+         .RD_DATA_READY                 (wTxcTlpReady),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK),
@@ -493,18 +559,17 @@ module tx_mux
           .C_TXC_PRIORITY               (C_TXC_PRIORITY),
           .C_TXR_PRIORITY               (C_TXR_PRIORITY))
     tx_arbiter_inst
-        (
-         // Outputs
-         .TXR_TLP_READY                    (wTxrTlpReady),
-         .TXC_TLP_READY                    (wTxcTlpReady),
+        (// Outputs
+         .TXR_TLP_READY                 (wTxrTlpReady),
+         .TXC_TLP_READY                 (wTxcTlpReady),
          // Inputs
-         .TX_TLP_READY                     (wTxTlpReady),
-         .TXC_TLP_VALID                    (wTxcTlpValid),
-         .TXC_TLP_START_FLAG               (wTxcTlpStartFlag),
-         .TXC_TLP_END_FLAG                 (wTxcTlpEndFlag),
-         .TXR_TLP_VALID                    (wTxrTlpValid),
-         .TXR_TLP_START_FLAG               (wTxrTlpStartFlag),
-         .TXR_TLP_END_FLAG                 (wTxrTlpEndFlag),
+         .TX_TLP_READY                  (wTxTlpReady),
+         .TXC_TLP_VALID                 (wTxcTlpValid),
+         .TXC_TLP_START_FLAG            (wTxcTlpStartFlag),
+         .TXC_TLP_END_FLAG              (wTxcTlpEndFlag),
+         .TXR_TLP_VALID                 (wTxrTlpValid),
+         .TXR_TLP_START_FLAG            (wTxrTlpStartFlag),
+         .TXR_TLP_END_FLAG              (wTxrTlpEndFlag),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK),
@@ -519,57 +584,54 @@ module tx_mux
           .C_MUX_TYPE                   (C_MUX_TYPE),
           .C_WIDTH                      (C_WIDTH))
     tx_phi_inst
-        (
-         // Outputs
-         .TXC_TLP_READY                    (wTxcTlpReady),
-         .TXR_TLP_READY                    (wTxrTlpReady),
+        (// Outputs
+         .TXC_TLP_READY                 (wTxcTlpReady),
+         .TXR_TLP_READY                 (wTxrTlpReady),
         
-         .TX_TLP                           (wTxTlp),
-         .TX_TLP_VALID                     (wTxTlpValid),
-         .TX_TLP_START_FLAG                (wTxTlpStartFlag),
-         .TX_TLP_START_OFFSET              (wTxTlpStartOffset),
-         .TX_TLP_END_FLAG                  (wTxTlpEndFlag),
-         .TX_TLP_END_OFFSET                (wTxTlpEndOffset),
+         .TX_TLP                        (wTxTlp),
+         .TX_TLP_VALID                  (wTxTlpValid),
+         .TX_TLP_START_FLAG             (wTxTlpStartFlag),
+         .TX_TLP_START_OFFSET           (wTxTlpStartOffset),
+         .TX_TLP_END_FLAG               (wTxTlpEndFlag),
+         .TX_TLP_END_OFFSET             (wTxTlpEndOffset),
          // Inputs
-         .TXC_TLP                          (wTxcTlp),
-         .TXC_TLP_VALID                    (wTxcTlpValid),
-         .TXC_TLP_START_FLAG               (wTxcTlpStartFlag),
-         .TXC_TLP_START_OFFSET             (wTxcTlpStartOffset),
-         .TXC_TLP_END_FLAG                 (wTxcTlpEndFlag),
-         .TXC_TLP_END_OFFSET               (wTxcTlpEndOffset),
+         .TXC_TLP                       (wTxcTlp),
+         .TXC_TLP_VALID                 (wTxcTlpValid),
+         .TXC_TLP_START_FLAG            (wTxcTlpStartFlag),
+         .TXC_TLP_START_OFFSET          (wTxcTlpStartOffset),
+         .TXC_TLP_END_FLAG              (wTxcTlpEndFlag),
+         .TXC_TLP_END_OFFSET            (wTxcTlpEndOffset),
         
-         .TXR_TLP                          (wTxrTlp),
-         .TXR_TLP_VALID                    (wTxrTlpValid),
-         .TXR_TLP_START_FLAG               (wTxrTlpStartFlag),
-         .TXR_TLP_START_OFFSET             (wTxrTlpStartOffset),
-         .TXR_TLP_END_FLAG                 (wTxrTlpEndFlag),
-         .TXR_TLP_END_OFFSET               (wTxrTlpEndOffset),
+         .TXR_TLP                       (wTxrTlp),
+         .TXR_TLP_VALID                 (wTxrTlpValid),
+         .TXR_TLP_START_FLAG            (wTxrTlpStartFlag),
+         .TXR_TLP_START_OFFSET          (wTxrTlpStartOffset),
+         .TXR_TLP_END_FLAG              (wTxrTlpEndFlag),
+         .TXR_TLP_END_OFFSET            (wTxrTlpEndOffset),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK),
          .RST_IN                        (RST_IN));
 
     pipeline
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_PIPELINE_OUTPUT?1:0),
           .C_USE_MEMORY                 (0),
           /*AUTOINSTPARAM*/
           // Parameters
           .C_WIDTH                      (C_WIDTH))
     tx_output_inst
-        (
-         // Outputs
-         .WR_DATA_READY                    (wTxTlpReady),
-         .RD_DATA                          ({TX_TLP, 
-                                             TX_TLP_START_FLAG, TX_TLP_START_OFFSET, 
-                                             TX_TLP_END_FLAG, TX_TLP_END_OFFSET}),
-         .RD_DATA_VALID                    (TX_TLP_VALID),
+        (// Outputs
+         .WR_DATA_READY                 (wTxTlpReady),
+         .RD_DATA                       ({TX_TLP, 
+                                          TX_TLP_START_FLAG, TX_TLP_START_OFFSET, 
+                                          TX_TLP_END_FLAG, TX_TLP_END_OFFSET}),
+         .RD_DATA_VALID                 (TX_TLP_VALID),
          // Inputs
-         .WR_DATA                          ({wTxTlp, wTxTlpStartFlag, wTxTlpStartOffset,
-                                             wTxTlpEndFlag, wTxTlpEndOffset}),
-         .WR_DATA_VALID                    (wTxTlpValid),
-         .RD_DATA_READY                    (TX_TLP_READY),
+         .WR_DATA                       ({wTxTlp, wTxTlpStartFlag, wTxTlpStartOffset,
+                                          wTxTlpEndFlag, wTxTlpEndOffset}),
+         .WR_DATA_VALID                 (wTxTlpValid),
+         .RD_DATA_READY                 (TX_TLP_READY),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK),
@@ -592,8 +654,7 @@ endmodule
  Co-Authors:
  */
 module tx_arbiter
-    #(
-      parameter C_TXC_PRIORITY = 1,
+    #(parameter C_TXC_PRIORITY = 1,
       parameter C_TXR_PRIORITY = 1)
     (
      // Interface: Clocks
@@ -615,9 +676,7 @@ module tx_arbiter
      output TXC_TLP_READY,
      input  TXC_TLP_VALID,
      input  TXC_TLP_START_FLAG,
-     input  TXC_TLP_END_FLAG
-
-     );
+     input  TXC_TLP_END_FLAG);
     
     localparam S_TXARB_IDLE = 0; // STATE: Idle state for the arbiter (not currently used)
     localparam S_TXARB_TRANSMIT_TXR = 1; // STATE: Transmit TXR packets until the priority counter is reached
@@ -775,13 +834,10 @@ endmodule
  Co-Authors:
  */
 module tx_phi
-    #(
-      parameter C_PCI_DATA_WIDTH = 10'd128,
+    #(parameter C_PCI_DATA_WIDTH = 10'd128,
       parameter C_MUX_TYPE = "SHIFT",
-      parameter C_WIDTH = (C_PCI_DATA_WIDTH + 2 * (clog2s(C_PCI_DATA_WIDTH/32) + 1))
-      )
-    (
-     // Interface: Clocks
+      parameter C_WIDTH = (C_PCI_DATA_WIDTH + 2 * (clog2s(C_PCI_DATA_WIDTH/32) + 1)))
+    (// Interface: Clocks
      input                                    CLK,
 
      // Interface: Resets
@@ -809,15 +865,13 @@ module tx_phi
      input                                    TXR_TLP_END_FLAG,
      input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_TLP_END_OFFSET,
 
-
      // Interface: TX Classic
      output [C_PCI_DATA_WIDTH-1:0]            TX_TLP,
      output                                   TX_TLP_VALID,
      output                                   TX_TLP_START_FLAG,
      output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_START_OFFSET,
      output                                   TX_TLP_END_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_END_OFFSET
-     );
+     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_END_OFFSET);
 
     // Width = 2 * (DATA WIDTH + VALID + START FLAG + START OFFSET + END FLAG + END OFFSET)
     localparam C_MUX_WIDTH = C_PCI_DATA_WIDTH + 3 + 2*clog2s(C_PCI_DATA_WIDTH/32);
@@ -830,16 +884,14 @@ module tx_phi
                           TXC_TLP_START_OFFSET,TXC_TLP_END_FLAG,TXC_TLP_END_OFFSET}};
 
     mux
-        #(
-          // Parameters
+        #(// Parameters
           .C_NUM_INPUTS                 (2),
           .C_CLOG_NUM_INPUTS            (1),
           .C_WIDTH                      (C_MUX_WIDTH),
           .C_MUX_TYPE                   ("SELECT")
           /*AUTOINSTPARAM*/)
     mux_inst
-        (
-         // Outputs
+        (// Outputs
          .MUX_OUTPUT                    ({TX_TLP,TX_TLP_VALID,TX_TLP_START_FLAG,
                                           TX_TLP_START_OFFSET,TX_TLP_END_FLAG,
                                           TX_TLP_END_OFFSET}),

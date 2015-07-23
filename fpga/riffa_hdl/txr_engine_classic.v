@@ -59,8 +59,7 @@ module txr_engine_classic
      input                                    CLK,
 
      // Interface: Resets
-     input                                    RST_BUS, // Replacement for generic RST_IN
-     input                                    RST_LOGIC, // Addition for RIFFA_RST
+     input                                    RST_IN, // Addition for RIFFA_RST
      output                                   DONE_TXR_RST,
 
      // Interface: Configuration 
@@ -119,6 +118,8 @@ module txr_engine_classic
     wire [`SIG_PACKETLEN_W-1:0]               wTxHdrPacketLen;
     wire [`SIG_LEN_W-1:0]                     wTxHdrPayloadLen; 
     wire                                      wTxHdrNopayload;
+
+    assign DONE_TXR_RST = ~RST_IN;
 
     txr_formatter_classic
         #(
