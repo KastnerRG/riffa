@@ -85,18 +85,15 @@
 `timescale 1ns/1ns
 `include "trellis.vh" // Defines the user-facing signal widths.
 module tx_alignment_pipeline
-    #(
-      parameter C_PIPELINE_OUTPUT = 1,
+    #(parameter C_PIPELINE_OUTPUT = 1,
       parameter C_PIPELINE_DATA_INPUT = 1,
       parameter C_PIPELINE_HDR_INPUT = 1,
       parameter C_USE_COMPUTE_REG = 1,
       parameter C_USE_READY_REG = 1,
       parameter C_DATA_WIDTH = 128,
       parameter C_MAX_HDR_WIDTH = 128,
-      parameter C_VENDOR = "ALTERA"
-      )
-    (
-     // Interface: Clocks
+      parameter C_VENDOR = "ALTERA")
+    (// Interface: Clocks
      input                                CLK,
 
      // Interface: Reset
@@ -126,8 +123,7 @@ module tx_alignment_pipeline
      output [clog2s(C_DATA_WIDTH/32)-1:0] TX_PKT_START_OFFSET,
      output                               TX_PKT_END_FLAG,
      output [clog2s(C_DATA_WIDTH/32)-1:0] TX_PKT_END_OFFSET,
-     output                               TX_PKT_VALID
-     );
+     output                               TX_PKT_VALID);
 
     localparam C_OFFSET_WIDTH = clog2s(C_DATA_WIDTH/32);
     localparam C_AGGREGATE_WIDTH = (C_DATA_WIDTH+C_MAX_HDR_WIDTH);
@@ -182,6 +178,7 @@ module tx_alignment_pipeline
     wire [32*C_MUX_INPUTS-1:0]            wTxMuxInputs[C_NUM_MUXES-1:0];
     wire [(C_CLOG_MUX_INPUTS*C_NUM_MUXES)-1:0] wTxMuxSelect,_wTxMuxSelect;
     wire [C_NUM_MUXES-1:0]                     wTxMuxSelectDataReady,_wTxMuxSelectDataReady;
+    wire [C_NUM_MUXES-1:0]                     wTxMuxSelectDataReadyAndPayload,_wTxMuxSelectDataReadyAndPayload;
     wire                                       wTxMuxSelectDataEndFlag,_wTxMuxSelectDataEndFlag;
     wire                                       wTxMuxSelectDataStartFlag,_wTxMuxSelectDataStartFlag;
     wire                                       wTxMuxSelectPktStartFlag,_wTxMuxSelectPktStartFlag;
@@ -234,6 +231,10 @@ module tx_alignment_pipeline
     assign wReadyMux[3] = _wTxHdrStartEndReady;
     assign _wTxMuxSelectValid = _wTxHdrValid;
     assign _wTxMuxSelectDataReady = wReadyMux[wReadyMuxSelect] & {C_NUM_MUXES{(wPktCtr >= _wTxHdrNonpayLen[`SIG_NONPAY_W-1:clog2s(C_NUM_MUXES)])}};
+    assign _wTxMuxSelectDataReadyAndPayload = wReadyMux[wReadyMuxSelect] & 
+                                              {C_NUM_MUXES{(wPktCtr >= _wTxHdrNonpayLen[`SIG_NONPAY_W-1:clog2s(C_NUM_MUXES)])}} &
+                                              {C_NUM_MUXES{~_wTxHdrNoPayload}} & 
+                                              {C_NUM_MUXES{_wTxHdrValid}};
     assign _wTxMuxSelectPktStartFlag = wPktCtr == 0;
     assign _wTxMuxSelectDataStartFlag = wPktCtr == _wTxHdrNonpayLen[`SIG_NONPAY_W-1:clog2s(C_NUM_MUXES)];
     assign _wTxMuxSelectDataEndFlag   = ({wPktCtr,{clog2s(C_NUM_MUXES){1'b0}}} + C_NUM_MUXES) >= _wTxHdrPacketLen;// TODO: Simplify
@@ -247,7 +248,8 @@ module tx_alignment_pipeline
     assign wTxPktEndFlag = wTxMuxSelectDataEndFlag;
     assign wTxPktEndOffset = wTxHdrPacketLen[C_OFFSET_WIDTH-1:0]-1; // TODO: Retime -1?
     assign wTxPktValid = wTxMuxSelectValid & (wTxHdrNoPayload | (~wTxHdrNoPayload & wTxDataPacketValid));
-    assign wTxDataWordReady = wTxMuxSelectDataReady & {C_NUM_MUXES{wTxPktReady & wTxMuxSelectValid  & wTxDataPacketValid & ~wTxHdrNoPayload}};
+    // assign wTxDataWordReady = wTxMuxSelectDataReady & {C_NUM_MUXES{wTxPktReady & wTxMuxSelectValid & wTxDataPacketValid}};
+    assign wTxDataWordReady = wTxMuxSelectDataReadyAndPayload & {C_NUM_MUXES{wTxPktReady & wTxDataPacketValid}};
 
     // Assignments for the output stage
     assign TX_PKT_START_OFFSET = {C_OFFSET_WIDTH{1'b0}};
@@ -292,8 +294,7 @@ module tx_alignment_pipeline
           .C_WIDTH                      (C_NUM_MUXES)
           /*AUTOINSTPARAM*/)
     rot_inst
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                   (__wTxHdrEndReady),
          // Inputs
          .WR_DATA                   (__wTxHdrPacketMask),
@@ -301,15 +302,13 @@ module tx_alignment_pipeline
          /*AUTOINST*/);
 
     pipeline
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_PIPELINE_HDR_INPUT?1:0),
           .C_WIDTH                      (C_MAX_HDR_WIDTH + `SIG_NONPAY_W + `SIG_PACKETLEN_W + `SIG_LEN_W + 1),
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     hdr_input_reg
-        (
-         // Outputs
+        (// Outputs
          .WR_DATA_READY             (TX_HDR_READY),
          .RD_DATA                   ({__wTxHdr,__wTxHdrNonpayLen,__wTxHdrPacketLen,__wTxHdrPayloadLen,__wTxHdrNoPayload}),
          .RD_DATA_VALID             (__wTxHdrValid),
@@ -323,15 +322,13 @@ module tx_alignment_pipeline
          .RST_IN                        (RST_IN));
 
     pipeline
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_USE_COMPUTE_REG?1:0),
           .C_WIDTH                      (C_MAX_HDR_WIDTH + `SIG_NONPAY_W + `SIG_PACKETLEN_W + `SIG_LEN_W + 1 + 4*C_MASK_WIDTH),
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     compute_reg
-        (
-         // Outputs
+        (// Outputs
          .WR_DATA_READY             (__wTxHdrReady),
          .RD_DATA                   ({_wTxHdr,_wTxHdrNonpayLen,_wTxHdrPacketLen,_wTxHdrPayloadLen,_wTxHdrNoPayload,
                                       _wTxHdrSteadyStateReady,_wTxHdrStartReady,_wTxHdrEndReady,_wTxHdrStartEndReady}),
@@ -347,15 +344,13 @@ module tx_alignment_pipeline
          .RST_IN                        (RST_IN));
 
     pipeline
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_USE_READY_REG?1:0),
           .C_WIDTH                      (C_MAX_HDR_WIDTH + `SIG_NONPAY_W + `SIG_PACKETLEN_W + `SIG_LEN_W + 1),
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     ready_reg
-        (
-         // Outputs
+        (// Outputs
          .WR_DATA_READY             (_wTxHdrReady),
          .RD_DATA                   ({wTxHdr,wTxHdrNonpayLen,wTxHdrPacketLen,wTxHdrPayloadLen,wTxHdrNoPayload}),
          .RD_DATA_VALID             (wTxHdrValid),
@@ -369,20 +364,24 @@ module tx_alignment_pipeline
          .RST_IN                        (RST_IN));
     
     pipeline
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_USE_READY_REG?1:0),
-          .C_WIDTH                      (C_NUM_MUXES + C_CLOG_MUX_INPUTS * C_NUM_MUXES + 3),
+          .C_WIDTH                      (2*C_NUM_MUXES + C_CLOG_MUX_INPUTS * C_NUM_MUXES + 3),
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     select_reg
-        (
-         // Outputs
+        (// Outputs
          .WR_DATA_READY             (_wTxMuxSelectReady),
-         .RD_DATA                   ({wTxMuxSelectDataReady,wTxMuxSelect,wTxMuxSelectDataEndFlag,wTxMuxSelectDataStartFlag,wTxMuxSelectPktStartFlag}),
+         .RD_DATA                   ({wTxMuxSelectDataReady,wTxMuxSelect,
+                                      wTxMuxSelectDataEndFlag,wTxMuxSelectDataStartFlag,
+                                      wTxMuxSelectPktStartFlag, 
+                                      wTxMuxSelectDataReadyAndPayload}),
          .RD_DATA_VALID             (wTxMuxSelectValid),
          // Inputs
-         .WR_DATA                   ({_wTxMuxSelectDataReady,_wTxMuxSelect,_wTxMuxSelectDataEndFlag,_wTxMuxSelectDataStartFlag,_wTxMuxSelectPktStartFlag}),
+         .WR_DATA                   ({_wTxMuxSelectDataReady,_wTxMuxSelect,
+                                      _wTxMuxSelectDataEndFlag,_wTxMuxSelectDataStartFlag,
+                                      _wTxMuxSelectPktStartFlag, 
+                                      _wTxMuxSelectDataReadyAndPayload}),
          .WR_DATA_VALID             (_wTxMuxSelectValid),
          .RD_DATA_READY             (wTxMuxSelectReady),
          /*AUTOINST*/
@@ -400,10 +399,11 @@ module tx_alignment_pipeline
         (// Outputs
          .VALUE                         (wSatCtr),
          // Inputs
-         .CLK                           (CLK),
          .RST_IN                        (wSatCtrReset),
-         .ENABLE                        (wSatCtrEnable)
-         /*AUTOINST*/);
+         .ENABLE                        (wSatCtrEnable),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
 
     counter
         #(// Parameters
@@ -415,10 +415,11 @@ module tx_alignment_pipeline
         (// Outputs
          .VALUE                         (wPktCtr),
          // Inputs
-         .CLK                           (CLK),
          .RST_IN                        (wPktCtrReset),
-         .ENABLE                        (wPktCtrEnable)
-         /*AUTOINST*/);
+         .ENABLE                        (wPktCtrEnable),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
 
     generate
         for( i = 0  ; i < C_MAX_HDR_WIDTH/32 ; i = i + 1) begin : gen_aggregate
@@ -473,16 +474,14 @@ module tx_alignment_pipeline
 
         for( i = 0 ; i < C_NUM_MUXES ; i = i + 1) begin : gen_packet_format_multiplexers
             mux
-                 #(
-                   // Parameters
+                 #(// Parameters
                    .C_NUM_INPUTS                 (C_MUX_INPUTS),
                    .C_CLOG_NUM_INPUTS            (C_CLOG_MUX_INPUTS),
                    .C_WIDTH                      (32),
                    .C_MUX_TYPE                   ("SELECT")
                    /*AUTOINSTPARAM*/)
             dw_mux_
-                 (
-                  // Outputs
+                 (// Outputs
                   .MUX_OUTPUT                (wTxPkt[32*i +: 32]),
                   // Inputs
                   .MUX_INPUTS                (wTxMuxInputs[i]),
@@ -492,15 +491,13 @@ module tx_alignment_pipeline
     endgenerate
 
     pipeline
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_PIPELINE_OUTPUT?1:0),
           .C_WIDTH                      (C_DATA_WIDTH + 2 + C_OFFSET_WIDTH),
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     output_register_inst
-        (
-         // Outputs
+        (// Outputs
          .WR_DATA_READY             (wTxPktReady),
          .RD_DATA                   ({TX_PKT,TX_PKT_START_FLAG,TX_PKT_END_FLAG,TX_PKT_END_OFFSET}),
          .RD_DATA_VALID             (TX_PKT_VALID),
