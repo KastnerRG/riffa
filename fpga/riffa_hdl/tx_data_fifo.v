@@ -64,11 +64,8 @@ module tx_data_fifo
     #(parameter C_DEPTH_PACKETS = 10,
       parameter C_DATA_WIDTH = 128,
       parameter C_PIPELINE_INPUT = 1,
-      parameter C_PIPELINE_OUTPUT = 1,
-      parameter C_MAX_PAYLOAD = 256 // BYTES
-      )
-    (
-     // Interface: Clocks
+      parameter C_MAX_PAYLOAD_DWORDS = 256)
+    (// Interface: Clocks
      input                          CLK,
 
      // Interface: Reset
@@ -88,16 +85,15 @@ module tx_data_fifo
      output                         RD_TX_DATA_START_FLAG,
      output [(C_DATA_WIDTH/32)-1:0] RD_TX_DATA_END_FLAGS,
      output [(C_DATA_WIDTH/32)-1:0] RD_TX_DATA_WORD_VALID,
-     output                         RD_TX_DATA_PACKET_VALID
-     );
+     output                         RD_TX_DATA_PACKET_VALID);
+
     localparam C_FIFO_OUTPUT_DEPTH = 1;
     localparam C_INPUT_DEPTH = C_PIPELINE_INPUT != 0 ? 1 : 0;
-    localparam C_OUTPUT_DEPTH = C_PIPELINE_OUTPUT != 0 ? 1 : 0;
-    localparam C_MAXPACKET_LINES = (C_MAX_PAYLOAD*8)/C_DATA_WIDTH;
-    localparam C_FIFO_DEPTH = C_MAXPACKET_LINES*C_DEPTH_PACKETS;
-    localparam C_FIFO_DATA_WIDTH = 32; 
-    localparam C_REGISTER_WIDTH = C_FIFO_DATA_WIDTH + 2;
-    localparam C_FIFO_WIDTH = C_FIFO_DATA_WIDTH + 2; // Data, end flag and start flag
+    localparam C_PAYLOAD_DEPTH = (C_MAX_PAYLOAD_DWORDS*32)/C_DATA_WIDTH;
+    localparam C_FIFO_DEPTH = C_PAYLOAD_DEPTH*C_DEPTH_PACKETS;
+    localparam C_FIFO_DATA_WIDTH = 32; // 1 DW, End Flag, Start Flag
+    localparam C_FIFO_WIDTH = 32 + 2; // 1 DW, End Flag, Start Flag
+    localparam C_INOUT_REG_WIDTH = C_FIFO_WIDTH;
     localparam C_NUM_FIFOS = (C_DATA_WIDTH/32);
     genvar                          i;
 
@@ -173,7 +169,7 @@ module tx_data_fifo
                  #(
                    .C_DEPTH              (C_INPUT_DEPTH),
                    .C_USE_MEMORY         (0),
-                   .C_WIDTH              (C_REGISTER_WIDTH)
+                   .C_WIDTH              (C_INOUT_REG_WIDTH)
                    /*AUTOINSTPARAM*/)
             input_pipeline_inst_
                  (

@@ -53,17 +53,15 @@
 //----------------------------------------------------------------------------
 `include "trellis.vh" // Defines the user-facing signal widths.
 module tx_data_pipeline
-    #(
-      parameter C_DATA_WIDTH = 128,
+    #(parameter C_DATA_WIDTH = 128,
       parameter C_PIPELINE_INPUT = 1,
       parameter C_PIPELINE_OUTPUT = 1,
-      parameter C_MAX_PAYLOAD = 256,
+      parameter C_MAX_PAYLOAD_DWORDS = 256,
       parameter C_DEPTH_PACKETS = 10,
-      parameter C_VENDOR = "ALTERA"
-      )
-    (
-     // Interface: Clocks
+      parameter C_VENDOR = "ALTERA")
+    (// Interface: Clocks
      input                               CLK,
+
      // Interface: Resets
      input                               RST_IN,
 
@@ -82,8 +80,7 @@ module tx_data_pipeline
      output [(C_DATA_WIDTH/32)-1:0]      RD_TX_DATA_END_FLAGS,
      output                              RD_TX_DATA_START_FLAG,
      output [(C_DATA_WIDTH/32)-1:0]      RD_TX_DATA_WORD_VALID,
-     output                              RD_TX_DATA_PACKET_VALID
-     );
+     output                              RD_TX_DATA_PACKET_VALID);
     
     wire                                 wRdTxDataValid;
     wire                                 wRdTxDataReady;
@@ -97,48 +94,45 @@ module tx_data_pipeline
     /*AUTOOUTPUT*/
 
     tx_data_shift
-        #(
-          .C_PIPELINE_OUTPUT            (0),
-          .C_PIPELINE_INPUT             (C_PIPELINE_INPUT),
+        #(.C_PIPELINE_OUTPUT            (0),
           /*AUTOINSTPARAM*/
           // Parameters
+          .C_PIPELINE_INPUT             (C_PIPELINE_INPUT),
           .C_DATA_WIDTH                 (C_DATA_WIDTH),
           .C_VENDOR                     (C_VENDOR))
     tx_shift_inst
-        (
-         // Outputs
-         .WR_TX_DATA_READY              (WR_TX_DATA_READY),
+        (// Outputs
          .RD_TX_DATA                    (wRdTxData),
          .RD_TX_DATA_VALID              (wRdTxDataValid),
          .RD_TX_DATA_START_FLAG         (wRdTxDataStartFlag),
          .RD_TX_DATA_WORD_VALID         (wRdTxDataWordValid),
          .RD_TX_DATA_END_FLAGS          (wRdTxDataEndFlags),
          // Inputs
-         .WR_TX_DATA                    (WR_TX_DATA[C_DATA_WIDTH-1:0]),
+         .RD_TX_DATA_READY              (wRdTxDataReady),
+         /*AUTOINST*/
+         // Outputs
+         .WR_TX_DATA_READY              (WR_TX_DATA_READY),
+         // Inputs
+         .CLK                           (CLK),
+         .RST_IN                        (RST_IN),
          .WR_TX_DATA_VALID              (WR_TX_DATA_VALID),
+         .WR_TX_DATA                    (WR_TX_DATA[C_DATA_WIDTH-1:0]),
          .WR_TX_DATA_START_FLAG         (WR_TX_DATA_START_FLAG),
          .WR_TX_DATA_START_OFFSET       (WR_TX_DATA_START_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
          .WR_TX_DATA_END_FLAG           (WR_TX_DATA_END_FLAG),
-         .WR_TX_DATA_END_OFFSET         (WR_TX_DATA_END_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
-         .RD_TX_DATA_READY              (wRdTxDataReady),
-         /*AUTOINST*/
-         // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .WR_TX_DATA_END_OFFSET         (WR_TX_DATA_END_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]));
 
     // TX Data Fifo
     tx_data_fifo
-        #(
-          .C_PIPELINE_OUTPUT            (C_PIPELINE_OUTPUT),
+        #(// Parameters
           .C_PIPELINE_INPUT             (1),
-          .C_DEPTH_PACKETS              (C_DEPTH_PACKETS),
-          .C_MAX_PAYLOAD                (C_MAX_PAYLOAD),
           /*AUTOINSTPARAM*/
           // Parameters
-          .C_DATA_WIDTH                 (C_DATA_WIDTH))
+          .C_DEPTH_PACKETS              (C_DEPTH_PACKETS),
+          .C_DATA_WIDTH                 (C_DATA_WIDTH),
+          .C_MAX_PAYLOAD_DWORDS         (C_MAX_PAYLOAD_DWORDS))
     txdf_inst
-        (
-         // Outputs
+        (// Outputs
          .WR_TX_DATA_READY              (wRdTxDataReady),
          .RD_TX_DATA                    (RD_TX_DATA[C_DATA_WIDTH-1:0]),
          .RD_TX_DATA_START_FLAG         (RD_TX_DATA_START_FLAG),

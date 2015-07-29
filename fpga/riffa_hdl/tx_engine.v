@@ -93,13 +93,13 @@ module tx_engine
     localparam C_PIPELINE_HDR_FIFO_INPUT = C_PIPELINE_INPUT;
     localparam C_PIPELINE_HDR_FIFO_OUTPUT = C_PIPELINE_OUTPUT;
     localparam C_PIPELINE_HDR_INPUT = C_PIPELINE_INPUT;
-    localparam C_ACTUAL_HDR_FIFO_DEPTH = clog2s(C_DEPTH_PACKETS);
+    localparam C_ACTUAL_HDR_FIFO_DEPTH = (1<<clog2s(C_DEPTH_PACKETS));
     localparam C_USE_COMPUTE_REG = 1;
     localparam C_USE_READY_REG = 1;
     localparam C_USE_FWFT_HDR_FIFO = 1;
     localparam C_DATA_FIFO_DEPTH = C_ACTUAL_HDR_FIFO_DEPTH + C_FORMATTER_DELAY + 
                                    C_PIPELINE_HDR_FIFO_INPUT + C_PIPELINE_HDR_FIFO_OUTPUT + C_USE_FWFT_HDR_FIFO + // Header Fifo
-                                   C_PIPELINE_HDR_INPUT + C_USE_COMPUTE_REG + C_USE_READY_REG + C_PIPELINE_OUTPUT; // Aligner
+                                   C_PIPELINE_HDR_INPUT + C_USE_COMPUTE_REG + C_USE_READY_REG + C_PIPELINE_OUTPUT + 1; // Aligner TODO: Why +1. Is it 64-bit specific?
 
     wire                                  wTxHdrReady;
     wire                                  wTxHdrValid;
@@ -119,32 +119,30 @@ module tx_engine
     wire [(C_DATA_WIDTH/32)-1:0]          wTxDataWordReady;
 
     tx_data_pipeline
-        #(
-          .C_MAX_PAYLOAD                (C_MAX_PAYLOAD_DWORDS*32),
-          .C_DEPTH_PACKETS              (C_DATA_FIFO_DEPTH),
+        #(.C_DEPTH_PACKETS              (C_DATA_FIFO_DEPTH),
           /*AUTOINSTPARAM*/
           // Parameters
           .C_DATA_WIDTH                 (C_DATA_WIDTH),
           .C_PIPELINE_INPUT             (C_PIPELINE_INPUT),
           .C_PIPELINE_OUTPUT            (C_PIPELINE_OUTPUT),
+          .C_MAX_PAYLOAD_DWORDS         (C_MAX_PAYLOAD_DWORDS),
           .C_VENDOR                     (C_VENDOR))
     tx_data_pipeline_inst
-        (
-         // Outputs
-         .RD_TX_DATA                  (wTxData[C_DATA_WIDTH-1:0]),
-         .RD_TX_DATA_WORD_VALID       (wTxDataWordValid[(C_DATA_WIDTH/32)-1:0]),
-         .RD_TX_DATA_START_FLAG       (wTxDataStartFlag),
-         .RD_TX_DATA_END_FLAGS        (wTxDataEndFlags[(C_DATA_WIDTH/32)-1:0]),
-         .RD_TX_DATA_PACKET_VALID     (wTxDataPacketValid),
-         .WR_TX_DATA_READY            (TX_DATA_READY),
+        (// Outputs
+         .RD_TX_DATA                    (wTxData[C_DATA_WIDTH-1:0]),
+         .RD_TX_DATA_WORD_VALID         (wTxDataWordValid[(C_DATA_WIDTH/32)-1:0]),
+         .RD_TX_DATA_START_FLAG         (wTxDataStartFlag),
+         .RD_TX_DATA_END_FLAGS          (wTxDataEndFlags[(C_DATA_WIDTH/32)-1:0]),
+         .RD_TX_DATA_PACKET_VALID       (wTxDataPacketValid),
+         .WR_TX_DATA_READY              (TX_DATA_READY),
          // Inputs
-         .RD_TX_DATA_WORD_READY       (wTxDataWordReady[(C_DATA_WIDTH/32)-1:0]),
-         .WR_TX_DATA                  (TX_DATA),
-         .WR_TX_DATA_VALID            (TX_DATA_VALID),
-         .WR_TX_DATA_START_FLAG       (TX_DATA_START_FLAG),
-         .WR_TX_DATA_START_OFFSET     (TX_DATA_START_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
-         .WR_TX_DATA_END_FLAG         (TX_DATA_END_FLAG),
-         .WR_TX_DATA_END_OFFSET       (TX_DATA_END_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
+         .RD_TX_DATA_WORD_READY         (wTxDataWordReady[(C_DATA_WIDTH/32)-1:0]),
+         .WR_TX_DATA                    (TX_DATA),
+         .WR_TX_DATA_VALID              (TX_DATA_VALID),
+         .WR_TX_DATA_START_FLAG         (TX_DATA_START_FLAG),
+         .WR_TX_DATA_START_OFFSET       (TX_DATA_START_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
+         .WR_TX_DATA_END_FLAG           (TX_DATA_END_FLAG),
+         .WR_TX_DATA_END_OFFSET         (TX_DATA_END_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK),
@@ -152,8 +150,7 @@ module tx_engine
 
     // TX Header Fifo
     tx_hdr_fifo
-        #(
-          .C_PIPELINE_OUTPUT            (C_PIPELINE_HDR_FIFO_OUTPUT),
+        #(.C_PIPELINE_OUTPUT            (C_PIPELINE_HDR_FIFO_OUTPUT),
           .C_PIPELINE_INPUT             (C_PIPELINE_HDR_FIFO_INPUT),
           /*AUTOINSTPARAM*/
           // Parameters
@@ -161,8 +158,7 @@ module tx_engine
           .C_MAX_HDR_WIDTH              (C_MAX_HDR_WIDTH),
           .C_VENDOR                     (C_VENDOR))
     txhf_inst
-        (
-         // Outputs
+        (// Outputs
          .WR_TX_HDR_READY               (TX_HDR_READY),
          .RD_TX_HDR                     (wTxHdr[C_MAX_HDR_WIDTH-1:0]),
          .RD_TX_HDR_VALID               (wTxHdrValid),
@@ -198,16 +194,9 @@ module tx_engine
           .C_MAX_HDR_WIDTH              (C_MAX_HDR_WIDTH),
           .C_VENDOR                     (C_VENDOR))
     tx_alignment_inst
-        (
-         // Outputs
+        (// Outputs
          .TX_DATA_WORD_READY            (wTxDataWordReady[(C_DATA_WIDTH/32)-1:0]),
          .TX_HDR_READY                  (wTxHdrReady),
-         .TX_PKT                        (TX_PKT[C_DATA_WIDTH-1:0]),
-         .TX_PKT_VALID                  (TX_PKT_VALID),
-         .TX_PKT_START_FLAG             (TX_PKT_START_FLAG),
-         .TX_PKT_START_OFFSET           (TX_PKT_START_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
-         .TX_PKT_END_FLAG               (TX_PKT_END_FLAG),
-         .TX_PKT_END_OFFSET             (TX_PKT_END_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
          // Inputs
          .TX_DATA_START_FLAG            (wTxDataStartFlag),
          .TX_DATA_END_FLAGS             (wTxDataEndFlags),
@@ -220,10 +209,17 @@ module tx_engine
          .TX_HDR_PAYLOAD_LEN            (wTxHdrPayloadLen[`SIG_LEN_W-1:0]),
          .TX_HDR_NONPAY_LEN             (wTxHdrNonpayLen[`SIG_NONPAY_W-1:0]),
          .TX_HDR_PACKET_LEN             (wTxHdrPacketLen[`SIG_PACKETLEN_W-1:0]),
-         .TX_PKT_READY                  (TX_PKT_READY),
          /*AUTOINST*/
+         // Outputs
+         .TX_PKT                        (TX_PKT[C_DATA_WIDTH-1:0]),
+         .TX_PKT_START_FLAG             (TX_PKT_START_FLAG),
+         .TX_PKT_START_OFFSET           (TX_PKT_START_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
+         .TX_PKT_END_FLAG               (TX_PKT_END_FLAG),
+         .TX_PKT_END_OFFSET             (TX_PKT_END_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
+         .TX_PKT_VALID                  (TX_PKT_VALID),
          // Inputs
          .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .RST_IN                        (RST_IN),
+         .TX_PKT_READY                  (TX_PKT_READY));
 
 endmodule
