@@ -52,8 +52,7 @@ module ADM_PCIe_7V3Gen1x8If64
       // Settings from Vivado IP Generator
       parameter C_PCI_DATA_WIDTH = 64,
       parameter C_MAX_PAYLOAD_BYTES = 256,
-      parameter C_LOG_NUM_TAGS = 6
-      ) 
+      parameter C_LOG_NUM_TAGS = 6) 
     (output [(C_NUM_LANES - 1) : 0] PCI_EXP_TXP,
      output [(C_NUM_LANES - 1) : 0] PCI_EXP_TXN,
      input [(C_NUM_LANES - 1) : 0]  PCI_EXP_RXP,

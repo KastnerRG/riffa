@@ -148,7 +148,7 @@ module riffa_wrapper_7V3
     localparam C_KEEP_WIDTH = C_PCI_DATA_WIDTH / 32;
     localparam C_PIPELINE_OUTPUT = 1;
     localparam C_PIPELINE_INPUT = 1;
-    localparam C_DEPTH_PACKETS = 10;
+    localparam C_DEPTH_PACKETS = 4;
     
     wire                                          clk;
     wire                                          rst_in;
