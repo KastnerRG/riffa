@@ -101,7 +101,7 @@ module tx_data_fifo
     
     wire [C_FIFO_DATA_WIDTH-1:0]    wWrTxData[C_NUM_FIFOS-1:0];
     wire [C_NUM_FIFOS-1:0]          wWrTxDataValid;
-    wire [C_NUM_FIFOS-1:0]          wWrTxDataReady;
+    wire [C_NUM_FIFOS-1:0]          wWrTxDataReady, _wWrTxDataReady;
     wire [C_NUM_FIFOS-1:0]          wWrTxDataStartFlags;
     wire [C_NUM_FIFOS-1:0]          wWrTxDataEndFlags;
 
@@ -136,7 +136,7 @@ module tx_data_fifo
     assign wPacketIncrement = wWrTxEndFlagValid & wWrTxEndFlagReady;
     assign wPacketDecrement = wRdTxEndFlagValid & wRdTxEndFlagReady;
     
-    assign WR_TX_DATA_READY = wWrTxEndFlagReady;
+    assign WR_TX_DATA_READY = _wWrTxDataReady[0];
 
     assign wRdTxEndFlagValid = rPacketCounter != 0;
     assign wRdTxEndFlagReady = (wRdTxDataReady & wRdTxDataEndFlags & wRdTxDataValid) != {C_NUM_FIFOS{1'b0}};
@@ -174,7 +174,7 @@ module tx_data_fifo
             input_pipeline_inst_
                  (
                   // Outputs
-                  .WR_DATA_READY         (),
+                  .WR_DATA_READY         (_wWrTxDataReady[i]),
                   .RD_DATA               ({wWrTxData[i], wWrTxDataEndFlags[i],wWrTxDataStartFlags[i]}),
                   .RD_DATA_VALID         (wWrTxDataValid[i]),
                   // Inputs

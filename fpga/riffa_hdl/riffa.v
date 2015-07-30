@@ -566,7 +566,7 @@ module riffa
          .TX_TXN_DONE                   (wChnlTxDone),
          .VECT_0_RST                    (wIntrVectorReady[0]),
          .VECT_1_RST                    (wIntrVectorReady[1]),
-         .VECT_RST                      (TXC_DATA[31:0]),
+         .VECT_RST                      (_wTxcData[31:0]),
          .VECT_0                        (wIntrVector[31:0]),
          .VECT_1                        (wIntrVector[63:32]),
          .INTR_LEGACY_CLR               (1'd0),

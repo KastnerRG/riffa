@@ -99,7 +99,7 @@ module tx_engine
     localparam C_USE_FWFT_HDR_FIFO = 1;
     localparam C_DATA_FIFO_DEPTH = C_ACTUAL_HDR_FIFO_DEPTH + C_FORMATTER_DELAY + 
                                    C_PIPELINE_HDR_FIFO_INPUT + C_PIPELINE_HDR_FIFO_OUTPUT + C_USE_FWFT_HDR_FIFO + // Header Fifo
-                                   C_PIPELINE_HDR_INPUT + C_USE_COMPUTE_REG + C_USE_READY_REG + C_PIPELINE_OUTPUT + 1; // Aligner TODO: Why +1. Is it 64-bit specific?
+                                   C_PIPELINE_HDR_INPUT + C_USE_COMPUTE_REG + C_USE_READY_REG + C_PIPELINE_OUTPUT;
 
     wire                                  wTxHdrReady;
     wire                                  wTxHdrValid;
