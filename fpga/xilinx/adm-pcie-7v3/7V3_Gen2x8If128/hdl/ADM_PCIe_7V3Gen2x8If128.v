@@ -48,7 +48,7 @@ module ADM_PCIe_7V3Gen2x8If128
     #(// Number of RIFFA Channels
       parameter C_NUM_CHNL = 1,
       // Number of PCIe Lanes
-      parameter C_NUM_LANES =  4,
+      parameter C_NUM_LANES =  8,
       // Settings from Vivado IP Generator
       parameter C_PCI_DATA_WIDTH = 128,
       parameter C_MAX_PAYLOAD_BYTES = 256,
