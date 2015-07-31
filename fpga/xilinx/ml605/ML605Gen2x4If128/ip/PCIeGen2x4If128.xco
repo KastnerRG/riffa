@@ -1,0 +1,208 @@
+##############################################################
+#
+# Xilinx Core Generator version 14.7
+# Date: Fri Feb 27 23:45:45 2015
+#
+##############################################################
+#
+#  This file contains the customisation parameters for a
+#  Xilinx CORE Generator IP GUI. It is strongly recommended
+#  that you do not manually alter this file as it may cause
+#  unexpected and unsupported behavior.
+#
+##############################################################
+#
+#  Generated from component: xilinx.com:ip:v6_pcie:2.5
+#
+##############################################################
+#
+# BEGIN Project Options
+SET addpads = false
+SET asysymbol = true
+SET busformat = BusFormatAngleBracketNotRipped
+SET createndf = false
+SET designentry = Verilog
+SET device = xc6vlx240t
+SET devicefamily = virtex6
+SET flowvendor = Other
+SET formalverification = false
+SET foundationsym = false
+SET implementationfiletype = Ngc
+SET package = ff1156
+SET removerpms = false
+SET simulationfiles = Behavioral
+SET speedgrade = -1
+SET verilogsim = true
+SET vhdlsim = false
+# END Project Options
+# BEGIN Select
+SELECT Virtex-6_Integrated_Block_for_PCI_Express xilinx.com:ip:v6_pcie:2.5
+# END Select
+# BEGIN Parameters
+CSET acceptable_l0s_latency=Maximum_of_64_ns
+CSET acceptable_l1_latency=No_limit
+CSET ack_nak_timeout_func=Absolute
+CSET ack_nak_timeout_value=0000
+CSET bar0_64bit=false
+CSET bar0_enabled=true
+CSET bar0_prefetchable=false
+CSET bar0_scale=Kilobytes
+CSET bar0_size=1
+CSET bar0_type=Memory
+CSET bar1_64bit=false
+CSET bar1_enabled=false
+CSET bar1_prefetchable=false
+CSET bar1_scale=Kilobytes
+CSET bar1_size=2
+CSET bar1_type=N/A
+CSET bar2_64bit=false
+CSET bar2_enabled=false
+CSET bar2_prefetchable=false
+CSET bar2_scale=Bytes
+CSET bar2_size=128
+CSET bar2_type=N/A
+CSET bar3_64bit=false
+CSET bar3_enabled=false
+CSET bar3_prefetchable=false
+CSET bar3_scale=Kilobytes
+CSET bar3_size=2
+CSET bar3_type=N/A
+CSET bar4_64bit=false
+CSET bar4_enabled=false
+CSET bar4_prefetchable=false
+CSET bar4_scale=Kilobytes
+CSET bar4_size=2
+CSET bar4_type=N/A
+CSET bar5_enabled=false
+CSET bar5_prefetchable=false
+CSET bar5_scale=Kilobytes
+CSET bar5_size=2
+CSET bar5_type=N/A
+CSET base_class_menu=Simple_communication_controllers
+CSET buf_opt_bma=true
+CSET cardbus_cis_pointer=00000000
+CSET class_code_base=05
+CSET class_code_interface=00
+CSET class_code_sub=00
+CSET component_name=PCIeGen2x4If128
+CSET cost_table=1
+CSET cpl_finite=false
+CSET cpl_timeout_disable_sup=false
+CSET cpl_timeout_range=Range_B
+CSET d0_pme_support=true
+CSET d0_power_consumed=0
+CSET d0_power_consumed_factor=0
+CSET d0_power_dissipated=0
+CSET d0_power_dissipated_factor=0
+CSET d1_pme_support=true
+CSET d1_power_consumed=0
+CSET d1_power_consumed_factor=0
+CSET d1_power_dissipated=0
+CSET d1_power_dissipated_factor=0
+CSET d1_support=false
+CSET d2_pme_support=true
+CSET d2_power_consumed=0
+CSET d2_power_consumed_factor=0
+CSET d2_power_dissipated=0
+CSET d2_power_dissipated_factor=0
+CSET d2_support=false
+CSET d3_power_consumed=0
+CSET d3_power_consumed_factor=0
+CSET d3_power_dissipated=0
+CSET d3_power_dissipated_factor=0
+CSET d3cold_pme_support=false
+CSET d3hot_pme_support=true
+CSET de_emph=0
+CSET device_id=6024
+CSET device_port_type=PCI_Express_Endpoint_device
+CSET device_specific_initialization=false
+CSET disable_tx_aspm_l0s=false
+CSET dll_link_active_cap=false
+CSET downstream_link_num=00
+CSET dsn_enabled=true
+CSET en_route_err_cor=false
+CSET en_route_err_ftl=false
+CSET en_route_err_nfl=false
+CSET en_route_inta=false
+CSET en_route_intb=false
+CSET en_route_intc=false
+CSET en_route_intd=false
+CSET en_route_pm_pme=false
+CSET en_route_pme_to=false
+CSET en_route_pme_to_ack=false
+CSET en_route_unlock=false
+CSET enable_ack_nak_timer=false
+CSET enable_lane_reversal=false
+CSET enable_replay_timer=true
+CSET enable_slot_clock_cfg=false
+CSET expansion_rom_enabled=false
+CSET expansion_rom_scale=Kilobytes
+CSET expansion_rom_size=2
+CSET ext_pci_cfg_space=false
+CSET ext_pci_cfg_space_addr=3FF
+CSET extended_tag_field=true
+CSET force_no_scrambling=false
+CSET hw_auton_spd_disable=false
+CSET intx_generation=false
+CSET io_base_limit_registers=Disabled
+CSET legacy_interrupt=NONE
+CSET link_speed=5.0_GT/s
+CSET max_payload_size=512_bytes
+CSET maximum_link_width=X4
+CSET msi_64b=true
+CSET msi_enabled=true
+CSET msi_vec_mask=false
+CSET msix_enabled=false
+CSET msix_pba_bir=BAR_0
+CSET msix_pba_offset=0
+CSET msix_table_bir=BAR_0
+CSET msix_table_offset=0
+CSET msix_table_size=1
+CSET multiple_message_capable=1_vector
+CSET no_soft_reset=true
+CSET pci_cfg_space=false
+CSET pci_cfg_space_addr=3F
+CSET pcie_blk_locn=X0Y0
+CSET pcie_cap_slot_implemented=false
+CSET pcie_debug_ports=false
+CSET perf_level=High
+CSET phantom_functions=No_function_number_bits_used
+CSET pipe_pipeline=None
+CSET prefetchable_memory_base_limit_registers=Disabled
+CSET rcb=64_byte
+CSET ref_clk_freq=100_MHz
+CSET replay_timeout_func=Add
+CSET replay_timeout_value=0026
+CSET revision_id=00
+CSET root_cap_crs=false
+CSET slot_cap_attn_butn=false
+CSET slot_cap_attn_ind=false
+CSET slot_cap_elec_interlock=false
+CSET slot_cap_hotplug_cap=false
+CSET slot_cap_hotplug_surprise=false
+CSET slot_cap_mrl=false
+CSET slot_cap_no_cmd_comp_sup=false
+CSET slot_cap_physical_slot_num=0
+CSET slot_cap_pwr_ctrl=false
+CSET slot_cap_pwr_ind=false
+CSET slot_cap_pwr_limit_scale=0
+CSET slot_cap_pwr_limit_value=0
+CSET sub_class_interface_menu=Generic_XT_compatible_serial_controller
+CSET subsystem_id=0007
+CSET subsystem_vendor_id=10EE
+CSET trans_buf_pipeline=None
+CSET trgt_link_speed=4'h2
+CSET trim_tlp_digest=false
+CSET upconfigure_capable=true
+CSET user_clk_freq=250_default
+CSET vc_cap_enabled=false
+CSET vc_cap_reject_snoop=false
+CSET vendor_id=10EE
+CSET vsec_enabled=false
+CSET xlnx_ref_board=None
+# END Parameters
+# BEGIN Extra information
+MISC pkg_timestamp=2013-10-13T18:30:52Z
+# END Extra information
+GENERATE
+# CRC: 1fea7c10
