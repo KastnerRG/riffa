@@ -320,7 +320,7 @@ module riffa
     assign wTxcMetaReady = TXC_META_READY & ~wRstLogic & DONE_TXC_RST;
 
     /* Workaround for a bug reported by the NetFPGA group, where the parameter
-    /* C_PCI_DATA_WIDTH cannot be directly assigned to a wire. */
+       C_PCI_DATA_WIDTH cannot be directly assigned to a wire. */
 
     generate
         if(C_PCI_DATA_WIDTH == 32) begin
