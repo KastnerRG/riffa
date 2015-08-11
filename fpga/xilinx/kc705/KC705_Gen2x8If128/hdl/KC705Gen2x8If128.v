@@ -51,7 +51,7 @@ module KC705Gen2x8If128
       // Number of PCIe Lanes
       parameter C_NUM_LANES =  8,
       // Settings from Vivado IP Generator
-      parameter C_PCI_DATA_WIDTH = 64,
+      parameter C_PCI_DATA_WIDTH = 128,
       parameter C_MAX_PAYLOAD_BYTES = 256,
       parameter C_LOG_NUM_TAGS = 5
       ) 

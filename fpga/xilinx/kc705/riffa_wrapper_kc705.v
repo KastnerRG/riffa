@@ -478,7 +478,6 @@ module riffa_wrapper_kc705
          .DONE_TXR_RST                  (done_txr_rst),
          .DONE_RXR_RST                  (done_rxc_rst),
          .DONE_RXC_RST                  (done_rxr_rst),
-         /*AUTOINST*/
          // Outputs
          .M_AXIS_CQ_TREADY              (m_axis_cq_tready_nc),
          .M_AXIS_RC_TREADY              (m_axis_rc_tready_nc),

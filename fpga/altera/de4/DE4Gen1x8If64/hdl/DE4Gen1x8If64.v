@@ -53,10 +53,8 @@ module DE4Gen1x8If64
       // Settings from Quartus IP Library
       parameter C_PCI_DATA_WIDTH = 64,
       parameter C_MAX_PAYLOAD_BYTES = 256,
-      parameter C_LOG_NUM_TAGS = 5
-      ) 
-    (
-     input                    OSC_50_BANK2,
+      parameter C_LOG_NUM_TAGS = 5)
+    (input                    OSC_50_BANK2,
      input                    OSC_50_BANK3,
      input                    OSC_50_BANK4,
      input                    OSC_50_BANK5,
@@ -65,8 +63,7 @@ module DE4Gen1x8If64
      input                    PCIE_REFCLK,
      input [C_NUM_LANES-1:0]  PCIE_RX_IN,
      output [C_NUM_LANES-1:0] PCIE_TX_OUT,
-     output [7:0]             LED
-     );
+     output [7:0]             LED);
 
     // ----------PLL Signals----------
     wire                      clk50;
@@ -178,7 +175,6 @@ module DE4Gen1x8If64
     // ----------PLL assignments----------
     assign inclk0 = OSC_50_BANK2;
     assign fixedclk_serdes = clk125;
-
     assign reconfig_clk = clk50;
 
     // ----------PCIe Resets----------
@@ -330,8 +326,7 @@ module DE4Gen1x8If64
           .C_PCI_DATA_WIDTH             (C_PCI_DATA_WIDTH),
           .C_MAX_PAYLOAD_BYTES          (C_MAX_PAYLOAD_BYTES))
     riffa
-        (
-         // Outputs
+        (// Outputs
          .RX_ST_READY                   (rx_st_ready0),
          .TX_ST_DATA                    (tx_st_data0[C_PCI_DATA_WIDTH-1:0]),
          .TX_ST_VALID                   (tx_st_valid0[0:0]),
@@ -382,13 +377,9 @@ module DE4Gen1x8If64
             // Instantiate and assign modules to RIFFA channels. Users should 
             // replace the chnl_tester instantiation with their own core.
             chnl_tester 
-                 #(
-                   .C_PCI_DATA_WIDTH(C_PCI_DATA_WIDTH)
-                   )
+                 #(.C_PCI_DATA_WIDTH(C_PCI_DATA_WIDTH))
             chnl_tester_i
-                 (
-
-                  .CLK(chnl_clk),
+                 (.CLK(chnl_clk),
                   .RST(chnl_reset), // chnl_reset includes riffa_endpoint resets
                   // Rx interface
                   .CHNL_RX_CLK(chnl_rx_clk[i]), 
@@ -409,8 +400,7 @@ module DE4Gen1x8If64
                   .CHNL_TX_OFF(chnl_tx_off[`SIG_CHNL_OFFSET_W*i +:`SIG_CHNL_OFFSET_W]), 
                   .CHNL_TX_DATA(chnl_tx_data[C_PCI_DATA_WIDTH*i +:C_PCI_DATA_WIDTH]), 
                   .CHNL_TX_DATA_VALID(chnl_tx_data_valid[i]), 
-                  .CHNL_TX_DATA_REN(chnl_tx_data_ren[i])
-                  );    
+                  .CHNL_TX_DATA_REN(chnl_tx_data_ren[i]));    
         end
     endgenerate
     // --------------------  END USER CODE  --------------------
