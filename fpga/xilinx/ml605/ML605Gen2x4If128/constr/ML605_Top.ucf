@@ -101,8 +101,6 @@ PIN "PCIeGen*/trn_reset_n_int_i.CLR" TIG ;
 PIN "PCIeGen*/trn_reset_n_i.CLR" TIG ;
 PIN "PCIeGen*/pcie_clocking_i/mmcm_adv_i.RST" TIG ;
 
-#TIMESPEC "TS_RESETN" = FROM FFS(*) TO FFS(user_reset) 8 ns;
-
 ###############################################################################
 # Physical Constraints
 ###############################################################################

@@ -1,7 +1,7 @@
 ##############################################################
 #
 # Xilinx Core Generator version 14.7
-# Date: Fri Feb 27 23:45:45 2015
+# Date: Mon Aug  3 23:07:31 2015
 #
 ##############################################################
 #
@@ -199,10 +199,10 @@ CSET vc_cap_enabled=false
 CSET vc_cap_reject_snoop=false
 CSET vendor_id=10EE
 CSET vsec_enabled=false
-CSET xlnx_ref_board=None
+CSET xlnx_ref_board=ML_605
 # END Parameters
 # BEGIN Extra information
 MISC pkg_timestamp=2013-10-13T18:30:52Z
 # END Extra information
 GENERATE
-# CRC: 1fea7c10
+# CRC: 96c65ca9
