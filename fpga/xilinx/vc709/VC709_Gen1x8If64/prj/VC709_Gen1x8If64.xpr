@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2014 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="2" Path="/home/drichmond/Research/repositories/git/RIFFA-devel/riffa_2.2.0/source/fpga/xilinx/vc709/VC709_Gen1x8If64/prj/VC709_Gen1x8If64.xpr">
+<Project Version="7" Minor="2" Path="/home/drichmond/Research/repositories/git/riffa/fpga/xilinx/vc709/VC709_Gen1x8If64/prj/VC709_Gen1x8If64.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="0e6774b4d2f941beabc11dd88355dde5"/>
@@ -410,6 +410,13 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PPRDIR/../../../../riffa_hdl/reset_controller.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PPRDIR/../../../../riffa_hdl/demux.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -548,6 +555,20 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PPRDIR/../../../../riffa_hdl/rxc_engine_128.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../../../../riffa_hdl/rxr_engine_128.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PPRDIR/../../../../riffa_hdl/riffa.vh">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -618,6 +639,13 @@
         </FileInfo>
       </File>
       <File Path="$PPRDIR/../../../../riffa_hdl/channel.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
+      <File Path="$PPRDIR/../../../../riffa_hdl/reset_extender.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>

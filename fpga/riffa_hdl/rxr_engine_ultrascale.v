@@ -151,7 +151,7 @@ module rxr_engine_ultrascale
     reg                                                 rValid,_rValid;
     reg                                                 rRST;
 
-    assign DONE_RST_RXR = ~rRST;
+    assign DONE_RXR_RST = ~rRST;
 
     assign wMAxisCqSop = M_AXIS_CQ_TUSER[`UPKT_CQ_TUSER_SOP_R];
     assign wMAxisCqTlast = M_AXIS_CQ_TLAST;
@@ -381,7 +381,7 @@ module rxr_engine_ultrascale
          .RD_DATA                       (wRxSrDataValid),
          // Inputs
          .WR_DATA                       (M_AXIS_CQ_TVALID),
-         .RST_IN                        (RST_BUS | RST_LOGIC),
+         .RST_IN                        (rRst),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));
@@ -493,7 +493,7 @@ module rxr_engine_ultrascale
          .WR_DATA                       ({wHdr,wBarDecoded,wType,wStartFlag,wStartOffset[C_OFFSET_WIDTH-1:0],wEndFlag,wEndOffset[C_OFFSET_WIDTH-1:0],wByteEnables}),
          .WR_DATA_VALID                 (rValid),
          .RD_DATA_READY                 (1'b1),
-         .RST_IN                        (RST_BUS | RST_LOGIC),
+         .RST_IN                        (rRST),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));

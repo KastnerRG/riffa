@@ -46,7 +46,7 @@
 `timescale 1ps / 1ps
 module VC709Gen1x8If64
     #(// Number of RIFFA Channels
-      parameter C_NUM_CHNL = 12,
+      parameter C_NUM_CHNL = 1,
       // Number of PCIe Lanes
       parameter C_NUM_LANES =  8,
       // Settings from Vivado IP Generator

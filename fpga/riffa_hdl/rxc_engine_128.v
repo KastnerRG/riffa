@@ -127,6 +127,9 @@ module rxc_engine_128
 
     reg                                                   rStraddledSOP;
     reg                                                   rStraddledSOPSplit;    
+    reg                                                   rRST;
+
+    assign DONE_RXC_RST = ~rRST;
 
     // ----- Header Register -----
     assign __wRxcHdrSOP = RX_SR_SOP[C_RX_INPUT_STAGES] & ~__wRxcStartOffset[1];
@@ -176,12 +179,16 @@ module rxc_engine_128
         // header is not contiguous. (Not sure if this is ever possible, but
         // better safe than sorry assert Straddled SOP Split. See Virtex 6 PCIe
         // errata.)
-        if(__wRxcHdrSOP | RST_IN) begin
+        if(__wRxcHdrSOP) begin
             rStraddledSOPSplit <=0;
         end else begin
             rStraddledSOPSplit <= (rStraddledSOP | rStraddledSOPSplit) & ~RX_SR_VALID[C_RX_INPUT_STAGES];
         end
         
+    end
+
+    always @(posedge CLK) begin
+        rRST <= RST_BUS | RST_LOGIC;
     end
     
     mux
@@ -215,7 +222,7 @@ module rxc_engine_128
          // Inputs
          .WR_DATA                       ({__wRxcHdr[C_STRADDLE_W-1:0], __wRxcHdrValid}),
          .WR_EN                         (__wRxcHdrSOP | rStraddledSOP),
-         .RST_IN                        (RST_IN), // TODO: Remove
+         .RST_IN                        (0), // TODO: Remove
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));
@@ -233,7 +240,7 @@ module rxc_engine_128
          // Inputs
          .WR_DATA                       (__wRxcHdr[`TLP_MAXHDR_W-1:C_STRADDLE_W]),
          .WR_EN                         (__wRxcHdrSOP | rStraddledSOP | rStraddledSOPSplit), // Non straddled start, Straddled, or straddled split
-         .RST_IN                        (RST_IN), // TODO: Remove
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));
@@ -251,7 +258,7 @@ module rxc_engine_128
          // Inputs
          .WR_DATA                       ({rStraddledSOP,__wRxcHdrSOP}),
          .WR_EN                         (1),
-         .RST_IN                        (RST_IN), // TODO: Remove
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));
@@ -290,7 +297,7 @@ module rxc_engine_128
                                   wRxcHdrSCP, wRxcHdrMCP,
                                   wRxcHdrEndMask, wRxcHdrStartMask}),
          // Inputs
-         .RST_IN                (RST_IN),
+         .RST_IN                (rRST),
          .WR_DATA               ({_wRxcHdrValid, 
                                   _wRxcHdrSCP, _wRxcHdrMCP,
                                   _wRxcHdrEndMask, _wRxcHdrStartMask}), // Need to invert the start mask
@@ -339,7 +346,7 @@ module rxc_engine_128
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .RST_IN                        (rRST));
 endmodule
 // Local Variables:
 // verilog-library-directories:("." "../../../common")

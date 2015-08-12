@@ -52,10 +52,9 @@ module riffa_wrapper_zc706
       parameter C_PCI_DATA_WIDTH = 128,
       // 4-Byte Name for this FPGA
       parameter C_MAX_PAYLOAD_BYTES = 256,
-      parameter C_LOG_NUM_TAGS = 5
-      ) 
-    (
-     // Interface: Xilinx RX 
+      parameter C_LOG_NUM_TAGS = 5,
+      parameter C_FPGA_ID = "Z706") 
+    (// Interface: Xilinx RX 
      input [C_PCI_DATA_WIDTH-1:0]                 M_AXIS_RX_TDATA,
      input [(C_PCI_DATA_WIDTH/8)-1:0]             M_AXIS_RX_TKEEP,
      input                                        M_AXIS_RX_TLAST,
@@ -96,6 +95,7 @@ module riffa_wrapper_zc706
      input                                        USER_CLK,
      input                                        USER_RESET,
 
+    
      // RIFFA Interface Signals
      output                                       RST_OUT,
      input [C_NUM_CHNL-1:0]                       CHNL_RX_CLK, // Channel read clock
@@ -116,9 +116,8 @@ module riffa_wrapper_zc706
      input [(C_NUM_CHNL*`SIG_CHNL_OFFSET_W)-1:0]  CHNL_TX_OFF, // Channel write offset
      input [(C_NUM_CHNL*C_PCI_DATA_WIDTH)-1:0]    CHNL_TX_DATA, // Channel write data
      input [C_NUM_CHNL-1:0]                       CHNL_TX_DATA_VALID, // Channel write data valid
-     output [C_NUM_CHNL-1:0]                      CHNL_TX_DATA_REN // Channel write data has been recieved
-
-     );
+     output [C_NUM_CHNL-1:0]                      CHNL_TX_DATA_REN); // Channel write data has been recieved
+     
     localparam C_FPGA_NAME = "REGT"; // This is not yet exposed in the driver
     localparam C_MAX_READ_REQ_BYTES = C_MAX_PAYLOAD_BYTES * 2;
     // ALTERA, XILINX or ULTRASCALE
@@ -127,11 +126,16 @@ module riffa_wrapper_zc706
     localparam C_KEEP_WIDTH = C_PCI_DATA_WIDTH / 32;
     localparam C_PIPELINE_OUTPUT = 1;
     localparam C_PIPELINE_INPUT = 1;
-    localparam C_DEPTH_PACKETS = 10;
+    localparam C_DEPTH_PACKETS = 4;
+    
 
     wire                                          clk;
     wire                                          rst_in;
 
+    wire                                          done_txc_rst;
+    wire                                          done_txr_rst;
+    wire                                          done_rxr_rst;
+    wire                                          done_rxc_rst;
     // Interface: RXC Engine
     wire [C_PCI_DATA_WIDTH-1:0]                   rxc_data;
     wire                                          rxc_data_valid;
@@ -286,14 +290,13 @@ module riffa_wrapper_zc706
 
     assign clk = USER_CLK;
     assign rst_in = USER_RESET;
-    
+
     translation_xilinx
         #(/*AUTOINSTPARAM*/
           // Parameters
           .C_PCI_DATA_WIDTH             (C_PCI_DATA_WIDTH))
     trans
-        (
-         // Outputs
+        (// Outputs
          .RX_TLP                        (rx_tlp[C_PCI_DATA_WIDTH-1:0]),
          .RX_TLP_VALID                  (rx_tlp_valid),
          .RX_TLP_START_FLAG             (rx_tlp_start_flag),
@@ -358,11 +361,13 @@ module riffa_wrapper_zc706
 
     engine_layer
         #(// Parameters
+          .C_MAX_PAYLOAD_DWORDS         (C_MAX_PAYLOAD_BYTES/4),
+          /*AUTOINSTPARAM*/
+          // Parameters
           .C_PCI_DATA_WIDTH             (C_PCI_DATA_WIDTH),
           .C_LOG_NUM_TAGS               (C_LOG_NUM_TAGS),
           .C_PIPELINE_INPUT             (C_PIPELINE_INPUT),
           .C_PIPELINE_OUTPUT            (C_PIPELINE_OUTPUT),
-          .C_MAX_PAYLOAD_DWORDS         (C_MAX_PAYLOAD_BYTES/4),
           .C_VENDOR                     (C_VENDOR))
     engine_layer_inst
         (// Outputs
@@ -409,6 +414,7 @@ module riffa_wrapper_zc706
          .TXR_DATA_READY                (txr_data_ready),
          .TXR_META_READY                (txr_meta_ready),
          .TXR_SENT                      (txr_sent),
+         .RST_LOGIC                     (RST_OUT),
          // Unconnected Outputs
          .TX_TLP                        (tx_tlp),
          .TX_TLP_VALID                  (tx_tlp_valid),
@@ -419,8 +425,8 @@ module riffa_wrapper_zc706
 
          .RX_TLP_READY                  (rx_tlp_ready),
          // Inputs
-         .CLK                           (clk),
-         .RST_IN                        (rst_in),
+         .CLK_BUS                       (clk),
+         .RST_BUS                       (rst_in),
 
          .CONFIG_COMPLETER_ID           (config_completer_id[`SIG_CPLID_W-1:0]),
 
@@ -469,6 +475,10 @@ module riffa_wrapper_zc706
          .RX_TLP_BAR_DECODE             (rx_tlp_bar_decode),
 
          .TX_TLP_READY                  (tx_tlp_ready),
+         .DONE_TXC_RST                  (done_txc_rst),
+         .DONE_TXR_RST                  (done_txr_rst),
+         .DONE_RXR_RST                  (done_rxc_rst),
+         .DONE_RXC_RST                  (done_rxr_rst),
          // Outputs
          .M_AXIS_CQ_TREADY              (m_axis_cq_tready_nc),
          .M_AXIS_RC_TREADY              (m_axis_rc_tready_nc),
@@ -506,6 +516,7 @@ module riffa_wrapper_zc706
           .C_MAX_READ_REQ_BYTES         (C_MAX_READ_REQ_BYTES),
           .C_VENDOR                     (C_VENDOR),
           .C_FPGA_NAME                  (C_FPGA_NAME),
+          .C_FPGA_ID                    (C_FPGA_ID),
           .C_DEPTH_PACKETS              (C_DEPTH_PACKETS))
     riffa_inst
         (// Outputs
@@ -548,7 +559,6 @@ module riffa_wrapper_zc706
          .INTR_MSI_REQUEST              (intr_msi_request),
          // Inputs
          .CLK                           (clk),
-         .RST_IN                        (rst_in),
          .RXR_DATA                      (rxr_data[C_PCI_DATA_WIDTH-1:0]),
          .RXR_DATA_VALID                (rxr_data_valid),
          .RXR_DATA_START_FLAG           (rxr_data_start_flag),
@@ -606,6 +616,9 @@ module riffa_wrapper_zc706
         
          .INTR_MSI_RDY                  (intr_msi_rdy),
 
+         .DONE_TXC_RST                  (done_txc_rst),
+         .DONE_TXR_RST                  (done_txr_rst),
+         .RST_BUS                       (rst_in),
          /*AUTOINST*/
          // Outputs
          .RST_OUT                       (RST_OUT),
@@ -631,5 +644,5 @@ module riffa_wrapper_zc706
 
 endmodule
 // Local Variables:
-// verilog-library-directories:("../../engine/" "../../riffa/")
+// verilog-library-directories:("../../riffa_hdl/")
 // End:

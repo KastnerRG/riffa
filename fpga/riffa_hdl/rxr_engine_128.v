@@ -148,6 +148,9 @@ module rxr_engine_128
 
     reg                                                   rStraddledSOP;
     reg                                                   rStraddledSOPSplit;
+    reg                                                   rRST;
+
+    assign DONE_RXR_RST = ~rRST;
     
     // ----- Header Register -----
     assign __wRxrHdrSOP = RX_SR_SOP[C_RX_INPUT_STAGES] & ~__wRxrStartOffset[1];
@@ -206,11 +209,15 @@ module rxr_engine_128
         // header is not contiguous. (Not sure if this is ever possible, but
         // better safe than sorry assert Straddled SOP Split. See Virtex 6 PCIe
         // errata.
-        if(__wRxrHdrSOP | RST_IN) begin
+        if(__wRxrHdrSOP | rRST) begin
             rStraddledSOPSplit <=0;
         end else begin
             rStraddledSOPSplit <= (__wRxrHdrSOPStraddle | rStraddledSOPSplit) & ~RX_SR_VALID[C_RX_INPUT_STAGES];
         end
+    end
+
+    always @(posedge CLK) begin
+        rRST <= RST_BUS | RST_LOGIC;
     end
     
     mux
@@ -245,7 +252,7 @@ module rxr_engine_128
          // Inputs
          .WR_DATA                       ({__wRxrHdr[C_STRADDLE_W-1:0], __wRxrHdrValid}),
          .WR_EN                         (__wRxrHdrSOP | rStraddledSOP),
-         .RST_IN                        (RST_IN), // TODO: Remove
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));
@@ -264,7 +271,7 @@ module rxr_engine_128
          // Inputs
          .WR_DATA                       ({__wRxrHdr4DWHWDataSF,rStraddledSOP,__wRxrHdrSOP}),
          .WR_EN                         (1),
-         .RST_IN                        (RST_IN), // TODO: Remove
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));
@@ -282,7 +289,7 @@ module rxr_engine_128
          // Inputs
          .WR_DATA                       ({__wRxrHdrSOP}),
          .WR_EN                         (RX_SR_VALID[C_RX_INPUT_STAGES]),
-         .RST_IN                        (RST_IN), // TODO: Remove
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));
@@ -300,7 +307,7 @@ module rxr_engine_128
          // Inputs
          .WR_DATA                       (__wRxrHdr[`TLP_MAXHDR_W-1:C_STRADDLE_W]),
          .WR_EN                         (__wRxrHdrSOP | rStraddledSOP | rStraddledSOPSplit), // Non straddled start, Straddled, or straddled split
-         .RST_IN                        (RST_IN), // TODO: Remove
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));
@@ -318,7 +325,7 @@ module rxr_engine_128
                                   wRxrHdrSF,wRxrHdrDataSoff,
                                   wRxrHdrEF}),/* TODO: TLP_METADATA_R and other signals*/
          // Inputs
-         .RST_IN                (0),/* TODO: Never need to reset?*/
+         .RST_IN                (0),
          .WR_DATA               ({_wRxrHdr[`TLP_REQMETADW0_I +: 64],
                                   _wRxrHdrSF,_wRxrHdrDataSoff[1:0],
                                   _wRxrHdrEF}),/* TODO: TLP_METADATA_R*/
@@ -328,8 +335,7 @@ module rxr_engine_128
          .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH              (3+8),
           .C_VALUE              (0)
           /*AUTOINSTPARAM*/)
@@ -339,7 +345,7 @@ module rxr_engine_128
                                   wRxrHdrSCP, wRxrHdrMCP,
                                   wRxrHdrEndMask, wRxrHdrStartMask}),
          // Inputs
-         .RST_IN                (RST_IN),
+         .RST_IN                (0),
          .WR_DATA               ({_wRxrHdrValid, 
                                   _wRxrHdrSCP, _wRxrHdrMCP,
                                   _wRxrHdrEndMask, _wRxrHdrStartMask}),
@@ -349,8 +355,7 @@ module rxr_engine_128
          .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH              (`SIG_ADDR_W/2),
           .C_VALUE              (0)
           /*AUTOINSTPARAM*/)
@@ -366,8 +371,7 @@ module rxr_engine_128
          .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH              (`SIG_ADDR_W/2),
           .C_VALUE              (0)
           /*AUTOINSTPARAM*/)
@@ -388,8 +392,7 @@ module rxr_engine_128
           .C_MASK_WIDTH                 (4)
           /*AUTOINSTPARAM*/)
     o2m_ef
-        (
-         // Outputs
+        (// Outputs
          .MASK                          (_wRxrHdrEndMask),
          // Inputs
          .OFFSET_ENABLE                 (_wRxrHdrEF),
@@ -397,15 +400,13 @@ module rxr_engine_128
          /*AUTOINST*/);
 
     pipeline
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_RX_OUTPUT_STAGES),
           .C_WIDTH                      (C_OUTPUT_STAGE_WIDTH),// TODO: 
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     output_pipeline
-        (
-         // Outputs
+        (// Outputs
          .WR_DATA_READY                 (), // Pinned to 1
          .RD_DATA                       ({RXR_DATA_WORD_ENABLE, RXR_DATA_START_FLAG, RXR_DATA_START_OFFSET,
                                           RXR_DATA_END_FLAG,
@@ -423,10 +424,10 @@ module rxr_engine_128
                                           wRxrMetaLength, wRxrMetaEP}),
          .WR_DATA_VALID                 (wRxrDataValid),
          .RD_DATA_READY                 (1'b1),
+         .RST_IN                        (rRST),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 endmodule
 // Local Variables:
 // verilog-library-directories:("." "../../../common")

@@ -195,10 +195,10 @@ module rx_engine_classic
          .RD_DATA                       (wRxSrDataValid),
          // Inputs
          .WR_DATA                       (RX_TLP_VALID),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
 
     // End Flag Shift Register. Data valid is deasserted based on the

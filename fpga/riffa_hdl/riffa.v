@@ -276,7 +276,6 @@ module riffa
     wire                                          wTxEngRdReqSent;
     wire                                          wRxEngRdComplete;
 
-    wire                                          wRstLogic;
     wire [31:0]                                   wCPciDataWidth;
     reg [31:0]                                    wCFpgaId;
 
@@ -285,8 +284,7 @@ module riffa
 
     genvar                                        i;
 
-    assign RST_OUT = wRstLogic;
-    assign wRstLogic = wCoreSettingsReady;
+    
     assign wRxEngRdComplete = RXC_DATA_END_FLAG & RXC_DATA_VALID & 
                               (RXC_META_LENGTH >= RXC_META_BYTES_REMAINING[`SIG_BYTECNT_W-1:2]);// TODO: Retime (if possible)
 
@@ -302,8 +300,8 @@ module riffa
     assign TXC_DATA_START_OFFSET = wTxcDataStartOffset;
     assign TXC_DATA_END_FLAG = wTxcDataEndFlag;
     assign TXC_DATA_END_OFFSET = wTxcDataEndOffset;
-    assign TXC_DATA_VALID = wTxcDataValid & ~wRstLogic & DONE_TXC_RST;
-    assign wTxcDataReady = TXC_DATA_READY & ~wRstLogic & DONE_TXC_RST;
+    assign TXC_DATA_VALID = wTxcDataValid & ~wPendingRst & DONE_TXC_RST;
+    assign wTxcDataReady = TXC_DATA_READY & ~wPendingRst & DONE_TXC_RST;
 
     assign TXC_META_FDWBE = wTxcMetaFdwbe;
     assign TXC_META_LDWBE = wTxcMetaLdwbe;
@@ -316,8 +314,8 @@ module riffa
     assign TXC_META_TC = wTxcMetaTc;
     assign TXC_META_ATTR = wTxcMetaAttr;
     assign TXC_META_EP = wTxcMetaEp;
-    assign TXC_META_VALID = wTxcMetaValid & ~wRstLogic & DONE_TXC_RST;
-    assign wTxcMetaReady = TXC_META_READY & ~wRstLogic & DONE_TXC_RST;
+    assign TXC_META_VALID = wTxcMetaValid & ~wPendingRst & DONE_TXC_RST;
+    assign wTxcMetaReady = TXC_META_READY & ~wPendingRst & DONE_TXC_RST;
 
     /* Workaround for a bug reported by the NetFPGA group, where the parameter
        C_PCI_DATA_WIDTH cannot be directly assigned to a wire. */
@@ -390,10 +388,10 @@ module riffa
                                            _wTxcMetaAttr, _wTxcMetaEp}),
          .WR_DATA_VALID                  (_wTxcMetaValid),
          .RD_DATA_READY                  (wTxcMetaReady),
+         .RST_IN                        (RST_BUS),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     pipeline
         #(// Parameters
@@ -415,18 +413,32 @@ module riffa
                                            _wTxcDataEndOffset}),
          .WR_DATA_VALID                  (_wTxcDataValid),
          .RD_DATA_READY                  (wTxcDataReady),
+         .RST_IN                        (RST_BUS),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
+    reset_extender
+        #(.C_RST_COUNT                  (8)
+          /*AUTOINSTPARAM*/)
+    reset_extender_inst
+        (// Outputs
+         .PENDING_RST                   (wPendingRst),
+         // Inputs
+         .RST_IN                        (RST_BUS | wCoreSettingsReady),
+         /*AUTOINST*/
+         // Outputs
+         .RST_OUT                       (RST_OUT),
+         // Inputs
+         .CLK                           (CLK));
+    
     reorder_queue 
         #(.C_PCI_DATA_WIDTH(C_PCI_DATA_WIDTH),
           .C_NUM_CHNL(C_NUM_CHNL),
           .C_MAX_READ_REQ_BYTES(C_MAX_READ_REQ_BYTES),
           .C_TAG_WIDTH(C_TAG_WIDTH)) 
     reorderQueue 
-        (.RST                           (wRstLogic),
+        (.RST                           (RST_OUT),
          .VALID                         (RXC_DATA_VALID),
          .DATA_START_FLAG               (RXC_DATA_START_FLAG),
          .DATA_START_OFFSET             (RXC_DATA_START_OFFSET[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
@@ -515,7 +527,7 @@ module riffa
          .CHNL_TX_DONELEN               (wChnlTxDoneLen),
          .CHNL_RX_DONELEN               (wChnlRxDoneLen),
          .INTR_VECTOR                   (wIntrVector),
-         .RST_IN                        (wRstLogic),
+         .RST_IN                        (RST_OUT),
          .TXC_DATA_READY                (_wTxcDataReady),
          .TXC_META_READY                (_wTxcMetaReady),
          /*AUTOINST*/
@@ -545,7 +557,7 @@ module riffa
          // Inputs
          .RX_ENG_RD_DONE                (wRxEngRdComplete),
          .TX_ENG_RD_REQ_SENT            (wTxEngRdReqSent),
-         .RST                           (wRstLogic),
+         .RST                           (RST_OUT),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK),
@@ -558,7 +570,7 @@ module riffa
         #(.C_NUM_CHNL                   (C_NUM_CHNL)) 
     intr 
         (// Inputs
-         .RST                           (wRstLogic),
+         .RST                           (RST_OUT),
          .RX_SG_BUF_RECVD               (wChnlSgRxBufRecvd),
          .RX_TXN_DONE                   (wChnlRxDone),
          .TX_TXN                        (wChnlTxRequest),
@@ -597,7 +609,7 @@ module riffa
          .INT_TAG_VALID                 (wInternalTagValid),
          .TX_ENG_RD_REQ_SENT            (wTxEngRdReqSent),
          // Inputs
-         .RST_IN                        (wRstLogic),
+         .RST_IN                        (RST_OUT),
          .WR_REQ                        (wTxEngWrReq[C_NUM_CHNL-1:0]),
          .WR_ADDR                       (wTxEngWrAddr[(C_NUM_CHNL*`SIG_ADDR_W)-1:0]),
          .WR_LEN                        (wTxEngWrLen[(C_NUM_CHNL*`SIG_LEN_W)-1:0]),
@@ -644,7 +656,7 @@ module riffa
                    )
             channel 
                  (
-                  .RST(wRstLogic),
+                  .RST(RST_OUT),
                   .CLK(CLK), 
                   .CONFIG_MAX_READ_REQUEST_SIZE(CONFIG_MAX_READ_REQUEST_SIZE), 
                   .CONFIG_MAX_PAYLOAD_SIZE(CONFIG_MAX_PAYLOAD_SIZE), 

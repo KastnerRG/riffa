@@ -153,6 +153,9 @@ module rxc_engine_classic
     wire [C_RX_PIPELINE_DEPTH:0]                          wRxSrSop;
 
     reg                                                   rValid,_rValid;
+    reg                                                 rRST;
+
+    assign DONE_RXR_RST = ~rRST;
     
     
     // Calculate the header length (start offset), and header length minus 1 (end offset)
@@ -229,116 +232,116 @@ module rxc_engine_classic
     end
     
     always @(posedge CLK) begin
-        if(RST_IN) begin
+        if(rRST) begin
 	        rValid <= 1'b0;
         end else begin
 	        rValid <= _rValid;
         end
     end
 
+    always @(posedge CLK) begin
+        rRST <= RST_BUS | RST_LOGIC;
+    end
 
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH                      (32))
     metadata_DW0_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wMetadata[31:0]),
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_IN                        (0),
          .WR_DATA                       (RX_SR_DATA[C_RX_METADW0_INDEX +: 32]),
-         .WR_EN                         (wRxSrSop[C_RX_METADW0_CYCLE]));
+         .WR_EN                         (wRxSrSop[C_RX_METADW0_CYCLE]),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH                      (32))
     meta_DW1_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wMetadata[63:32]),
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_IN                        (0),
          .WR_DATA                       (RX_SR_DATA[C_RX_METADW1_INDEX +: 32]),
-         .WR_EN                         (wRxSrSop[C_RX_METADW1_CYCLE]));
+         .WR_EN                         (wRxSrSop[C_RX_METADW1_CYCLE]),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH                      (32))
     meta_DW2_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wMetadata[95:64]),
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_IN                        (0),
          .WR_DATA                       (RX_SR_DATA[C_RX_METADW2_INDEX +: 32]),
-         .WR_EN                         (wRxSrSop[C_RX_METADW2_CYCLE]));
+         .WR_EN                         (wRxSrSop[C_RX_METADW2_CYCLE]),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH                      (`TLP_TYPE_W))
     metadata_type_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wType),
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_IN                        (0),
          .WR_DATA                       (RX_SR_DATA[(`TLP_TYPE_I + C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES) +: `TLP_TYPE_W]),
-         .WR_EN                         (wRxSrSop[`TLP_TYPE_I/C_PCI_DATA_WIDTH  + C_RX_INPUT_STAGES]));
+         .WR_EN                         (wRxSrSop[`TLP_TYPE_I/C_PCI_DATA_WIDTH  + C_RX_INPUT_STAGES]),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH                      (`TLP_LEN_W))
     metadata_length_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wLength),
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_IN                        (0),
          .WR_DATA                       (RX_SR_DATA[((`TLP_LEN_I%C_PCI_DATA_WIDTH) + C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES) +: `TLP_LEN_W]),
-         .WR_EN                         (wRxSrSop[`TLP_LEN_I/C_PCI_DATA_WIDTH + C_RX_INPUT_STAGES]));
+         .WR_EN                         (wRxSrSop[`TLP_LEN_I/C_PCI_DATA_WIDTH + C_RX_INPUT_STAGES]),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH                      (`TLP_CPLADDR_W))
     metadata_address_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wAddr),
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_IN                        (0),
          .WR_DATA                       (RX_SR_DATA[((`TLP_CPLADDR_I%C_PCI_DATA_WIDTH) + C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES) +: `TLP_CPLADDR_W]),
-         .WR_EN                         (wRxSrSop[`TLP_CPLADDR_I/C_PCI_DATA_WIDTH + C_RX_INPUT_STAGES]));
-
+         .WR_EN                         (wRxSrSop[`TLP_CPLADDR_I/C_PCI_DATA_WIDTH + C_RX_INPUT_STAGES]),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
     
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH                      (1),
           .C_VALUE                      (1'b0)
           /*AUTOINSTPARAM*/)
     start_flag_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wStartFlag),
          // Inputs
+         .RST_IN                        (0),
          .WR_DATA                       (_wStartFlag),
          .WR_EN                         (1),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     assign wStartMask = {C_PCI_DATA_WIDTH/32{1'b1}} << ({C_OFFSET_WIDTH{wStartFlag}}& wStartOffset[C_OFFSET_WIDTH-1:0]);
 
@@ -348,20 +351,19 @@ module rxc_engine_classic
           .C_MASK_WIDTH                 (C_PCI_DATA_WIDTH/32)
           /*AUTOINSTPARAM*/)
     o2m_ef
-        (
-         // Outputs
+        (// Outputs
          .MASK                          (wEndMask),
          // Inputs
          .OFFSET_ENABLE                 (wEndFlag),
          .OFFSET                        (wEndOffset)
          /*AUTOINST*/);
+    
     generate
         if(C_RX_OUTPUT_STAGES == 0) begin
             assign RXC_DATA_WORD_ENABLE = {wEndMask & wStartMask} & {C_PCI_DATA_WIDTH/32{~rValid | ~wMetadata[`TLP_PAYBIT_I]}};
         end else begin
             register
-                #(
-                  // Parameters
+                #(// Parameters
                   .C_WIDTH              (C_PCI_DATA_WIDTH/32),
                   .C_VALUE              (0)
                   /*AUTOINSTPARAM*/)
@@ -377,40 +379,36 @@ module rxc_engine_classic
                  .CLK                   (CLK));
 
             pipeline
-                #(
-                  // Parameters
-                  .C_DEPTH                      (C_RX_OUTPUT_STAGES-1),
-                  .C_WIDTH                      (C_PCI_DATA_WIDTH/32),
-                  .C_USE_MEMORY                 (0)
+                #(// Parameters
+                  .C_DEPTH              (C_RX_OUTPUT_STAGES-1),
+                  .C_WIDTH              (C_PCI_DATA_WIDTH/32),
+                  .C_USE_MEMORY         (0)
                   /*AUTOINSTPARAM*/)
             dw_pipeline
-                (
-                 // Outputs
-                 .WR_DATA_READY                 (), // Pinned to 1
-                 .RD_DATA                       (RXC_DATA_WORD_ENABLE),
-                 .RD_DATA_VALID                 (),
+                (// Outputs
+                 .WR_DATA_READY         (), // Pinned to 1
+                 .RD_DATA               (RXC_DATA_WORD_ENABLE),
+                 .RD_DATA_VALID         (),
                  // Inputs
-                 .WR_DATA                       (wRxcDataWordEnable),
-                 .WR_DATA_VALID                 (1),
-                 .RD_DATA_READY                 (1'b1),
+                 .WR_DATA               (wRxcDataWordEnable),
+                 .WR_DATA_VALID         (1),
+                 .RD_DATA_READY         (1'b1),
+                 .RST_IN                (rRST),
                  /*AUTOINST*/
                  // Inputs
-                 .CLK                   (CLK),
-                 .RST_IN                (RST_IN));
+                 .CLK                   (CLK));
 
         end
     endgenerate
 
     pipeline
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_RX_OUTPUT_STAGES),
           .C_WIDTH                      (`TLP_CPLHDR_W + 2*(clog2s(C_PCI_DATA_WIDTH/32) + 1)),
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     output_pipeline
-        (
-         // Outputs
+        (// Outputs
          .WR_DATA_READY                 (), // Pinned to 1
          .RD_DATA                       ({wRxcMetadata,wRxcDataStartFlag,wRxcDataStartOffset,wRxcDataEndFlag,wRxcDataEndOffset}),
          .RD_DATA_VALID                 (wRxcDataValid),
@@ -418,10 +416,10 @@ module rxc_engine_classic
          .WR_DATA                       ({wMetadata, wStartFlag,wStartOffset[C_OFFSET_WIDTH-1:0],wEndFlag,wEndOffset[C_OFFSET_WIDTH-1:0]}),
          .WR_DATA_VALID                 (rValid),
          .RD_DATA_READY                 (1'b1),
+         .RST_IN                        (rRST),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     // Start Flag Shift Register. Data enables are derived from the
     // taps on this shift register.

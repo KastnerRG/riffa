@@ -149,7 +149,7 @@ module rxc_engine_ultrascale
     reg                                                 rValid,_rValid;
     reg                                                 rRST;
         
-    assign DONE_RST_RXC = ~rRST;
+    assign DONE_RXC_RST = ~rRST;
 
     assign wMAxisRcSop = M_AXIS_RC_TUSER[`UPKT_RC_TUSER_SOP_I];
     assign wMAxisRcTlast = M_AXIS_RC_TLAST;
@@ -217,7 +217,7 @@ module rxc_engine_ultrascale
     end
     
     always @(posedge CLK) begin
-        if(RST_BUS | RST_LOGIC) begin
+        if(rRST) begin
 	        rValid <= 1'b0;
         end else begin
 	        rValid <= _rValid;
@@ -360,7 +360,7 @@ module rxc_engine_ultrascale
          .RD_DATA                       (wRxSrDataValid),
          // Inputs
          .WR_DATA                       (M_AXIS_RC_TVALID),
-         .RST_IN                        (RST_BUS | RST_LOGIC),
+         .RST_IN                        (rRST),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));
@@ -447,7 +447,7 @@ module rxc_engine_ultrascale
                                           wEndFlag,wEndOffset[C_OFFSET_WIDTH-1:0],wType}),
          .WR_DATA_VALID                 (rValid),
          .RD_DATA_READY                 (1'b1),
-         .RST_IN                        (RST_BUS | RST_LOGIC),
+         .RST_IN                        (rRST),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));

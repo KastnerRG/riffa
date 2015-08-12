@@ -170,10 +170,11 @@ module rxr_engine_classic
     wire [C_RX_PIPELINE_DEPTH:0]                          wRxSrSop;
 
     reg                                                   rValid,_rValid;
+    reg                                                   rRST;
 
-    
+    assign DONE_RXC_RST = ~rRST;
+
     assign wAddrHiReset = ~RX_SR_DATA[C_RX_ADDRDW1_RESET_INDEX];
-
     // Select Addr[31:0] from one of the two possible locations in the TLP based
     // on header length (1 bit)
     assign wRotateAddressField = w4DWH;
@@ -259,12 +260,17 @@ module rxr_engine_classic
     end
     
     always @(posedge CLK) begin
-        if(RST_IN) begin
+        if(rRST) begin
 	        rValid <= 1'b0;
         end else begin
 	        rValid <= _rValid;
         end
     end
+
+    always @(posedge CLK) begin
+        rRST <= RST_BUS | RST_LOGIC;
+    end
+
     assign wStartMask = {C_PCI_DATA_WIDTH/32{1'b1}} << ({C_OFFSET_WIDTH{wStartFlag}}& wStartOffset[C_OFFSET_WIDTH-1:0]);
 
     offset_to_mask
@@ -309,8 +315,7 @@ module rxr_engine_classic
                   .C_USE_MEMORY                 (0)
                   /*AUTOINSTPARAM*/)
             dw_pipeline
-                (
-                 // Outputs
+                (// Outputs
                  .WR_DATA_READY                 (), // Pinned to 1
                  .RD_DATA                       (RXR_DATA_WORD_ENABLE),
                  .RD_DATA_VALID                 (),
@@ -318,10 +323,10 @@ module rxr_engine_classic
                  .WR_DATA                       (wRxrDataWordEnable),
                  .WR_DATA_VALID                 (1),
                  .RD_DATA_READY                 (1'b1),
+                 .RST_IN                        (rRST),
                  /*AUTOINST*/
                  // Inputs
-                 .CLK                   (CLK),
-                 .RST_IN                (RST_IN));
+                 .CLK                   (CLK));
         end
     endgenerate
     
@@ -338,182 +343,164 @@ module rxr_engine_classic
          // Inputs
          .WR_DATA                       (RX_SR_DATA[C_RX_METADW0_INDEX +: 32]),
          .WR_EN                         (wRxSrSop[C_RX_METADW0_CYCLE]),
-         /*AUTOINST*/
-         // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
-
-    register
-        #(
-          // Parameters
-          .C_WIDTH                      (32),
-          .C_VALUE                      (0)
-          /*AUTOINSTPARAM*/)
-    meta_DW1_register
-        (
-         // Outputs
-         .RD_DATA                       (wMetadata[63:32]),
-         // Inputs
-         .WR_DATA                       (RX_SR_DATA[C_RX_METADW1_INDEX +: 32]),
-         .WR_EN                         (wRxSrSop[C_RX_METADW1_CYCLE]),
-         /*AUTOINST*/
-         // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
-
-    register
-        #(
-          // Parameters
-          .C_WIDTH                      (32),
-          .C_VALUE                      (0)
-          /*AUTOINSTPARAM*/)
-    addr_DW0_register
-        (
-         // Outputs
-         .RD_DATA                       (wAddr[31:0]),
-         // Inputs
-         .WR_DATA                       (RX_SR_DATA[C_RX_ADDRDW0_INDEX +: 32]),
-         .WR_EN                         (wRxSrSop[C_RX_ADDRDW0_CYCLE]),
-         /*AUTOINST*/
-         // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
-
-    register
-        #(
-          // Parameters
-          .C_WIDTH                      (32),
-          .C_VALUE                      (0)
-          /*AUTOINSTPARAM*/)
-    addr_DW1_register
-        (
-         // Outputs
-         .RD_DATA                       (wAddr[63:32]),
-         // Inputs
-         .WR_DATA                       (RX_SR_DATA[C_RX_ADDRDW1_INDEX +: 32]),
-         .WR_EN                         (wRxSrSop[C_RX_ADDRDW1_CYCLE]),
-         .RST_IN                        (RST_IN | (wAddrHiReset & wRxSrSop[C_RX_ADDRDW1_CYCLE])),
+         .RST_IN                        (rRST),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
+        #(// Parameters
+          .C_WIDTH                      (32),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
+    meta_DW1_register
+        (// Outputs
+         .RD_DATA                       (wMetadata[63:32]),
+         // Inputs
+         .WR_DATA                       (RX_SR_DATA[C_RX_METADW1_INDEX +: 32]),
+         .WR_EN                         (wRxSrSop[C_RX_METADW1_CYCLE]),
+         .RST_IN                        (rRST),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
+
+    register
+        #(// Parameters
+          .C_WIDTH                      (32),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
+    addr_DW0_register
+        (// Outputs
+         .RD_DATA                       (wAddr[31:0]),
+         // Inputs
+         .WR_DATA                       (RX_SR_DATA[C_RX_ADDRDW0_INDEX +: 32]),
+         .WR_EN                         (wRxSrSop[C_RX_ADDRDW0_CYCLE]),
+         .RST_IN                        (0),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
+
+    register
+        #(// Parameters
+          .C_WIDTH                      (32),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
+    addr_DW1_register
+        (// Outputs
+         .RD_DATA                       (wAddr[63:32]),
+         // Inputs
+         .WR_DATA                       (RX_SR_DATA[C_RX_ADDRDW1_INDEX +: 32]),
+         .WR_EN                         (wRxSrSop[C_RX_ADDRDW1_CYCLE]),
+         .RST_IN                        (wAddrHiReset & wRxSrSop[C_RX_ADDRDW1_CYCLE]),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
+
+    register
+        #(// Parameters
           .C_WIDTH                      (2),
           .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     metadata_4DWH_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       ({wHasPayload,w4DWH}),
          // Inputs
          .WR_DATA                       (RX_SR_DATA[`TLP_FMT_I + C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES +: 2]),
          .WR_EN                         (wRxSrSop[`TLP_4DWHBIT_I/C_PCI_DATA_WIDTH + C_RX_INPUT_STAGES]),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH                      (`TLP_TYPE_W),
           .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     metadata_type_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wType),
          // Inputs
          .WR_DATA                       (RX_SR_DATA[(`TLP_TYPE_I/* + C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES*/) +: `TLP_TYPE_W]),
          .WR_EN                         (wRxSrSop[`TLP_TYPE_I/C_PCI_DATA_WIDTH/* + C_RX_INPUT_STAGES*/]),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH                      (`TLP_LEN_W),
           .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     metadata_length_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wLength),
          // Inputs
          .WR_DATA                       (RX_SR_DATA[(`TLP_LEN_I + C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES) +: `TLP_LEN_W]),
          .WR_EN                         (wRxSrSop[`TLP_LEN_I/C_PCI_DATA_WIDTH + C_RX_INPUT_STAGES]),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
 
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH                      (1),
           .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     addr_DW0_bit_2_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wAddrDW0Bit2),
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN),
+         .RST_IN                        (0),
          .WR_DATA                       (RX_SR_DATA[(`TLP_REQADDRDW0_I%C_PCI_DATA_WIDTH) + 2 + C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES]),
-         .WR_EN                         (wRxSrSop[(`TLP_REQADDRDW0_I/C_PCI_DATA_WIDTH) + C_RX_INPUT_STAGES]));
+         .WR_EN                         (wRxSrSop[(`TLP_REQADDRDW0_I/C_PCI_DATA_WIDTH) + C_RX_INPUT_STAGES]),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH                      (1),
           .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     addr_DW1_bit_2_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wAddrDW1Bit2),
          // Inputs
          .WR_DATA                       (RX_SR_DATA[(`TLP_REQADDRDW1_I%C_PCI_DATA_WIDTH) + 2 + C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES]),
          .WR_EN                         (wRxSrSop[(`TLP_REQADDRDW1_I/C_PCI_DATA_WIDTH) + C_RX_INPUT_STAGES]),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     register
-        #(
-          // Parameters
+        #(// Parameters
           .C_WIDTH                      (1),
           .C_VALUE                      (0)
           /*AUTOINSTPARAM*/)
     start_flag_register
-        (
-         // Outputs
+        (// Outputs
          .RD_DATA                       (wStartFlag),
          // Inputs
          .WR_DATA                       (_wStartFlag),
          .WR_EN                         (1),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
     
     pipeline
-        #(
-          // Parameters
+        #(// Parameters
           .C_DEPTH                      (C_RX_OUTPUT_STAGES),
           .C_WIDTH                      (`TLP_MAXHDR_W + 2*(1 + C_OFFSET_WIDTH)),
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     output_pipeline
-        (
-         // Outputs
+        (// Outputs
          .WR_DATA_READY                 (), // Pinned to 1
          .RD_DATA                       ({wRxrMetadata,wRxrMetaAddr,wRxrDataStartFlag,wRxrDataStartOffset,wRxrDataEndFlag,wRxrDataEndOffset}),
          .RD_DATA_VALID                 (wRxrDataValid),
@@ -521,10 +508,10 @@ module rxr_engine_classic
          .WR_DATA                       ({wMetadata, wAddrFmt, wStartFlag,wStartOffset[C_OFFSET_WIDTH-1:0],wEndFlag,wEndOffset[C_OFFSET_WIDTH-1:0]}),
          .WR_DATA_VALID                 (rValid),
          .RD_DATA_READY                 (1'b1),
+         .RST_IN                        (rRST),
          /*AUTOINST*/
          // Inputs
-         .CLK                           (CLK),
-         .RST_IN                        (RST_IN));
+         .CLK                           (CLK));
 
     // Start Flag Shift Register. Data enables are derived from the
     // taps on this shift register.
@@ -539,7 +526,7 @@ module rxr_engine_classic
          .RD_DATA                       (wRxSrSop),
          // Inputs
          .WR_DATA                       (RX_TLP_START_FLAG & RX_TLP_VALID & (RX_SR_DATA[`TLP_TYPE_R] == `TLP_TYPE_REQ)),
-         .RST_IN                        (RST_IN),
+         .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));

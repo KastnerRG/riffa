@@ -53,7 +53,7 @@ module riffa_wrapper_kc705
       // 4-Byte Name for this FPGA
       parameter C_MAX_PAYLOAD_BYTES = 256,
       parameter C_LOG_NUM_TAGS = 5,
-      parameter C_FPGA_ID = "KC105") 
+      parameter C_FPGA_ID = "K705") 
     (// Interface: Xilinx RX 
      input [C_PCI_DATA_WIDTH-1:0]                 M_AXIS_RX_TDATA,
      input [(C_PCI_DATA_WIDTH/8)-1:0]             M_AXIS_RX_TKEEP,
@@ -293,8 +293,7 @@ module riffa_wrapper_kc705
           // Parameters
           .C_PCI_DATA_WIDTH             (C_PCI_DATA_WIDTH))
     trans
-        (
-         // Outputs
+        (// Outputs
          .RX_TLP                        (rx_tlp[C_PCI_DATA_WIDTH-1:0]),
          .RX_TLP_VALID                  (rx_tlp_valid),
          .RX_TLP_START_FLAG             (rx_tlp_start_flag),
@@ -473,7 +472,7 @@ module riffa_wrapper_kc705
          .RX_TLP_END_OFFSET             (rx_tlp_end_offset),
          .RX_TLP_BAR_DECODE             (rx_tlp_bar_decode),
 
-         .TX_TLP_READY                  (wTxTlpReady),
+         .TX_TLP_READY                  (tx_tlp_ready),
          .DONE_TXC_RST                  (done_txc_rst),
          .DONE_TXR_RST                  (done_txr_rst),
          .DONE_RXR_RST                  (done_rxc_rst),
