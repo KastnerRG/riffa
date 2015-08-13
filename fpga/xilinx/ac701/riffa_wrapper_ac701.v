@@ -473,7 +473,7 @@ module riffa_wrapper_ac701
          .RX_TLP_END_OFFSET             (rx_tlp_end_offset),
          .RX_TLP_BAR_DECODE             (rx_tlp_bar_decode),
 
-         .TX_TLP_READY                  (wTxTlpReady),
+         .TX_TLP_READY                  (tx_tlp_ready),
          .DONE_TXC_RST                  (done_txc_rst),
          .DONE_TXR_RST                  (done_txr_rst),
          .DONE_RXR_RST                  (done_rxc_rst),
