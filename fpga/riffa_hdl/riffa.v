@@ -43,8 +43,7 @@ module riffa
       parameter C_VENDOR = "ALTERA",
       parameter C_FPGA_NAME = "FPGA", // TODO: Give each channel a unique name
       parameter C_FPGA_ID = 0,// A value from 0 to 255 uniquely identifying this RIFFA design
-      parameter C_DEPTH_PACKETS = 10
-      )
+      parameter C_DEPTH_PACKETS = 10)
     (input                                      CLK,
      input                                      RST_BUS,
      output                                     RST_OUT,
@@ -425,12 +424,13 @@ module riffa
         (// Outputs
          .PENDING_RST                   (wPendingRst),
          // Inputs
-         .RST_IN                        (RST_BUS | wCoreSettingsReady),
+         .RST_LOGIC                     (wCoreSettingsReady),
          /*AUTOINST*/
          // Outputs
          .RST_OUT                       (RST_OUT),
          // Inputs
-         .CLK                           (CLK));
+         .CLK                           (CLK),
+         .RST_BUS                       (RST_BUS));
     
     reorder_queue 
         #(.C_PCI_DATA_WIDTH(C_PCI_DATA_WIDTH),

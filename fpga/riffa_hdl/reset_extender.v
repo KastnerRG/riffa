@@ -35,7 +35,8 @@
 module reset_extender
     #(parameter C_RST_COUNT = 10)
     (input  CLK,
-     input  RST_IN,
+     input  RST_BUS,
+     input  RST_LOGIC,
      output RST_OUT,
      output PENDING_RST);
 
@@ -45,8 +46,8 @@ module reset_extender
     
     wire [C_CLOG2_RST_COUNT:0] wRstCount;
     wire [C_RST_SHIFTREG_DEPTH:0] wRstShiftReg;
-
-    assign PENDING_RST = RST_IN | (wRstShiftReg != 0);
+    
+    assign PENDING_RST = wRstShiftReg != 0;
     assign RST_OUT = wRstShiftReg[C_RST_SHIFTREG_DEPTH];
     
     counter
@@ -60,7 +61,7 @@ module reset_extender
          .VALUE                         (wRstCount),
          // Inputs
          .ENABLE                        (1'b1),
-         .RST_IN                        (RST_IN),
+         .RST_IN                        (RST_BUS | RST_LOGIC),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));

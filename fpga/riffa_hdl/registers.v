@@ -35,8 +35,7 @@
 `include "trellis.vh"
 `include "riffa.vh"
 module registers
-    #(
-      parameter C_PCI_DATA_WIDTH = 128,
+    #(parameter C_PCI_DATA_WIDTH = 128,
       parameter C_NUM_CHNL = 12,
       parameter C_MAX_READ_REQ_BYTES = 512, // Max size of read requests (in bytes)
       parameter C_VENDOR = "ALTERA",
@@ -44,8 +43,7 @@ module registers
       parameter C_VECTOR_WIDTH = 32,
       parameter C_FPGA_NAME = "FPGA",
       parameter C_PIPELINE_OUTPUT= 1,
-      parameter C_PIPELINE_INPUT= 1
-      )
+      parameter C_PIPELINE_INPUT= 1)
     (
      // Interface: Clocks
      input                                     CLK,
