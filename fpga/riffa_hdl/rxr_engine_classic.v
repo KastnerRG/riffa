@@ -172,7 +172,7 @@ module rxr_engine_classic
     reg                                                   rValid,_rValid;
     reg                                                   rRST;
 
-    assign DONE_RXC_RST = ~rRST;
+    assign DONE_RXR_RST = ~rRST;
 
     assign wAddrHiReset = ~RX_SR_DATA[C_RX_ADDRDW1_RESET_INDEX];
     // Select Addr[31:0] from one of the two possible locations in the TLP based
@@ -506,7 +506,7 @@ module rxr_engine_classic
          .RD_DATA_VALID                 (wRxrDataValid),
          // Inputs
          .WR_DATA                       ({wMetadata, wAddrFmt, wStartFlag,wStartOffset[C_OFFSET_WIDTH-1:0],wEndFlag,wEndOffset[C_OFFSET_WIDTH-1:0]}),
-         .WR_DATA_VALID                 (rValid),
+         .WR_DATA_VALID                 (rValid & RX_SR_VALID[C_TOTAL_STAGES-C_RX_OUTPUT_STAGES]),
          .RD_DATA_READY                 (1'b1),
          .RST_IN                        (rRST),
          /*AUTOINST*/

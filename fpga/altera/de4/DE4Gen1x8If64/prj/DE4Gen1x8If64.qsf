@@ -41,7 +41,7 @@ set_global_assignment -name DEVICE EP4SGX230KF40C2
 set_global_assignment -name TOP_LEVEL_ENTITY DE4Gen1x8If64
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "11:42:13  MARCH 24, 2014"
-set_global_assignment -name LAST_QUARTUS_VERSION "14.1.0 SP0.19"
+set_global_assignment -name LAST_QUARTUS_VERSION 15.0.0
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY output_files
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
@@ -271,6 +271,8 @@ set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/channel_32.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/channel.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/async_fifo_fwft.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/async_fifo.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/reset_controller.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/reset_extender.v
 set_global_assignment -name QIP_FILE ../ip/ALTGXPCIeGen1x8.qip
 set_global_assignment -name QIP_FILE ../ip/ALTPLL50I50O125O250O.qip
 set_global_assignment -name QIP_FILE ../ip/PCIeGen1x8If64.qip

@@ -155,7 +155,7 @@ module rxc_engine_classic
     reg                                                   rValid,_rValid;
     reg                                                 rRST;
 
-    assign DONE_RXR_RST = ~rRST;
+    assign DONE_RXC_RST = ~rRST;
     
     
     // Calculate the header length (start offset), and header length minus 1 (end offset)
@@ -414,7 +414,7 @@ module rxc_engine_classic
          .RD_DATA_VALID                 (wRxcDataValid),
          // Inputs
          .WR_DATA                       ({wMetadata, wStartFlag,wStartOffset[C_OFFSET_WIDTH-1:0],wEndFlag,wEndOffset[C_OFFSET_WIDTH-1:0]}),
-         .WR_DATA_VALID                 (rValid),
+         .WR_DATA_VALID                 (rValid & RX_SR_VALID[C_TOTAL_STAGES - C_RX_OUTPUT_STAGES]),
          .RD_DATA_READY                 (1'b1),
          .RST_IN                        (rRST),
          /*AUTOINST*/

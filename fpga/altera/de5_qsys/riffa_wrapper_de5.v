@@ -51,13 +51,12 @@ module riffa_wrapper_de5
       // Bit-Width from Quartus IP Generator
       parameter C_PCI_DATA_WIDTH = 128,
       parameter C_MAX_PAYLOAD_BYTES = 256,
-      parameter C_LOG_NUM_TAGS = 5
-      ) 
-    (
-     // Interface: Altera RX 
+      parameter C_LOG_NUM_TAGS = 5,
+      parameter C_FPGA_ID = "ADE5") 
+    (// Interface: Altera RX  
      input [C_PCI_DATA_WIDTH-1:0]                 RX_ST_DATA,
-     input [0:0]                                  RX_ST_EOP, // TODO: Should be 2 bits wide in 256-bit interface
-     input [0:0]                                  RX_ST_SOP, // TODO: Should be 2 bits wide in 256-bit interface
+     input [0:0]                                  RX_ST_EOP,
+     input [0:0]                                  RX_ST_SOP,
      input [0:0]                                  RX_ST_VALID,
      output                                       RX_ST_READY,
      input [0:0]                                  RX_ST_EMPTY,
@@ -108,20 +107,25 @@ module riffa_wrapper_de5
      input [(C_NUM_CHNL*`SIG_CHNL_OFFSET_W)-1:0]  CHNL_TX_OFF, // Channel write offset
      input [(C_NUM_CHNL*C_PCI_DATA_WIDTH)-1:0]    CHNL_TX_DATA, // Channel write data
      input [C_NUM_CHNL-1:0]                       CHNL_TX_DATA_VALID, // Channel write data valid
-     output [C_NUM_CHNL-1:0]                      CHNL_TX_DATA_REN // Channel write data has been recieved
-     );
+     output [C_NUM_CHNL-1:0]                      CHNL_TX_DATA_REN); // Channel write data has been recieved
+     
     localparam C_FPGA_NAME = "REGT"; // This is not yet exposed in the driver
     localparam C_MAX_READ_REQ_BYTES = C_MAX_PAYLOAD_BYTES * 2;
     localparam C_VENDOR = "ALTERA";
-    
+
     localparam C_ALTERA_TX_READY_LATENCY = 2;
     localparam C_KEEP_WIDTH = C_PCI_DATA_WIDTH / 32;
     localparam C_PIPELINE_OUTPUT = 1;
     localparam C_PIPELINE_INPUT = 1;
+    localparam C_DEPTH_PACKETS = 4;
 
     wire                                          clk;
     wire                                          rst_in;
 
+    wire                                          done_txc_rst;
+    wire                                          done_txr_rst;
+    wire                                          done_rxr_rst;
+    wire                                          done_rxc_rst;
     // Interface: RXC Engine
     wire [C_PCI_DATA_WIDTH-1:0]                   rxc_data;
     wire                                          rxc_data_valid;
@@ -207,22 +211,22 @@ module riffa_wrapper_de5
     wire                                          txr_sent;
 
     // Classic Interface Wires
-    wire                                          wRxTlpReady;
-    wire [C_PCI_DATA_WIDTH-1:0]                   wRxTlp;
-    wire                                          wRxTlpEndFlag;
-    wire [`SIG_OFFSET_W-1:0]                      wRxTlpEndOffset;
-    wire                                          wRxTlpStartFlag;
-    wire [`SIG_OFFSET_W-1:0]                      wRxTlpStartOffset;
-    wire                                          wRxTlpValid;
-    wire [`SIG_BARDECODE_W-1:0]                   wRxTlpBarDecode;
+    wire                                          rx_tlp_ready;
+    wire [C_PCI_DATA_WIDTH-1:0]                   rx_tlp;
+    wire                                          rx_tlp_end_flag;
+    wire [`SIG_OFFSET_W-1:0]                      rx_tlp_end_offset;
+    wire                                          rx_tlp_start_flag;
+    wire [`SIG_OFFSET_W-1:0]                      rx_tlp_start_offset;
+    wire                                          rx_tlp_valid;
+    wire [`SIG_BARDECODE_W-1:0]                   rx_tlp_bar_decode;
     
-    wire                                          wTxTlpReady;
-    wire [C_PCI_DATA_WIDTH-1:0]                   wTxTlp;
-    wire                                          wTxTlpEndFlag;
-    wire [`SIG_OFFSET_W-1:0]                      wTxTlpEndOffset;
-    wire                                          wTxTlpStartFlag;
-    wire [`SIG_OFFSET_W-1:0]                      wTxTlpStartOffset;
-    wire                                          wTxTlpValid;
+    wire                                          tx_tlp_ready;
+    wire [C_PCI_DATA_WIDTH-1:0]                   tx_tlp;
+    wire                                          tx_tlp_end_flag;
+    wire [`SIG_OFFSET_W-1:0]                      tx_tlp_end_offset;
+    wire                                          tx_tlp_start_flag;
+    wire [`SIG_OFFSET_W-1:0]                      tx_tlp_start_offset;
+    wire                                          tx_tlp_valid;
     
     // Unconnected Wires (Used in ultrascale interface)
     // Interface: RQ (TXC)
@@ -275,43 +279,42 @@ module riffa_wrapper_de5
     assign rst_in = RESET_STATUS;
 
     translation_altera
-        #(
-          /*AUTOINSTPARAM*/
+        #(/*AUTOINSTPARAM*/
           // Parameters
           .C_PCI_DATA_WIDTH             (C_PCI_DATA_WIDTH))
     trans
         (
          // Outputs
-         .RX_TLP                            (wRxTlp[C_PCI_DATA_WIDTH-1:0]),
-         .RX_TLP_VALID                      (wRxTlpValid),
-         .RX_TLP_START_FLAG                 (wRxTlpStartFlag),
-         .RX_TLP_START_OFFSET               (wRxTlpStartOffset[`SIG_OFFSET_W-1:0]),
-         .RX_TLP_END_FLAG                   (wRxTlpEndFlag),
-         .RX_TLP_END_OFFSET                 (wRxTlpEndOffset[`SIG_OFFSET_W-1:0]),
-         .RX_TLP_BAR_DECODE                 (wRxTlpBarDecode[`SIG_BARDECODE_W-1:0]),
-         .TX_TLP_READY                      (wTxTlpReady),
-         .CONFIG_COMPLETER_ID               (config_completer_id[`SIG_CPLID_W-1:0]),
-         .CONFIG_BUS_MASTER_ENABLE          (config_bus_master_enable),
-         .CONFIG_LINK_WIDTH                 (config_link_width[`SIG_LINKWIDTH_W-1:0]),
-         .CONFIG_LINK_RATE                  (config_link_rate[`SIG_LINKRATE_W-1:0]),
-         .CONFIG_MAX_READ_REQUEST_SIZE      (config_max_read_request_size[`SIG_MAXREAD_W-1:0]),
-         .CONFIG_MAX_PAYLOAD_SIZE           (config_max_payload_size[`SIG_MAXPAYLOAD_W-1:0]),
-         .CONFIG_INTERRUPT_MSIENABLE        (config_interrupt_msienable),
-         .CONFIG_CPL_BOUNDARY_SEL           (config_cpl_boundary_sel),
-         .CONFIG_MAX_CPL_DATA               (config_max_cpl_data[`SIG_FC_CPLD_W-1:0]),
-         .CONFIG_MAX_CPL_HDR                (config_max_cpl_hdr[`SIG_FC_CPLH_W-1:0]),
-         .INTR_MSI_RDY                      (intr_msi_rdy),
+         .RX_TLP                        (rx_tlp[C_PCI_DATA_WIDTH-1:0]),
+         .RX_TLP_VALID                  (rx_tlp_valid),
+         .RX_TLP_START_FLAG             (rx_tlp_start_flag),
+         .RX_TLP_START_OFFSET           (rx_tlp_start_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .RX_TLP_END_FLAG               (rx_tlp_end_flag),
+         .RX_TLP_END_OFFSET             (rx_tlp_end_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .RX_TLP_BAR_DECODE             (rx_tlp_bar_decode[`SIG_BARDECODE_W-1:0]),
+         .TX_TLP_READY                  (tx_tlp_ready),
+         .CONFIG_COMPLETER_ID           (config_completer_id[`SIG_CPLID_W-1:0]),
+         .CONFIG_BUS_MASTER_ENABLE      (config_bus_master_enable),
+         .CONFIG_LINK_WIDTH             (config_link_width[`SIG_LINKWIDTH_W-1:0]),
+         .CONFIG_LINK_RATE              (config_link_rate[`SIG_LINKRATE_W-1:0]),
+         .CONFIG_MAX_READ_REQUEST_SIZE  (config_max_read_request_size[`SIG_MAXREAD_W-1:0]),
+         .CONFIG_MAX_PAYLOAD_SIZE       (config_max_payload_size[`SIG_MAXPAYLOAD_W-1:0]),
+         .CONFIG_INTERRUPT_MSIENABLE    (config_interrupt_msienable),
+         .CONFIG_CPL_BOUNDARY_SEL       (config_cpl_boundary_sel),
+         .CONFIG_MAX_CPL_DATA           (config_max_cpl_data[`SIG_FC_CPLD_W-1:0]),
+         .CONFIG_MAX_CPL_HDR            (config_max_cpl_hdr[`SIG_FC_CPLH_W-1:0]),
+         .INTR_MSI_RDY                  (intr_msi_rdy),
          // Inputs
-         .CLK                               (clk),
-         .RST_IN                            (rst_in),
-         .RX_TLP_READY                      (wRxTlpReady),
-         .TX_TLP                            (wTxTlp[C_PCI_DATA_WIDTH-1:0]),
-         .TX_TLP_VALID                      (wTxTlpValid),
-         .TX_TLP_START_FLAG                 (wTxTlpStartFlag),
-         .TX_TLP_START_OFFSET               (wTxTlpStartOffset[`SIG_OFFSET_W-1:0]),
-         .TX_TLP_END_FLAG                   (wTxTlpEndFlag),
-         .TX_TLP_END_OFFSET                 (wTxTlpEndOffset[`SIG_OFFSET_W-1:0]),
-         .INTR_MSI_REQUEST                  (intr_msi_request),
+         .CLK                           (clk),
+         .RST_IN                        (rst_in),
+         .RX_TLP_READY                  (rx_tlp_ready),
+         .TX_TLP                        (tx_tlp[C_PCI_DATA_WIDTH-1:0]),
+         .TX_TLP_VALID                  (tx_tlp_valid),
+         .TX_TLP_START_FLAG             (tx_tlp_start_flag),
+         .TX_TLP_START_OFFSET           (tx_tlp_start_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TX_TLP_END_FLAG               (tx_tlp_end_flag),
+         .TX_TLP_END_OFFSET             (tx_tlp_end_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .INTR_MSI_REQUEST              (intr_msi_request),
          /*AUTOINST*/
          // Outputs
          .RX_ST_READY                   (RX_ST_READY),
@@ -337,11 +340,13 @@ module riffa_wrapper_de5
 
     engine_layer
         #(// Parameters
+          .C_MAX_PAYLOAD_DWORDS         (C_MAX_PAYLOAD_BYTES/4),
+          /*AUTOINSTPARAM*/
+          // Parameters
           .C_PCI_DATA_WIDTH             (C_PCI_DATA_WIDTH),
           .C_LOG_NUM_TAGS               (C_LOG_NUM_TAGS),
           .C_PIPELINE_INPUT             (C_PIPELINE_INPUT),
           .C_PIPELINE_OUTPUT            (C_PIPELINE_OUTPUT),
-          .C_MAX_PAYLOAD_DWORDS         (C_MAX_PAYLOAD_BYTES/4),
           .C_VENDOR                     (C_VENDOR))
     engine_layer_inst
         (// Outputs
@@ -388,18 +393,19 @@ module riffa_wrapper_de5
          .TXR_DATA_READY                (txr_data_ready),
          .TXR_META_READY                (txr_meta_ready),
          .TXR_SENT                      (txr_sent),
+         .RST_LOGIC                     (RST_OUT),
          // Unconnected Outputs
-         .TX_TLP                        (wTxTlp),
-         .TX_TLP_VALID                  (wTxTlpValid),
-         .TX_TLP_START_FLAG             (wTxTlpStartFlag),
-         .TX_TLP_START_OFFSET           (wTxTlpStartOffset),
-         .TX_TLP_END_FLAG               (wTxTlpEndFlag),
-         .TX_TLP_END_OFFSET             (wTxTlpEndOffset),
+         .TX_TLP                        (tx_tlp),
+         .TX_TLP_VALID                  (tx_tlp_valid),
+         .TX_TLP_START_FLAG             (tx_tlp_start_flag),
+         .TX_TLP_START_OFFSET           (tx_tlp_start_offset),
+         .TX_TLP_END_FLAG               (tx_tlp_end_flag),
+         .TX_TLP_END_OFFSET             (tx_tlp_end_offset),
 
-         .RX_TLP_READY                  (wRxTlpReady),
+         .RX_TLP_READY                  (rx_tlp_ready),
          // Inputs
-         .CLK                           (clk),
-         .RST_IN                        (rst_in),
+         .CLK_BUS                       (clk),
+         .RST_BUS                       (rst_in),
 
          .CONFIG_COMPLETER_ID           (config_completer_id[`SIG_CPLID_W-1:0]),
 
@@ -439,15 +445,19 @@ module riffa_wrapper_de5
          .TXR_META_TYPE                 (txr_meta_type[`SIG_TYPE_W-1:0]),
          .TXR_META_EP                   (txr_meta_ep),
          // Unconnected Inputs
-         .RX_TLP                        (wRxTlp),
-         .RX_TLP_VALID                  (wRxTlpValid),
-         .RX_TLP_START_FLAG             (wRxTlpStartFlag),
-         .RX_TLP_START_OFFSET           (wRxTlpStartOffset),
-         .RX_TLP_END_FLAG               (wRxTlpEndFlag),
-         .RX_TLP_END_OFFSET             (wRxTlpEndOffset),
-         .RX_TLP_BAR_DECODE             (wRxTlpBarDecode),
+         .RX_TLP                        (rx_tlp),
+         .RX_TLP_VALID                  (rx_tlp_valid),
+         .RX_TLP_START_FLAG             (rx_tlp_start_flag),
+         .RX_TLP_START_OFFSET           (rx_tlp_start_offset),
+         .RX_TLP_END_FLAG               (rx_tlp_end_flag),
+         .RX_TLP_END_OFFSET             (rx_tlp_end_offset),
+         .RX_TLP_BAR_DECODE             (rx_tlp_bar_decode),
 
-         .TX_TLP_READY                  (wTxTlpReady),
+         .TX_TLP_READY                  (tx_tlp_ready),
+         .DONE_TXC_RST                  (done_txc_rst),
+         .DONE_TXR_RST                  (done_txr_rst),
+         .DONE_RXR_RST                  (done_rxc_rst),
+         .DONE_RXC_RST                  (done_rxr_rst),
          // Outputs
          .M_AXIS_CQ_TREADY              (m_axis_cq_tready_nc),
          .M_AXIS_RC_TREADY              (m_axis_rc_tready_nc),
@@ -484,7 +494,9 @@ module riffa_wrapper_de5
           .C_NUM_CHNL                   (C_NUM_CHNL),
           .C_MAX_READ_REQ_BYTES         (C_MAX_READ_REQ_BYTES),
           .C_VENDOR                     (C_VENDOR),
-          .C_FPGA_NAME                  (C_FPGA_NAME))
+          .C_FPGA_NAME                  (C_FPGA_NAME),
+          .C_FPGA_ID                    (C_FPGA_ID),
+          .C_DEPTH_PACKETS              (C_DEPTH_PACKETS))
     riffa_inst
         (// Outputs
          .TXC_DATA                      (txc_data[C_PCI_DATA_WIDTH-1:0]),
@@ -526,7 +538,6 @@ module riffa_wrapper_de5
          .INTR_MSI_REQUEST              (intr_msi_request),
          // Inputs
          .CLK                           (clk),
-         .RST_IN                        (rst_in),
          .RXR_DATA                      (rxr_data[C_PCI_DATA_WIDTH-1:0]),
          .RXR_DATA_VALID                (rxr_data_valid),
          .RXR_DATA_START_FLAG           (rxr_data_start_flag),
@@ -584,6 +595,9 @@ module riffa_wrapper_de5
         
          .INTR_MSI_RDY                  (intr_msi_rdy),
 
+         .DONE_TXC_RST                  (done_txc_rst),
+         .DONE_TXR_RST                  (done_txr_rst),
+         .RST_BUS                       (rst_in),
          /*AUTOINST*/
          // Outputs
          .RST_OUT                       (RST_OUT),
@@ -609,6 +623,6 @@ module riffa_wrapper_de5
 
 endmodule
 // Local Variables:
-// verilog-library-directories:("../../engine/" "../../riffa/" "../../trans")
+// verilog-library-directories:("../../riffa_hdl/")
 // End:
 
