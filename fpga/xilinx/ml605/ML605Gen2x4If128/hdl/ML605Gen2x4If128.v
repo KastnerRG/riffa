@@ -51,90 +51,87 @@ module ML605Gen2x4If128
       // Number of PCIe Lanes
       parameter C_NUM_LANES =  4,
       // Settings from Vivado IP Generator
-      parameter C_PCI_DATA_WIDTH = 128,
+      parameter C_PCI_DATA_WIDTH = 64,
       parameter C_MAX_PAYLOAD_BYTES = 256,
-      parameter C_LOG_NUM_TAGS = 5
-      )
-    (
-     output [(C_NUM_LANES - 1) : 0] PCI_EXP_TXP,
+      parameter C_LOG_NUM_TAGS = 5)
+    (output [(C_NUM_LANES - 1) : 0] PCI_EXP_TXP,
      output [(C_NUM_LANES - 1) : 0] PCI_EXP_TXN,
      input [(C_NUM_LANES - 1) : 0]  PCI_EXP_RXP,
      input [(C_NUM_LANES - 1) : 0]  PCI_EXP_RXN,
      input                          PCIE_REFCLK_P,
      input                          PCIE_REFCLK_N,
-     input                          PCIE_RESET_N
-     );
+     input                          PCIE_RESET_N);
 
     wire                            pcie_refclk;
     wire                            pcie_reset_n;
 
     wire                            user_clk;
     wire                            user_reset;
-    wire                            user_reset_int1;
+    wire                            user_reset_int;
     wire                            user_lnk_up;
 
-    wire                            tx_cfg_req;
-    wire                            tx_cfg_gnt;
-    wire                            rx_np_ok;
-
     wire                            s_axis_tx_tready;
-    wire [3:0]                      s_axis_tx_tuser;
-    wire [C_PCI_DATA_WIDTH-1:0]     s_axis_tx_tdata;
-    wire [(C_PCI_DATA_WIDTH/8)-1:0] s_axis_tx_tkeep;
-    wire                            s_axis_tx_tlast;
-    wire                            s_axis_tx_tvalid;
+    wire [C_PCI_DATA_WIDTH-1 : 0]   s_axis_tx_tdata;
+    wire [(C_PCI_DATA_WIDTH/8)-1 : 0] s_axis_tx_tkeep;
+    wire                              s_axis_tx_tlast;
+    wire                              s_axis_tx_tvalid;
+    wire [`SIG_XIL_TX_TUSER_W : 0]    s_axis_tx_tuser;
+    
+    wire [C_PCI_DATA_WIDTH-1 : 0]     m_axis_rx_tdata;
+    wire [(C_PCI_DATA_WIDTH/8)-1 : 0] m_axis_rx_tkeep;
+    wire                              m_axis_rx_tlast;
+    wire                              m_axis_rx_tvalid;
+    wire                              m_axis_rx_tready;
+    wire [`SIG_XIL_RX_TUSER_W - 1 : 0] m_axis_rx_tuser;
 
-    // Rx
-    wire [C_PCI_DATA_WIDTH-1:0]     m_axis_rx_tdata;
-    wire [(C_PCI_DATA_WIDTH/8)-1:0] m_axis_rx_tkeep;
-    wire                            m_axis_rx_tlast;
-    wire                            m_axis_rx_tvalid;
-    wire                            m_axis_rx_tready;
-    wire [21:0]                     m_axis_rx_tuser;
+    wire                               tx_cfg_gnt;
+    wire                               rx_np_ok;
+    wire                               tx_cfg_req;
+    wire                               cfg_trn_pending;
+    
+    wire [11 : 0]                      fc_cpld;
+    wire [7 : 0]                       fc_cplh;
+    wire [11 : 0]                      fc_npd;
+    wire [7 : 0]                       fc_nph;
+    wire [11 : 0]                      fc_pd;
+    wire [7 : 0]                       fc_ph;
+    wire [2 : 0]                       fc_sel;
+    
+    wire [15 : 0]                      cfg_status;
+    wire [15 : 0]                      cfg_command;
+    wire [15 : 0]                      cfg_dstatus;
+    wire [15 : 0]                      cfg_dcommand;
+    wire [15 : 0]                      cfg_lstatus;
+    wire [15 : 0]                      cfg_lcommand;
+    wire [15 : 0]                      cfg_dcommand2;
+    
+    wire [2 : 0]                       cfg_pcie_link_state;
+    wire                               cfg_pmcsr_pme_en;
+    wire [1 : 0]                       cfg_pmcsr_powerstate;
+    wire                               cfg_pmcsr_pme_status;
+    wire                               cfg_received_func_lvl_rst;
+    wire [4 : 0]                       cfg_pciecap_interrupt_msgnum;
+    wire                               cfg_to_turnoff;
+    wire [7 : 0]                       cfg_bus_number;
+    wire [4 : 0]                       cfg_device_number;
+    wire [2 : 0]                       cfg_function_number;
 
-    // Flow Control
-    wire [11:0]                     fc_cpld;
-    wire [7:0]                      fc_cplh;
-    wire [11:0]                     fc_npd;
-    wire [7:0]                      fc_nph;
-    wire [11:0]                     fc_pd;
-    wire [7:0]                      fc_ph;
-    wire [2:0]                      fc_sel;
+    wire                               cfg_interrupt;
+    wire                               cfg_interrupt_rdy;
+    wire                               cfg_interrupt_assert;
+    wire [7 : 0]                       cfg_interrupt_di;
+    wire [7 : 0]                       cfg_interrupt_do;
+    wire [2 : 0]                       cfg_interrupt_mmenable;
+    wire                               cfg_interrupt_msienable;
+    wire                               cfg_interrupt_msixenable;
+    wire                               cfg_interrupt_msixfm;
+    wire                               cfg_interrupt_stat;
 
-    //-------------------------------------------------------
-    // 3. Configuration (CFG) Interface
-    //-------------------------------------------------------
-
-    wire                            cfg_interrupt;
-    wire                            cfg_interrupt_rdy;
-    wire                            cfg_interrupt_assert;
-    wire [7:0]                      cfg_interrupt_di;
-    wire [7:0]                      cfg_interrupt_do;
-    wire [2:0]                      cfg_interrupt_mmenable;
-    wire                            cfg_interrupt_msienable;
-    wire                            cfg_interrupt_msixenable;
-    wire                            cfg_interrupt_msixfm;    
-
-    wire [7:0]                      cfg_bus_number;
-    wire [4:0]                      cfg_device_number;
-    wire [2:0]                      cfg_function_number;
-
-    wire [15:0]                     cfg_status;
-    wire [15:0]                     cfg_command;
-    wire [15:0]                     cfg_dstatus;
-    wire [15:0]                     cfg_dcommand;
-    wire [15:0]                     cfg_lstatus;
-    wire [15:0]                     cfg_lcommand;
-    wire [15:0]                     cfg_dcommand2;
-    wire [2:0]                      cfg_pcie_link_state;
-
-    //-------------------------------------------------------
-
-    wire                            rst_out;
-    wire [C_NUM_CHNL-1:0]           chnl_rx_clk; 
-    wire [C_NUM_CHNL-1:0]           chnl_rx; 
-    wire [C_NUM_CHNL-1:0]           chnl_rx_ack; 
-    wire [C_NUM_CHNL-1:0]           chnl_rx_last; 
+    wire                               rst_out;
+    wire [C_NUM_CHNL-1:0]              chnl_rx_clk; 
+    wire [C_NUM_CHNL-1:0]              chnl_rx; 
+    wire [C_NUM_CHNL-1:0]              chnl_rx_ack; 
+    wire [C_NUM_CHNL-1:0]              chnl_rx_last; 
     wire [(C_NUM_CHNL*`SIG_CHNL_LENGTH_W)-1:0] chnl_rx_len; 
     wire [(C_NUM_CHNL*`SIG_CHNL_OFFSET_W)-1:0] chnl_rx_off; 
     wire [(C_NUM_CHNL*C_PCI_DATA_WIDTH)-1:0]   chnl_rx_data; 
@@ -152,104 +149,107 @@ module ML605Gen2x4If128
     wire [C_NUM_CHNL-1:0]                      chnl_tx_data_ren;
 
     genvar                                     chnl;
+    assign cfg_turnoff_ok = 0;
+    assign cfg_trn_pending = 0;
+    assign cfg_interrupt_assert = 0;
+    assign cfg_interrupt_di = 0;
+    assign cfg_interrupt_stat = 0;
+    assign cfg_turnoff_ok = 0;
+    assign cfg_pm_wake = 0;
 
-    IBUF   
-    pci_reset_n_ibuf 
-        (.O(pcie_reset_n), 
-         .I(PCIE_RESET_N));
+    IBUF  
+        pci_reset_n_ibuf 
+            (.O(pcie_reset_n), 
+             .I(PCIE_RESET_N));
 
     IBUFDS_GTXE1 
-    refclk_ibuf 
-        (.O(pcie_refclk), 
-         .ODIV2(), 
-         .I(PCIE_REFCLK_P), 
-         .CEB(1'b0), 
-         .IB(PCIE_REFCLK_N));
+        refclk_ibuf 
+            (.O(pcie_refclk), 
+             .ODIV2(), 
+             .I(PCIE_REFCLK_P), 
+             .CEB(1'b0), 
+             .IB(PCIE_REFCLK_N));
 
-    PCIeGen2x4If128 
-        #(
-          .PL_FAST_TRAIN( "FALSE" )
-          ) 
-    PCIeGen2x4If128_inst
-        (//-------------------------------------------------------
-         // 1. PCI Express (pci_exp) Interface
-         //-------------------------------------------------------
+    FDCP 
+        #(.INIT(1'b1)) 
+    user_reset_n_i 
+        (.Q (user_reset),
+         .D (user_reset_int),
+         .C (user_clk),
+         .CLR (1'b0),
+         .PRE (1'b0));
 
-         // Tx
-         .pci_exp_txn                   ( PCI_EXP_TXN ),
-         .pci_exp_txp                   ( PCI_EXP_TXP ),
+
+    // Core Top Level Wrapper
+    PCIeGen2x4If128 PCIeGen2x4If128_inst
+        (// Tx
+         .pci_exp_txn                               ( PCI_EXP_TXN ),
+         .pci_exp_txp                               ( PCI_EXP_TXP ),
         
          // Rx
-         .pci_exp_rxn                   ( PCI_EXP_RXN ),
-         .pci_exp_rxp                   ( PCI_EXP_RXP ),
-
-         //-------------------------------------------------------
-         // 2. AXI-S Interface
-         //-------------------------------------------------------
-
+         .pci_exp_rxn                               ( PCI_EXP_RXN ),
+         .pci_exp_rxp                               ( PCI_EXP_RXP ),
+        
          // Common
-         .user_clk_out                  ( user_clk ),
-         .user_reset_out                ( user_reset ),
+         .user_clk_out                              ( user_clk ),
+         .user_reset_out                            ( user_reset_int ),
 
-         // Tx
-         .s_axis_tx_tready              ( s_axis_tx_tready ),
-         .s_axis_tx_tdata               ( s_axis_tx_tdata ),
-         .s_axis_tx_tkeep               ( s_axis_tx_tkeep ),
-         .s_axis_tx_tuser               ( s_axis_tx_tuser ),
-         .s_axis_tx_tlast               ( s_axis_tx_tlast ),
-         .s_axis_tx_tvalid              ( s_axis_tx_tvalid ),
+         // TX
+         .s_axis_tx_tready                          ( s_axis_tx_tready ),
+         .s_axis_tx_tdata                           ( s_axis_tx_tdata ),
+         .s_axis_tx_tkeep                           ( s_axis_tx_tkeep ),
+         .s_axis_tx_tuser                           ( s_axis_tx_tuser ),
+         .s_axis_tx_tlast                           ( s_axis_tx_tlast ),
+         .s_axis_tx_tvalid                          ( s_axis_tx_tvalid ),
 
          // Rx
-         .m_axis_rx_tdata               ( m_axis_rx_tdata ),
-         .m_axis_rx_tkeep               ( m_axis_rx_tkeep ),
-         .m_axis_rx_tlast               ( m_axis_rx_tlast ),
-         .m_axis_rx_tvalid              ( m_axis_rx_tvalid ),
-         .m_axis_rx_tready              ( m_axis_rx_tready ),
-         .m_axis_rx_tuser               ( m_axis_rx_tuser ),
+         .m_axis_rx_tdata                           ( m_axis_rx_tdata ),
+         .m_axis_rx_tkeep                           ( m_axis_rx_tkeep ),
+         .m_axis_rx_tlast                           ( m_axis_rx_tlast ),
+         .m_axis_rx_tvalid                          ( m_axis_rx_tvalid ),
+         .m_axis_rx_tready                          ( m_axis_rx_tready ),
+         .m_axis_rx_tuser                           ( m_axis_rx_tuser ),
 
-         // Flow Control
-         .fc_cpld                       ( fc_cpld ),
-         .fc_cplh                       ( fc_cplh ),
-         .fc_npd                        ( fc_npd ),
-         .fc_nph                        ( fc_nph ),
-         .fc_pd                         ( fc_pd ),
-         .fc_ph                         ( fc_ph ),
-         .fc_sel                        ( fc_sel ),
+         .tx_cfg_gnt                                ( tx_cfg_gnt ),
+         .rx_np_ok                                  ( rx_np_ok ),
+         .tx_cfg_req                                ( tx_cfg_req ),
 
-         //-------------------------------------------------------
-         // 3. Configuration (CFG) Interface
-         //-------------------------------------------------------
+         .fc_cpld                                   ( fc_cpld ),
+         .fc_cplh                                   ( fc_cplh ),
+         .fc_npd                                    ( fc_npd ),
+         .fc_nph                                    ( fc_nph ),
+         .fc_pd                                     ( fc_pd ),
+         .fc_ph                                     ( fc_ph ),
+         .fc_sel                                    ( fc_sel ),
 
-         .rx_np_ok                      ( rx_np_ok ),
-         .tx_cfg_gnt                    ( tx_cfg_gnt ),
-         .tx_cfg_req                    ( tx_cfg_req ),
+         .cfg_trn_pending                           ( cfg_trn_pending ),
+         .cfg_turnoff_ok                            ( cfg_turnoff_ok ),
+         .cfg_pm_wake                               ( cfg_pm_wake ),
 
-         .cfg_interrupt                 ( cfg_interrupt ),
-         .cfg_interrupt_rdy             ( cfg_interrupt_rdy ),
-         .cfg_interrupt_assert          ( cfg_interrupt_assert ),
-         .cfg_interrupt_di              ( cfg_interrupt_di ),
-         .cfg_interrupt_do              ( cfg_interrupt_do ),
-         .cfg_interrupt_mmenable        ( cfg_interrupt_mmenable ),
-         .cfg_interrupt_msienable       ( cfg_interrupt_msienable ),
-         .cfg_interrupt_msixenable      ( cfg_interrupt_msixenable ),
-         .cfg_interrupt_msixfm          ( cfg_interrupt_msixfm ),
+         .cfg_device_number                         ( cfg_device_number ),
+         .cfg_dcommand2                             ( cfg_dcommand2 ),
+         .cfg_pmcsr_pme_status                      ( cfg_pmcsr_pme_status ),
+         .cfg_status                                ( cfg_status ),
+         .cfg_dcommand                              ( cfg_dcommand ),
+         .cfg_bus_number                            ( cfg_bus_number ),
+         .cfg_function_number                       ( cfg_function_number ),
+         .cfg_command                               ( cfg_command ),
+         .cfg_dstatus                               ( cfg_dstatus ),
+         .cfg_lstatus                               ( cfg_lstatus ),
+         .cfg_pcie_link_state                       ( cfg_pcie_link_state ),
+         .cfg_lcommand                              ( cfg_lcommand ),
+         .cfg_pmcsr_pme_en                          ( cfg_pmcsr_pme_en ),
+         .cfg_pmcsr_powerstate                      ( cfg_pmcsr_powerstate ),
 
-         .cfg_bus_number                ( cfg_bus_number ),
-         .cfg_device_number             ( cfg_device_number ),
-         .cfg_function_number           ( cfg_function_number ),
-
-         .cfg_status                    ( cfg_status ),
-         .cfg_command                   ( cfg_command ),
-         .cfg_dstatus                   ( cfg_dstatus ),
-         .cfg_dcommand                  ( cfg_dcommand ),
-         .cfg_lstatus                   ( cfg_lstatus ),
-         .cfg_lcommand                  ( cfg_lcommand ),
-         .cfg_dcommand2                 ( cfg_dcommand2 ),
-         .cfg_pcie_link_state           ( cfg_pcie_link_state ),
-
-         //-------------------------------------------------------
-         // 5. System  (SYS) Interface
-         //-------------------------------------------------------
+         .cfg_interrupt                             ( cfg_interrupt ),
+         .cfg_interrupt_rdy                         ( cfg_interrupt_rdy ),
+         .cfg_interrupt_assert                      ( cfg_interrupt_assert ),
+         .cfg_interrupt_di                          ( cfg_interrupt_di ),
+         .cfg_interrupt_do                          ( cfg_interrupt_do ),
+         .cfg_interrupt_mmenable                    ( cfg_interrupt_mmenable ),
+         .cfg_interrupt_msienable                   ( cfg_interrupt_msienable ),
+         .cfg_interrupt_msixenable                  ( cfg_interrupt_msixenable ),
+         .cfg_interrupt_msixfm                      ( cfg_interrupt_msixfm ),
 
          .sys_clk                       ( pcie_refclk ),
          .sys_reset                     ( ~pcie_reset_n ));
@@ -262,8 +262,7 @@ module ML605Gen2x4If128
           .C_PCI_DATA_WIDTH             (C_PCI_DATA_WIDTH),
           .C_MAX_PAYLOAD_BYTES          (C_MAX_PAYLOAD_BYTES))
     riffa
-        (
-         // Outputs
+        (// Outputs
          .CFG_INTERRUPT                 (cfg_interrupt),
          .M_AXIS_RX_TREADY              (m_axis_rx_tready),
          .S_AXIS_TX_TDATA               (s_axis_tx_tdata[C_PCI_DATA_WIDTH-1:0]),
@@ -318,9 +317,7 @@ module ML605Gen2x4If128
     generate
         for (chnl = 0; chnl < C_NUM_CHNL; chnl = chnl + 1) begin : test_channels
             chnl_tester 
-                    #(
-                      .C_PCI_DATA_WIDTH(C_PCI_DATA_WIDTH)
-                      ) 
+                    #(.C_PCI_DATA_WIDTH(C_PCI_DATA_WIDTH)) 
             module1 
                     (.CLK(user_clk),
                      .RST(rst_out),    // riffa_reset includes riffa_endpoint resets
@@ -343,8 +340,7 @@ module ML605Gen2x4If128
                      .CHNL_TX_OFF(chnl_tx_off[31*chnl +:31]), 
                      .CHNL_TX_DATA(chnl_tx_data[C_PCI_DATA_WIDTH*chnl +:C_PCI_DATA_WIDTH]), 
                      .CHNL_TX_DATA_VALID(chnl_tx_data_valid[chnl]), 
-                     .CHNL_TX_DATA_REN(chnl_tx_data_ren[chnl])
-                     );    
+                     .CHNL_TX_DATA_REN(chnl_tx_data_ren[chnl]));    
         end
     endgenerate
 endmodule
