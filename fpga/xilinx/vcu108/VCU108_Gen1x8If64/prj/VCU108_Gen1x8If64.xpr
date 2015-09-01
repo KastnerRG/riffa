@@ -647,6 +647,13 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
+      <File Path="$PPRDIR/../../../../riffa_hdl/reset_extender.v">
+        <FileInfo>
+          <Attr Name="UsedIn" Val="synthesis"/>
+          <Attr Name="UsedIn" Val="implementation"/>
+          <Attr Name="UsedIn" Val="simulation"/>
+        </FileInfo>
+      </File>
       <File Path="$PPRDIR/../../../../riffa_hdl/riffa.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
@@ -696,7 +703,6 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../ip/PCIeGen1x8If64.upgrade_log"/>
       <Config>
         <Option Name="DesignMode" Val="RTL"/>
         <Option Name="TopModule" Val="VCU108Gen1x8If64"/>
@@ -771,9 +777,7 @@
     </Run>
     <Run Id="PCIeGen1x8If64_synth_1" Type="Ft3:Synth" SrcSet="PCIeGen1x8If64" Part="xcvu095-ffva2104-2-e-es2" ConstrsSet="PCIeGen1x8If64" Description="Vivado Synthesis Defaults" Dir="$PRUNDIR/PCIeGen1x8If64_synth_1">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2015">
-          <Desc>Vivado Synthesis Defaults</Desc>
-        </StratHandle>
+        <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2015"/>
         <Step Id="synth_design"/>
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
@@ -795,9 +799,7 @@
     </Run>
     <Run Id="PCIeGen1x8If64_impl_1" Type="Ft2:EntireDesign" Part="xcvu095-ffva2104-2-e-es2" ConstrsSet="PCIeGen1x8If64" Description="Vivado Implementation Defaults" SynthRun="PCIeGen1x8If64_synth_1">
       <Strategy Version="1" Minor="2">
-        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2015">
-          <Desc>Vivado Implementation Defaults</Desc>
-        </StratHandle>
+        <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2015"/>
         <Step Id="init_design"/>
         <Step Id="opt_design"/>
         <Step Id="power_opt_design"/>
