@@ -53,6 +53,7 @@
 #include <linux/interrupt.h>
 #include <linux/sched.h>
 #include <linux/rwsem.h>
+#include <linux/semaphore.h>
 #include <linux/dma-mapping.h>
 #include <linux/pagemap.h>
 #include <asm/uaccess.h>
@@ -86,6 +87,7 @@ struct sg_mapping {
 };
 
 struct chnl_dir {
+	struct semaphore sem;
 	wait_queue_head_t waitq;
 	struct circ_queue * msgs;
 	void * buf_addr;
@@ -530,16 +532,6 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
 
 	DEFINE_WAIT(wait);
 
-	// Validate the parameters.
-	if (chnl >= sc->num_chnls || chnl < 0) {
-		printk(KERN_INFO "riffa: fpga:%d chnl:%d, recv channel invalid!\n", sc->id, chnl);
-		return 0;
-	}
-	if (udata & 0x3) {
-		printk(KERN_INFO "riffa: fpga:%d chnl:%d, recv user buffer must be 32 bit word aligned!\n", sc->id, chnl);
-		return -EINVAL;
-	}
-
 	// Convert timeout to jiffies.
 	tymeout = (timeout == 0 ? MAX_SCHEDULE_TIMEOUT : (timeout * HZ/1000 > LONG_MAX ? LONG_MAX : timeout * HZ/1000));
 	tymeouto = tymeout;
@@ -673,7 +665,38 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
 			break;
 		}
 	}
+
 	return 0;
+}
+
+static inline unsigned int chnl_recv_wrapcheck(struct fpga_state * sc, int chnl,
+				char  __user * bufp, unsigned int len, unsigned long long timeout)
+{
+	unsigned long udata = (unsigned long)bufp;
+	unsigned int ret;
+
+	// Validate the parameters.
+	if (chnl >= sc->num_chnls || chnl < 0) {
+		printk(KERN_INFO "riffa: fpga:%d chnl:%d, recv channel invalid!\n", sc->id, chnl);
+		return 0;
+	}
+	if (udata & 0x3) {
+		printk(KERN_INFO "riffa: fpga:%d chnl:%d, recv user buffer must be 32 bit word aligned!\n", sc->id, chnl);
+		return -EINVAL;
+	}
+
+	// Ensure no simultaneous operations from several threads
+	if (down_trylock(&sc->recv[chnl]->sem) != 0) {
+		printk(KERN_ERR "riffa: fpga:%d chnl:%d, recv conflict between threads!\n", sc->id, chnl);
+		return -EINVAL;
+	}
+
+	ret = chnl_recv(sc, chnl, bufp, len, timeout);
+
+	// Release the semaphore
+	up(&sc->recv[chnl]->sem);
+
+	return ret;
 }
 
 /**
@@ -688,7 +711,7 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
  * On error, returns a negative value. 
  */
 static inline unsigned int chnl_send(struct fpga_state * sc, int chnl,
-				const char  __user * bufp, unsigned int len, unsigned int offset, 
+				const char  __user * bufp, unsigned int len, unsigned int offset,
 				unsigned int last, unsigned long long timeout)
 {
 	struct sg_mapping * sg_map;
@@ -700,24 +723,8 @@ static inline unsigned int chnl_send(struct fpga_state * sc, int chnl,
 	unsigned long long sent = 0;
 	unsigned long long length = (((unsigned long long)len)<<2);
 	unsigned long udata = (unsigned long)bufp;
-	unsigned long max_ptr;
 
 	DEFINE_WAIT(wait);
-
-	// Validate the parameters.
-	if (chnl >= sc->num_chnls || chnl < 0) {
-		printk(KERN_INFO "riffa: fpga:%d chnl:%d, send channel invalid!\n", sc->id, chnl);
-		return 0;
-	}
-	max_ptr = (unsigned long)(udata + length - 1);
-	if (max_ptr < udata) {
-		printk(KERN_ERR "riffa: fpga:%d chnl:%d, send pointer address overflow\n", sc->id, chnl);
-		return -EINVAL;
-	}
-	if (udata & 0x3) {
-		printk(KERN_INFO "riffa: fpga:%d chnl:%d, send user buffer must be 32 bit word aligned!\n", sc->id, chnl);
-		return -EINVAL;
-	}
 
 	// Convert timeout to jiffies.
 	tymeout = (timeout == 0 ? MAX_SCHEDULE_TIMEOUT : (timeout * HZ/1000 > LONG_MAX ? LONG_MAX : timeout * HZ/1000));
@@ -824,6 +831,44 @@ static inline unsigned int chnl_send(struct fpga_state * sc, int chnl,
 	return 0;
 }
 
+static inline unsigned int chnl_send_wrapcheck(struct fpga_state * sc, int chnl,
+				const char  __user * bufp, unsigned int len, unsigned int offset,
+				unsigned int last, unsigned long long timeout)
+{
+	unsigned long long length = (((unsigned long long)len)<<2);
+	unsigned long udata = (unsigned long)bufp;
+	unsigned long max_ptr;
+	unsigned int ret;
+
+	// Validate the parameters.
+	if (chnl >= sc->num_chnls || chnl < 0) {
+		printk(KERN_INFO "riffa: fpga:%d chnl:%d, send channel invalid!\n", sc->id, chnl);
+		return 0;
+	}
+	max_ptr = (unsigned long)(udata + length - 1);
+	if (max_ptr < udata) {
+		printk(KERN_ERR "riffa: fpga:%d chnl:%d, send pointer address overflow\n", sc->id, chnl);
+		return -EINVAL;
+	}
+	if (udata & 0x3) {
+		printk(KERN_INFO "riffa: fpga:%d chnl:%d, send user buffer must be 32 bit word aligned!\n", sc->id, chnl);
+		return -EINVAL;
+	}
+
+	// Ensure no simultaneous operations from several threads
+	if (down_trylock(&sc->send[chnl]->sem) != 0) {
+		printk(KERN_ERR "riffa: fpga:%d chnl:%d, send conflict between threads!\n", sc->id, chnl);
+		return -EINVAL;
+	}
+
+	ret = chnl_send(sc, chnl, bufp, len, offset, last, timeout);
+
+	// Release the semaphore
+	up(&sc->send[chnl]->sem);
+
+	return ret;
+}
+
 /**
  * Populates the fpga_info struct with the current FPGA state information. On 
  * success, returns 0. On error, returns a negative value. 
@@ -907,7 +952,7 @@ static long fpga_ioctl(struct file *filp, unsigned int ioctlnum,
 		}
 		if (io.id < 0 || io.id >= NUM_FPGAS || !atomic_read(&used_fpgas[io.id]))
 			return 0;
-		return chnl_send(fpgas[io.id], io.chnl, io.data, io.len, io.offset, 
+		return chnl_send_wrapcheck(fpgas[io.id], io.chnl, io.data, io.len, io.offset,
 				io.last, io.timeout);
 	case IOCTL_RECV:
 		if ((rc = copy_from_user(&io, (void *)ioctlparam, sizeof(fpga_chnl_io)))) {
@@ -916,7 +961,7 @@ static long fpga_ioctl(struct file *filp, unsigned int ioctlnum,
 		}
 		if (io.id < 0 || io.id >= NUM_FPGAS || !atomic_read(&used_fpgas[io.id]))
 			return 0;
-		return chnl_recv(fpgas[io.id], io.chnl, io.data, io.len, io.timeout);
+		return chnl_recv_wrapcheck(fpgas[io.id], io.chnl, io.data, io.len, io.timeout);
 	case IOCTL_LIST:
 		list_fpgas(&list);
 		if ((rc = copy_to_user((void *)ioctlparam, &list, sizeof(fpga_info_list))))
@@ -950,6 +995,7 @@ static inline int __devinit allocate_chnls(struct pci_dev *dev, struct fpga_stat
 		sc->recv[i] = (struct chnl_dir *) kzalloc(sizeof(struct chnl_dir), GFP_KERNEL);
 		if (sc->recv[i] == NULL)
 			return i;
+		sema_init(&sc->recv[i]->sem, 1);
 		init_waitqueue_head(&sc->recv[i]->waitq);
 		if ((sc->recv[i]->msgs = init_circ_queue(5)) == NULL) {
 			kfree(sc->recv[i]);
@@ -972,6 +1018,7 @@ static inline int __devinit allocate_chnls(struct pci_dev *dev, struct fpga_stat
 			kfree(sc->recv[i]);
 			return i;
 		}
+		sema_init(&sc->send[i]->sem, 1);
 		init_waitqueue_head(&sc->send[i]->waitq);
 		if ((sc->send[i]->msgs = init_circ_queue(4)) == NULL) {
 			kfree(sc->send[i]);
