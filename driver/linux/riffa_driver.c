@@ -688,7 +688,7 @@ static inline unsigned int chnl_recv_wrapcheck(struct fpga_state * sc, int chnl,
 	// Ensure no simultaneous operations from several threads
 	if (down_trylock(&sc->recv[chnl]->sem) != 0) {
 		printk(KERN_ERR "riffa: fpga:%d chnl:%d, recv conflict between threads!\n", sc->id, chnl);
-		return -EINVAL;
+		return -EBUSY;
 	}
 
 	ret = chnl_recv(sc, chnl, bufp, len, timeout);
@@ -858,7 +858,7 @@ static inline unsigned int chnl_send_wrapcheck(struct fpga_state * sc, int chnl,
 	// Ensure no simultaneous operations from several threads
 	if (down_trylock(&sc->send[chnl]->sem) != 0) {
 		printk(KERN_ERR "riffa: fpga:%d chnl:%d, send conflict between threads!\n", sc->id, chnl);
-		return -EINVAL;
+		return -EBUSY;
 	}
 
 	ret = chnl_send(sc, chnl, bufp, len, offset, last, timeout);
@@ -971,6 +971,7 @@ static long fpga_ioctl(struct file *filp, unsigned int ioctlnum,
 		reset((int)ioctlparam);
 		break;
 	default:
+		return -ENOTTY;
 		break;
 	}
 	return 0;
