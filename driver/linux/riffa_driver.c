@@ -53,7 +53,6 @@
 #include <linux/interrupt.h>
 #include <linux/sched.h>
 #include <linux/rwsem.h>
-#include <linux/semaphore.h>
 #include <linux/dma-mapping.h>
 #include <linux/pagemap.h>
 #include <asm/uaccess.h>
@@ -76,6 +75,8 @@ MODULE_AUTHOR("Matt Jacobsen, Patrick Lai");
 #define BUILD_32 1
 #endif
 
+#define CHNL_FLAG_BUSY 0
+
 struct sg_mapping {
 	struct page ** pages;
 	struct scatterlist * sgl;
@@ -87,7 +88,7 @@ struct sg_mapping {
 };
 
 struct chnl_dir {
-	struct semaphore sem;
+	volatile unsigned long flags;
 	wait_queue_head_t waitq;
 	struct circ_queue * msgs;
 	void * buf_addr;
@@ -686,15 +687,15 @@ static inline unsigned int chnl_recv_wrapcheck(struct fpga_state * sc, int chnl,
 	}
 
 	// Ensure no simultaneous operations from several threads
-	if (down_trylock(&sc->recv[chnl]->sem) != 0) {
+	if (test_and_set_bit(CHNL_FLAG_BUSY, &sc->recv[chnl]->flags) != 0) {
 		printk(KERN_ERR "riffa: fpga:%d chnl:%d, recv conflict between threads!\n", sc->id, chnl);
 		return -EBUSY;
 	}
 
 	ret = chnl_recv(sc, chnl, bufp, len, timeout);
 
-	// Release the semaphore
-	up(&sc->recv[chnl]->sem);
+	// Clear the busy flag
+	clear_bit(CHNL_FLAG_BUSY, &sc->recv[chnl]->flags);
 
 	return ret;
 }
@@ -856,15 +857,15 @@ static inline unsigned int chnl_send_wrapcheck(struct fpga_state * sc, int chnl,
 	}
 
 	// Ensure no simultaneous operations from several threads
-	if (down_trylock(&sc->send[chnl]->sem) != 0) {
+	if (test_and_set_bit(CHNL_FLAG_BUSY, &sc->send[chnl]->flags) != 0) {
 		printk(KERN_ERR "riffa: fpga:%d chnl:%d, send conflict between threads!\n", sc->id, chnl);
 		return -EBUSY;
 	}
 
 	ret = chnl_send(sc, chnl, bufp, len, offset, last, timeout);
 
-	// Release the semaphore
-	up(&sc->send[chnl]->sem);
+	// Clear the busy flag
+	clear_bit(CHNL_FLAG_BUSY, &sc->send[chnl]->flags);
 
 	return ret;
 }
@@ -927,6 +928,8 @@ static inline void reset(int id)
 			while (!pop_circ_queue(sc->recv[i]->msgs, &dummy0, &dummy1));
 			wake_up(&sc->send[i]->waitq);
 			wake_up(&sc->recv[i]->waitq);
+			clear_bit(CHNL_FLAG_BUSY, &sc->send[i]->flags);
+			clear_bit(CHNL_FLAG_BUSY, &sc->recv[i]->flags);
 		}
 		// Enable interrupts
 		atomic_set(&sc->intr_disabled, 0);
@@ -996,7 +999,7 @@ static inline int __devinit allocate_chnls(struct pci_dev *dev, struct fpga_stat
 		sc->recv[i] = (struct chnl_dir *) kzalloc(sizeof(struct chnl_dir), GFP_KERNEL);
 		if (sc->recv[i] == NULL)
 			return i;
-		sema_init(&sc->recv[i]->sem, 1);
+		sc->recv[i]->flags = 0;
 		init_waitqueue_head(&sc->recv[i]->waitq);
 		if ((sc->recv[i]->msgs = init_circ_queue(5)) == NULL) {
 			kfree(sc->recv[i]);
@@ -1019,7 +1022,7 @@ static inline int __devinit allocate_chnls(struct pci_dev *dev, struct fpga_stat
 			kfree(sc->recv[i]);
 			return i;
 		}
-		sema_init(&sc->send[i]->sem, 1);
+		sc->send[i]->flags = 0;
 		init_waitqueue_head(&sc->send[i]->waitq);
 		if ((sc->send[i]->msgs = init_circ_queue(4)) == NULL) {
 			kfree(sc->send[i]);
