@@ -190,45 +190,15 @@ always @ (posedge CLK) begin
 end
 
 always @ (*) begin
-	_rRdPtr = (wAfterEnd ? rRdPtr + 1'd1 : rRdPtr);
-	_rWrPtr = (rLenValid ? rWrPtr + 1'd1 : rWrPtr);
-	_rLenLSB0 = rLenLSB0;
-	_rLenLSB1 = rLenLSB1;
-	{_rLenLSB1[rWrPtr], _rLenLSB0[rWrPtr]} = (rLenValid ? (~LEN_LSB + 1'd1) : {rLenLSB1[rWrPtr], rLenLSB0[rWrPtr]}); // Negative ,
-	_rLenLast = rLenLast;
-	_rLenLast[rWrPtr] = (rLenValid ? LEN_LAST : rLenLast[rWrPtr]);
+    _rRdPtr = (wAfterEnd ? rRdPtr + 1'd1 : rRdPtr);
+    _rWrPtr = (rLenValid ? rWrPtr + 1'd1 : rWrPtr);
+    _rLenLSB0 = rLenLSB0;
+    _rLenLSB1 = rLenLSB1;
+    if(rLenValid)
+        {_rLenLSB1[rWrPtr], _rLenLSB0[rWrPtr]} = (~LEN_LSB + 1);
+    _rLenLast = rLenLast;
+    if(rLenValid)
+        _rLenLast[rWrPtr] = LEN_LAST;
 end
-
-
-
-/*
-wire [35:0] wControl0;
-chipscope_icon_1 cs_icon(
-	.CONTROL0(wControl0)
-);
-
-chipscope_ila_t8_512_max a0(
-	.CLK(CLK), 
-	.CONTROL(wControl0), 
-	.TRIG0({2'd0, rCount, RD_EN, WR_EN, rFifoRdEn}),
-	.DATA({4'd0,
-			wLenLSB, // 2
-			wLenLast, // 1
-			wAfterEnd, // 1
-			wConsumed, // 3
-			rData, // 224
-			rFifoRdEn, // 1
-			rCount, // 3
-			rRen, // 1
-			RD_EN, // 1
-			RD_DATA, // 128
-			WR_COUNT, // 10
-			WR_EN, // 1
-			WR_DATA, // 128
-			LEN_LSB, // 2
-			LEN_LAST, // 1
-			LEN_VALID}) // 1
-);
-*/
 
 endmodule
