@@ -680,7 +680,7 @@
           <Attr Name="UsedIn" Val="simulation"/>
         </FileInfo>
       </File>
-      <File Path="$PPRDIR/../hdl/NetFPGAGen2x8If128.v">
+      <File Path="$PPRDIR/../hdl/NetFPGA_Gen2x8If128.v">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
@@ -701,20 +701,20 @@
       </File>
       <Config>
         <Option Name="DesignMode" Val="RTL"/>
-        <Option Name="TopModule" Val="NetFPGAGen2x8If128"/>
+        <Option Name="TopModule" Val="NetFPGA_Gen2x8If128"/>
         <Option Name="TopAutoSet" Val="TRUE"/>
       </Config>
     </FileSet>
     <FileSet Name="constrs_1" Type="Constrs" RelSrcDir="$PSRCDIR/constrs_1">
       <Filter Type="Constrs"/>
-      <File Path="$PPRDIR/../constr/NetFPGA_Top.xdc">
+      <File Path="$PPRDIR/../constr/NetFPGA_Gen2x8If128.xdc">
         <FileInfo>
           <Attr Name="UsedIn" Val="synthesis"/>
           <Attr Name="UsedIn" Val="implementation"/>
         </FileInfo>
       </File>
       <Config>
-        <Option Name="TargetConstrsFile" Val="$PPRDIR/../constr/NetFPGA_Top.xdc"/>
+        <Option Name="TargetConstrsFile" Val="$PPRDIR/../constr/NetFPGA_Gen2x8If128.xdc"/>
         <Option Name="ConstrsType" Val="XDC"/>
       </Config>
     </FileSet>
@@ -722,7 +722,7 @@
       <Filter Type="Srcs"/>
       <Config>
         <Option Name="DesignMode" Val="RTL"/>
-        <Option Name="TopModule" Val="NetFPGAGen2x8If128"/>
+        <Option Name="TopModule" Val="NetFPGA_Gen2x8If128"/>
         <Option Name="TopLib" Val="xil_defaultlib"/>
         <Option Name="TopAutoSet" Val="TRUE"/>
         <Option Name="SrcSet" Val="sources_1"/>

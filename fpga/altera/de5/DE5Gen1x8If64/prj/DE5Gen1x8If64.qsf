@@ -41,7 +41,8 @@ set_global_assignment -name DEVICE 5SGXEA7N2F45C2
 set_global_assignment -name TOP_LEVEL_ENTITY DE5Gen1x8If64
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "11:03:06  MARCH 21, 2014"
-set_global_assignment -name LAST_QUARTUS_VERSION 14.1.0
+set_global_assignment -name LAST_QUARTUS_VERSION 15.0.0
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../bit/
 
 ################################################################################
 # Timing SDC Files
@@ -386,9 +387,9 @@ set_global_assignment -name SIP_FILE ../ip/PCIeGen1x8If64.sip
 set_global_assignment -name QIP_FILE ../ip/PCIeGen1x8If64.qip
 set_global_assignment -name VERILOG_FILE ../hdl/DE5Gen1x8If64.v
 set_global_assignment -name VERILOG_FILE ../../riffa_wrapper_de5.v
-set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/txr_engine_ultrascale.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/reset_extender.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/reset_controller.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/txr_engine_classic.v
-set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/txc_engine_ultrascale.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/txc_engine_classic.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_writer.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_monitor_128.v
@@ -403,13 +404,11 @@ set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_buffer_32
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_128.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_64.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_32.v
-set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_multiplexer_all.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_multiplexer_128.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_multiplexer_64.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_multiplexer_32.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_multiplexer.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_hdr_fifo.v
-set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_engine_ultrascale.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_engine_selector.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_engine_classic.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_engine.v
@@ -417,7 +416,6 @@ set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_data_shift.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_data_pipeline.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_data_fifo.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_alignment_pipeline.v
-set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/translation_xilinx.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/translation_altera.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/syncff.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/sync_fifo.v
@@ -427,9 +425,7 @@ set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/sg_list_reader_12
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/sg_list_reader_64.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/sg_list_reader_32.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/scsdpram.v
-set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rxr_engine_ultrascale.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rxr_engine_classic.v
-set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rxc_engine_ultrascale.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rxc_engine_classic.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_port_requester_mux.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_port_reader.v
@@ -437,7 +433,6 @@ set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_port_channel_g
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_port_128.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_port_64.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_port_32.v
-set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_engine_ultrascale.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_engine_classic.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rotate.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/riffa.v
