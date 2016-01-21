@@ -32,8 +32,12 @@
 # USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 # DAMAGE.
 # ----------------------------------------------------------------------
-
-#include common.mk
+#-----------------------------------------------------------------------
+# Filename:            Makefile
+# Version:             1.0
+# Description:         Top-level makefile for building all vendor projects
+# Author:              Dustin Richmond (@darichmond)
+#-----------------------------------------------------------------------
 
 MKPATH:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
 RIFFA_PATH:=$(MKPATH)/riffa_hdl
