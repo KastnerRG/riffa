@@ -41,7 +41,7 @@ set_global_assignment -name DEVICE 5SGXEA7N2F45C2
 set_global_assignment -name TOP_LEVEL_ENTITY DE5Gen2x8If128
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "11:03:06  MARCH 21, 2014"
-set_global_assignment -name LAST_QUARTUS_VERSION 14.1.0
+set_global_assignment -name LAST_QUARTUS_VERSION 15.1.0
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../bit/
 
 ################################################################################
@@ -409,6 +409,7 @@ set_global_assignment -name SIP_FILE ../ip/PCIeGen2x8If128.sip
 set_global_assignment -name QIP_FILE ../ip/XCVRCtrlGen2x8.qip
 set_global_assignment -name SIP_FILE ../ip/XCVRCtrlGen2x8.sip
 set_global_assignment -name SDC_FILE ../constr/DE5Gen2x8If128.sdc
+set_global_assignment -name SEARCH_PATH ../../../../riffa_hdl
 set_global_assignment -name VERILOG_FILE ../hdl/DE5Gen2x8If128.v
 set_global_assignment -name VERILOG_FILE ../../riffa_wrapper_de5.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/reset_extender.v

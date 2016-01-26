@@ -41,7 +41,7 @@ set_global_assignment -name DEVICE 5SGXEA7N2F45C2
 set_global_assignment -name TOP_LEVEL_ENTITY DE5QGen1x8If64
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "11:03:06  MARCH 21, 2014"
-set_global_assignment -name LAST_QUARTUS_VERSION 15.0.0
+set_global_assignment -name LAST_QUARTUS_VERSION 15.1.0
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../bit/
 ################################################################################
 # Timing SDC Files
@@ -380,6 +380,7 @@ set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
 set_global_assignment -name VERILOG_INPUT_VERSION SYSTEMVERILOG_2005
 set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
 
+set_global_assignment -name SEARCH_PATH ../../../../riffa_hdl
 set_global_assignment -name SDC_FILE ../constr/DE5QGen1x8If64.sdc
 set_global_assignment -name QSYS_FILE ../ip/QSysDE5QGen1x8If64.qsys
 set_global_assignment -name VERILOG_FILE ../hdl/DE5QGen1x8If64.v

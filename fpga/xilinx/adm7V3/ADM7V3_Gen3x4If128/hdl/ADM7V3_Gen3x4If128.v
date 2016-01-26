@@ -360,7 +360,7 @@ module ADM7V3_Gen3x4If128
          .sys_clk                                        (pcie_refclk),
          .sys_reset                                      (~pcie_reset_n));
 
-    riffa_wrapper_7V3
+    riffa_wrapper_adm7V3
         #(/*AUTOINSTPARAM*/
           // Parameters
           .C_NUM_CHNL                   (C_NUM_CHNL),

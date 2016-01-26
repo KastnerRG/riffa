@@ -41,7 +41,7 @@ set_global_assignment -name DEVICE EP4CGX150DF31C7
 set_global_assignment -name TOP_LEVEL_ENTITY DE2Gen1x1If64
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "12:52:42  MARCH 20, 2014"
-set_global_assignment -name LAST_QUARTUS_VERSION "14.1.0 SP0.19"
+set_global_assignment -name LAST_QUARTUS_VERSION 15.1.0
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../bit/
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
@@ -250,6 +250,7 @@ set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/channel_32.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/channel.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/async_fifo_fwft.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/async_fifo.v
+set_global_assignment -name SEARCH_PATH ../../../../riffa_hdl
 set_global_assignment -name SDC_FILE ../constr/DE2Gen1x1If64.sdc
 set_global_assignment -name VERILOG_FILE ../hdl/DE2Gen1x1If64.v
 set_global_assignment -name QIP_FILE ../ip/ALTGXPCIeGen1x1.qip
