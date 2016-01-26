@@ -47,7 +47,7 @@
 `timescale 1ps / 1ps
 module ZC706_Gen2x4If64
     #(// Number of RIFFA Channels
-      parameter C_NUM_CHNL = 12,
+      parameter C_NUM_CHNL = 1,
       // Number of PCIe Lanes
       parameter C_NUM_LANES =  4,
       // Settings from Vivado IP Generator
