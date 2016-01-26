@@ -54,7 +54,7 @@ $(VENDORS)::
 
 .PHONY:clean $(SUBDIRS) clobber
 clean clobber: $(VENDORS)
-	rm -rf *~
+	rm -rf *~ *.jou *.log
 
 
 
