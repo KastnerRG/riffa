@@ -64,7 +64,7 @@ RIFFA_HDL= types.vh widths.vh trellis.vh schedules.vh functions.vh riffa.vh \
 	reorder_queue.v reorder_queue_input.v reorder_queue_output.v \
 	reset_controller.v reset_extender.v riffa.v rotate.v \
 	rx_port_channel_gate.v rx_port_reader.v rx_port_requester_mux.v \
-	scsdpram.v sctdpram.v sg_list_requester.v shiftreg.v sync_fifo.v \
+	scsdpram.v sg_list_requester.v shiftreg.v sync_fifo.v \
 	$(ENGINE_HDL) $(RIFFA_$(WIDTH)_HDL) $($(TYPE)_HDL) $($(VENDOR)_HDL)
 
 
