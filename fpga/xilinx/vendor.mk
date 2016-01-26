@@ -33,14 +33,20 @@
 # DAMAGE.
 # ----------------------------------------------------------------------
 #-----------------------------------------------------------------------
-# Filename:            Makefile
+# Filename:            vendor.mk
 # Version:             1.0
-# Description:         Top-level makefile for building the example 
-#                      projects in a board
+# Description:         Vendor-specific include makefile
 # Author:              Dustin Richmond (@darichmond)
 #-----------------------------------------------------------------------
-BOARD=de5
-BOARD_PROJECTS:= DE5QGen1x8If64 DE5QGen2x8If128 DE5QGen3x4If128 DE5Gen1x8If64 DE5Gen2x8If128 DE5Gen3x4If128 
-BOARD_TYPE:=classic
-BOARD_VENDOR:=altera
-include ../vendor.mk
+BOARD_PATH:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))/$(BOARD)
+BOARD_HDL:= $(BOARD_PATH)/riffa_wrapper_$(BOARD).v
+SUBDIRS = $(BOARD_PROJECTS)
+
+.PHONY:clean clobber $(SUBDIRS) all $(BOARD_VENDOR) $(BOARD) $(BOARD_TYPE)
+all $(BOARD_VENDOR) $(BOARD) $(BOARD_TYPE): $(SUBDIRS)
+
+$(SUBDIRS)::
+	$(MAKE) -C $@ $(MAKECMDGOALS) BOARD=$(BOARD) TYPE=$(BOARD_TYPE) VENDOR=$(BOARD_VENDOR) BOARD_HDL=$(BOARD_HDL)
+
+clean clobber: $(SUBDIRS)
+	rm -rf *.log *.jou .Xil *~

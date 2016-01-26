@@ -40,7 +40,6 @@
 #-----------------------------------------------------------------------
 BOARD_HDL:= $(BOARD_PATH)/riffa_wrapper_$(BOARD).v
 
-
 # These rules impact 
 PROJECT_IP=
 PROJECT_HDL=hdl/$(PROJECT).v $(BOARD_HDL) $(patsubst %, $(RIFFA_PATH)/%,$(RIFFA_HDL))
@@ -48,7 +47,7 @@ PROJECT_CONSTR=constr/$(PROJECT).sdc
 PROJECT_FILE=prj/$(PROJECT).qsf prj/$(PROJECT).qpf
 PROJECT_FILES=$(PROJECT_IP) $(PROJECT_CONSTR) $(PROJECT_QSRCS) $(PROJECT_HDL)
 
-.PHONY:$(PROJECT)
+.PHONY:$(PROJECT) all synthesis implementation clean clobber $(TYPE) $(VENDOR) $(BOARD)
 $(PROJECT): bit/$(PROJECT).sof 
 	@echo Compiling Project $@
 
@@ -64,7 +63,7 @@ implementation:bit/$(PROJECT).fit.rpt
 bit/$(PROJECT).fit.rpt: $(PROJECT_FILES)
 	quartus_sh --flow fitter prj/$(PROJECT).qpf
 
-all:$(PROJECT)
+all $(TYPE) $(VENDOR) $(BOARD):$(PROJECT)
 clean:
 	rm -rf ip/.qsys_edit ip/*~
 	rm -rf prj/db prj/incremental_db prj/*txt prj/*.sopcinfo prj/*.qws prj/*~
@@ -73,5 +72,5 @@ clean:
 	rm -rf constr/*~
 	rm -rf *~
 
-clean-bit:
+clobber:
 	rm -rf bit/*.sof

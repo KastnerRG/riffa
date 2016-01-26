@@ -39,19 +39,21 @@
 # Author:              Dustin Richmond (@darichmond)
 #-----------------------------------------------------------------------
 
-MKPATH:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))
-RIFFA_PATH:=$(MKPATH)/riffa_hdl
+CURRENT_PATH := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
+RIFFA_PATH:=$(CURRENT_PATH)/riffa_hdl
 VENDORS:= xilinx altera
 SUBDIRS = $(VENDORS)
 
+all classic: $(VENDORS)
 
-all: $(VENDORS)
+ultrascale:
+	$(MAKE) -C xilinx $(MAKECMDGOALS) RIFFA_PATH=$(RIFFA_PATH)
 
 $(VENDORS)::
 	$(MAKE) -C $@ $(MAKECMDGOALS) RIFFA_PATH=$(RIFFA_PATH)
 
-.PHONY:clean $(SUBDIRS)
-clean: $(VENDORS)
+.PHONY:clean $(SUBDIRS) clobber
+clean clobber: $(VENDORS)
 	rm -rf *~
 
 

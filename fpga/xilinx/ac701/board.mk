@@ -46,7 +46,7 @@ PROJECT_CONSTR=constr/$(PROJECT).xdc
 PROJECT_FILE=prj/$(PROJECT).xpr
 PROJECT_FILES=$(PROJECT_IP) $(PROJECT_CONSTR) $(PROJECT_QSRCS) $(PROJECT_HDL)
 
-.PHONY:$(PROJECT)
+.PHONY:$(PROJECT) all synthesis implementation clean clobber $(TYPE) $(VENDOR) $(BOARD)
 $(PROJECT): bit/$(PROJECT).bit 
 	@echo Compiling Project $@
 
@@ -62,11 +62,11 @@ implementation:prj/$(PROJECT).runs/impl_1
 prj/$(PROJECT).runs/impl_1: $($(PROJECT)_FILES)
 	echo "launch_runs impl_1 -jobs $(JOBS); wait_on_run impl1" | vivado -mode tcl prj/$(PROJECT).xpr
 
-all:$(PROJECT)
+all $(TYPE) $(VENDOR) $(BOARD):$(PROJECT)
 clean:
 	rm -rf *.log *.jou *~ .Xil 
 	rm -rf ip/doc ip/sim ip/source ip/synth ip/*.dcp ip/*.v ip/*.xml ip/*.vhdl ip/*.veo ip/*~
 	rm -rf prj/*.hw prj/*.runs prj/*.cache prj/*~
 
-clean-bit:
-	rm -rf bit/*.bit 
+clobber:
+	rm -rf bit/*.bit
