@@ -270,6 +270,7 @@ set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/channel_32.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/channel.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/async_fifo_fwft.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/async_fifo.v
+set_global_assignment -name SEARCH_PATH ../../../../riffa_hdl
 set_global_assignment -name SDC_FILE ../constr/C4DevGen1x4If64.sdc
 set_global_assignment -name VERILOG_FILE ../hdl/C4DevGen1x4If64.v
 set_global_assignment -name SOURCE_FILE db/C4DevGen1x4If64.cmp.rdb
