@@ -33,7 +33,7 @@
 // DAMAGE.
 // ----------------------------------------------------------------------
 //----------------------------------------------------------------------------
-// Filename:            7V3Gen2x8If128.v
+// Filename:            ADM7V3_Gen2x8If128.v
 // Version:             1.00.a
 // Verilog Standard:    Verilog-2001
 // Description:         Top level module for RIFFA 2.2 reference design for the
@@ -44,7 +44,7 @@
 `include "riffa.vh"
 `include "ultrascale.vh"
 `timescale 1ps / 1ps
-module ADM_PCIe_7V3Gen2x8If128
+module ADM7V3_Gen2x8If128
     #(// Number of RIFFA Channels
       parameter C_NUM_CHNL = 1,
       // Number of PCIe Lanes

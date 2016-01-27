@@ -33,7 +33,7 @@
 // DAMAGE.
 // ----------------------------------------------------------------------
 //----------------------------------------------------------------------------
-// Filename:            ZC706Gen2x4If128.v
+// Filename:            ZC706_Gen2x4If128.v
 // Version:             1.00.a
 // Verilog Standard:    Verilog-2001
 // Description:         Top level module for RIFFA 2.2 reference design for the

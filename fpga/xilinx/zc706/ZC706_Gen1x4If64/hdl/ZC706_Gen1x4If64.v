@@ -33,7 +33,7 @@
 // DAMAGE.
 // ----------------------------------------------------------------------
 //----------------------------------------------------------------------------
-// Filename:            ZC706Gen2x4If64.v
+// Filename:            ZC706_Gen1x4If64.v
 // Version:             1.00.a
 // Verilog Standard:    Verilog-2001
 // Description:         Top level module for RIFFA 2.2 reference design for the
@@ -45,7 +45,7 @@
 `include "tlp.vh"
 `include "xilinx.vh"
 `timescale 1ps / 1ps
-module ZC706_Gen2x4If64
+module ZC706_Gen1x4If64
     #(// Number of RIFFA Channels
       parameter C_NUM_CHNL = 1,
       // Number of PCIe Lanes

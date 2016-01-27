@@ -33,7 +33,7 @@
 // DAMAGE.
 // ----------------------------------------------------------------------
 //----------------------------------------------------------------------------
-// Filename:            VC709Gen3x4If128.v
+// Filename:            VC709_Gen3x4If128.v
 // Version:             1.00.a
 // Verilog Standard:    Verilog-2001
 // Description:         Top level module for RIFFA 2.2 reference design for the
@@ -44,7 +44,7 @@
 `include "riffa.vh"
 `include "ultrascale.vh"
 `timescale 1ps / 1ps
-module VC709Gen3x4If128
+module VC709_Gen3x4If128
     #(// Number of RIFFA Channels
       parameter C_NUM_CHNL = 1,
       // Number of PCIe Lanes

@@ -33,7 +33,7 @@
 // DAMAGE.
 // ----------------------------------------------------------------------
 //----------------------------------------------------------------------------
-// Filename:            KC705Gen1x8If64.v
+// Filename:            KC705_Gen1x8If64.v
 // Version:             1.00.a
 // Verilog Standard:    Verilog-2001
 // Description:         Top level module for RIFFA 2.2 reference design for the
@@ -45,7 +45,7 @@
 `include "tlp.vh"
 `include "xilinx.vh"
 `timescale 1ps / 1ps
-module KC705Gen1x8If64
+module KC705_Gen1x8If64
     #(// Number of RIFFA Channels
       parameter C_NUM_CHNL = 1,
       // Number of PCIe Lanes
