@@ -123,8 +123,13 @@ module tx_data_fifo
     wire                            wPacketDecrement; 
     wire                            wPacketIncrement;
 
-    reg [clog2(C_DEPTH_PACKETS+1)-1:0] rPacketCounter,_rPacketCounter;
+    //reg [clog2(C_DEPTH_PACKETS+1)-1:0] rPacketCounter,_rPacketCounter;
+    wire [clog2(C_DEPTH_PACKETS+1)-1:0] wPacketCounter;
 
+    wire [C_NUM_FIFOS-1:0]              wEFDecrement; 
+    wire [C_NUM_FIFOS-1:0]              wEFIncrement;
+    wire [clog2(C_DEPTH_PACKETS+1)-1:0] wEFCounter [C_NUM_FIFOS-1:0];
+    wire [C_NUM_FIFOS-1:0]              wEFValid;
     /*AUTOINPUT*/
     /*AUTOWIRE*/
     ///*AUTOOUTPUT*/
@@ -132,36 +137,36 @@ module tx_data_fifo
     assign RST = RST_IN;
 
     assign wWrTxEndFlagValid = (wWrTxDataEndFlags & wWrTxDataValid) != {C_NUM_FIFOS{1'b0}};
-    assign wWrTxEndFlagReady = rPacketCounter != C_DEPTH_PACKETS;// Designed a small bit of latency here to help timing...
+    assign wWrTxEndFlagReady = wPacketCounter != C_DEPTH_PACKETS;// Designed a small bit of latency here to help timing...
     assign wPacketIncrement = wWrTxEndFlagValid & wWrTxEndFlagReady;
     assign wPacketDecrement = wRdTxEndFlagValid & wRdTxEndFlagReady;
     
     assign WR_TX_DATA_READY = _wWrTxDataReady[0];
 
-    assign wRdTxEndFlagValid = rPacketCounter != 0;
+    assign wRdTxEndFlagValid = wPacketCounter != 0;
     assign wRdTxEndFlagReady = (wRdTxDataReady & wRdTxDataEndFlags & wRdTxDataValid) != {C_NUM_FIFOS{1'b0}};
-    assign wRdTxDataPacketValid = rPacketCounter != 0;
+    assign wRdTxDataPacketValid = wPacketCounter != 0;
 
     assign RD_TX_DATA_START_FLAG = _wRdTxDataStartFlags[0];
-    
-    always @(*) begin
-        _rPacketCounter = rPacketCounter;
-        if(wPacketIncrement & wPacketDecrement) begin
-            _rPacketCounter = rPacketCounter + 0;
-        end else if(wPacketIncrement) begin
-            _rPacketCounter = rPacketCounter + 1;
-        end else if(wPacketDecrement) begin
-            _rPacketCounter = rPacketCounter - 1;
-        end
-    end // always @ (*)
 
-    always @(posedge CLK) begin
-        if(RST_IN) begin
-            rPacketCounter <= #1 0;
-        end else begin
-            rPacketCounter <= #1 _rPacketCounter;
-        end
-    end
+    counter_v2
+        #(// Parameters
+          .C_MAX_VALUE                  (C_DEPTH_PACKETS),
+          .C_SAT_VALUE                  (C_DEPTH_PACKETS + 1), // Never saturate
+          .C_RST_VALUE                  (0),
+          .C_FLR_VALUE                  (0)
+          /*AUTOINSTPARAM*/)
+    packet_ctr_inst
+        (// Outputs
+         .VALUE                         (wPacketCounter),
+         // Inputs
+         .INC                           (wPacketIncrement),
+         .DEC                           (wPacketDecrement),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK),
+         .RST_IN                        (RST_IN));
+
 
     generate
         for( i = 0 ; i < C_NUM_FIFOS ; i = i + 1 ) begin : gen_regs_fifos
@@ -231,6 +236,29 @@ module tx_data_fifo
                  // Inputs
                  .CLK                   (CLK),
                  .RST_IN                (RST_IN));
+            
+            assign wEFIncrement[i] = wWrTxDataEndFlags[i] & wWrTxDataValid[i];
+            assign wEFDecrement[i] = wRdTxDataEndFlags[i] & wRdTxDataReady[i];
+            assign wEFValid[i]     = (wEFCounter[i] != 0);
+
+            counter_v2
+                #(// Parameters
+                  .C_MAX_VALUE                  (C_DEPTH_PACKETS),
+                  .C_SAT_VALUE                  (C_DEPTH_PACKETS + 1), // Never saturate
+                  .C_RST_VALUE                  (0),
+                  .C_FLR_VALUE                  (0)
+                  /*AUTOINSTPARAM*/)
+            perfifo_ctr_inst
+                (// Outputs
+                 .VALUE                         (wEFCounter[i]),
+                 // Inputs
+                 .INC                           (wEFIncrement[i]),
+                 .DEC                           (wEFDecrement[i]),
+                 /*AUTOINST*/
+                 // Inputs
+                 .CLK                           (CLK),
+                 .RST_IN                        (RST_IN));
+
         end // for ( i = 0 ; i < C_NUM_FIFOS ; i = i + 1 )
         pipeline
             #(.C_DEPTH              (C_FIFO_OUTPUT_DEPTH),
@@ -244,12 +272,12 @@ module tx_data_fifo
              .RD_DATA_VALID         (RD_TX_DATA_PACKET_VALID),
              // Inputs
              .WR_DATA               (),
-             .WR_DATA_VALID         (wRdTxDataPacketValid),
-             .RD_DATA_READY         ((RD_TX_DATA_WORD_READY & RD_TX_DATA_END_FLAGS) !== 0),
+             .WR_DATA_VALID         (wEFValid != 0),
+             .RD_DATA_READY         ((RD_TX_DATA_WORD_READY & RD_TX_DATA_END_FLAGS) != 0),
              /*AUTOINST*/
              // Inputs
-             .CLK                   (CLK),
-             .RST_IN                (RST_IN));
+             .CLK                       (CLK),
+             .RST_IN                    (RST_IN));
     endgenerate
 endmodule
 // Local Variables:
@@ -257,3 +285,37 @@ endmodule
 // End:
 
 
+module counter_v2
+    #(parameter C_MAX_VALUE = 10,
+      parameter C_SAT_VALUE = 10,
+      parameter C_FLR_VALUE = 0,
+      parameter C_RST_VALUE = 0)
+    (input                              CLK,
+     input                              RST_IN,
+
+     input                              INC,
+     input                              DEC,
+     output [clog2s(C_MAX_VALUE+1)-1:0] VALUE);
+    
+    wire                                wInc;
+    wire                                wDec;
+    
+    reg [clog2s(C_MAX_VALUE+1)-1:0]     wCtrValue;
+    reg [clog2s(C_MAX_VALUE+1)-1:0]     rCtrValue;
+    /* verilator lint_off WIDTH */
+    assign wInc = INC & (C_SAT_VALUE > rCtrValue);
+    assign wDec = DEC & (C_FLR_VALUE < rCtrValue);
+    /* verilator lint_on WIDTH */
+    assign VALUE = rCtrValue;
+    always @(posedge CLK) begin
+        if(RST_IN) begin
+            rCtrValue <= C_RST_VALUE[clog2s(C_MAX_VALUE+1)-1:0];
+        end else if(wInc & wDec) begin
+            rCtrValue <= rCtrValue + 0;
+        end else if(wInc) begin
+            rCtrValue <= rCtrValue + 1;
+        end else if(wDec) begin
+            rCtrValue <= rCtrValue - 1;
+        end 
+    end
+endmodule

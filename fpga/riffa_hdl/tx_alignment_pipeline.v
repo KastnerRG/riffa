@@ -143,6 +143,7 @@ module tx_alignment_pipeline
     wire [C_DATA_WIDTH-1:0]               wTxData;
     wire                                  wTxDataStartFlag;
     wire [(C_DATA_WIDTH/32)-1:0]          wTxDataEndFlags;
+    wire [(C_DATA_WIDTH/32)-1:0]          wTxDataPacketWordValid;
     wire [clog2s(C_DATA_WIDTH/32)-1:0]    wTxDataEndOffset;
 
     // Wires from the header interface input register
@@ -249,11 +250,12 @@ module tx_alignment_pipeline
     assign wTxPktEndOffset = wTxHdrPacketLen[C_OFFSET_WIDTH-1:0]-1; // TODO: Retime -1?
     assign wTxPktValid = wTxMuxSelectValid & (wTxHdrNoPayload | (~wTxHdrNoPayload & wTxDataPacketValid));
     // assign wTxDataWordReady = wTxMuxSelectDataReady & {C_NUM_MUXES{wTxPktReady & wTxMuxSelectValid & wTxDataPacketValid}};
-    assign wTxDataWordReady = wTxMuxSelectDataReadyAndPayload & {C_NUM_MUXES{wTxPktReady & wTxDataPacketValid}};
+    assign wTxDataWordReady = wTxMuxSelectDataReadyAndPayload & {C_NUM_MUXES{wTxPktReady & wTxDataPacketValid}}; // TODO: Change this to bit-wise AND of wTxDataPacketValid
 
     // Assignments for the output stage
     assign TX_PKT_START_OFFSET = {C_OFFSET_WIDTH{1'b0}};
 
+    assign wTxDataPacketValid = wTxDataPacketWordValid != 0;
     /*See comment block at start of module*/
     generate
         for(i = 0 ; i < C_NUM_MUXES ; i = i + 1) begin : muxes
@@ -399,11 +401,10 @@ module tx_alignment_pipeline
         (// Outputs
          .VALUE                         (wSatCtr),
          // Inputs
+         .CLK                           (CLK),
          .RST_IN                        (wSatCtrReset),
-         .ENABLE                        (wSatCtrEnable),
-         /*AUTOINST*/
-         // Inputs
-         .CLK                           (CLK));
+         .ENABLE                        (wSatCtrEnable)
+         /*AUTOINST*/);
 
     counter
         #(// Parameters
@@ -415,17 +416,58 @@ module tx_alignment_pipeline
         (// Outputs
          .VALUE                         (wPktCtr),
          // Inputs
+         .CLK                           (CLK),
          .RST_IN                        (wPktCtrReset),
-         .ENABLE                        (wPktCtrEnable),
-         /*AUTOINST*/
-         // Inputs
-         .CLK                           (CLK));
+         .ENABLE                        (wPktCtrEnable)
+         /*AUTOINST*/);
 
     generate
         for( i = 0  ; i < C_MAX_HDR_WIDTH/32 ; i = i + 1) begin : gen_aggregate
             assign wAggregate[i] = wTxHdr[i*32 +: 32];
         end
 
+//            pipeline
+//                #(// Parameters
+//                  .C_DEPTH                      (C_PIPELINE_DATA_INPUT?1:0),
+//                  .C_WIDTH                      (1),
+//                  .C_USE_MEMORY                 (0)
+//                  /*AUTOINSTPARAM*/)
+//            packet_valid_register
+//                (// Outputs
+//                 .WR_DATA_READY             (),
+//                 .RD_DATA                   (),
+//                 .RD_DATA_VALID             (wTxDataPacketValid),
+//                 // Inputs
+//                 .WR_DATA                   (),
+//                 .WR_DATA_VALID             (TX_DATA_PACKET_VALID | ((wTxDataWordValid & wTxDataEndFlags[i])),
+//                 .RD_DATA_READY             (~wTxDataPacketValid | 
+//                                             ((wTxDataEndFlags & wTxDataWordReady) != 0)),
+//                 // TODO: End flag read? This is odd, you want to read when there is not a valid packet 
+//                 /*AUTOINST*/
+//                 // Inputs
+//                 .CLK                   (CLK),
+//                 .RST_IN                (RST_IN));
+        for( i = 0; i < C_NUM_MUXES ; i = i + 1) begin : gen_data_input_regs
+            assign wAggregate[i + C_MAX_HDR_WIDTH/32] = wTxData[32*i +: 32];
+            pipeline
+                #(// Parameters
+                  .C_DEPTH                      (C_PIPELINE_DATA_INPUT?1:0),
+                  .C_WIDTH                      (32),
+                  .C_USE_MEMORY                 (0)
+                  /*AUTOINSTPARAM*/)
+            data_register_
+                (// Outputs
+                 .WR_DATA_READY             (TX_DATA_WORD_READY[i]),
+                 .RD_DATA                   (wTxData[32*i +: 32]),
+                 .RD_DATA_VALID             (wTxDataWordValid[i]),
+                 // Inputs
+                 .WR_DATA                   (TX_DATA[32*i +: 32]),
+                 .WR_DATA_VALID             (TX_DATA_WORD_VALID[i]),
+                 .RD_DATA_READY             (wTxDataWordReady[i]),
+                 /*AUTOINST*/
+                 // Inputs
+                 .CLK                   (CLK),
+                 .RST_IN                (RST_IN));
             pipeline
                 #(// Parameters
                   .C_DEPTH                      (C_PIPELINE_DATA_INPUT?1:0),
@@ -436,36 +478,13 @@ module tx_alignment_pipeline
                 (// Outputs
                  .WR_DATA_READY             (),
                  .RD_DATA                   (),
-                 .RD_DATA_VALID             (wTxDataPacketValid),
+                 .RD_DATA_VALID             (wTxDataPacketWordValid[i]),
                  // Inputs
                  .WR_DATA                   (),
-                 .WR_DATA_VALID             (TX_DATA_PACKET_VALID),
-                 .RD_DATA_READY             (~wTxDataPacketValid | 
-                                             ((wTxDataEndFlags & wTxDataWordReady) != 0)),
+                 .WR_DATA_VALID             ((TX_DATA_END_FLAGS[i] & TX_DATA_WORD_VALID[i]) | 
+                                             (TX_DATA_PACKET_VALID & TX_DATA_WORD_VALID[i] & (TX_DATA_END_FLAGS == 0))),
+                 .RD_DATA_READY             (wTxDataWordReady[i] | ~wTxDataPacketWordValid[i]),
                  // TODO: End flag read? This is odd, you want to read when there is not a valid packet 
-                 /*AUTOINST*/
-                 // Inputs
-                 .CLK                   (CLK),
-                 .RST_IN                (RST_IN));
-        for( i = 0; i < C_NUM_MUXES ; i = i + 1) begin : gen_data_input_regs
-            assign wAggregate[i + C_MAX_HDR_WIDTH/32] = wTxData[32*i +: 32];
-            pipeline
-                #(// Parameters
-                  .C_DEPTH                      (C_PIPELINE_DATA_INPUT?1:0),
-                  .C_WIDTH                      (32 + 1),
-                  .C_USE_MEMORY                 (0)
-                  /*AUTOINSTPARAM*/)
-            data_register_
-                (// Outputs
-                 .WR_DATA_READY             (TX_DATA_WORD_READY[i]),
-                 .RD_DATA                   ({wTxData[32*i +: 32],
-                                              wTxDataEndFlags[i]}),
-                 .RD_DATA_VALID             (wTxDataWordValid[i]),
-                 // Inputs
-                 .WR_DATA                   ({TX_DATA[32*i +: 32],
-                                              TX_DATA_END_FLAGS[i] & TX_DATA_WORD_VALID[i]}),
-                 .WR_DATA_VALID             (TX_DATA_WORD_VALID[i]),
-                 .RD_DATA_READY             (wTxDataWordReady[i]),
                  /*AUTOINST*/
                  // Inputs
                  .CLK                   (CLK),
@@ -474,14 +493,16 @@ module tx_alignment_pipeline
 
         for( i = 0 ; i < C_NUM_MUXES ; i = i + 1) begin : gen_packet_format_multiplexers
             mux
-                 #(// Parameters
+                 #(
+                   // Parameters
                    .C_NUM_INPUTS                 (C_MUX_INPUTS),
                    .C_CLOG_NUM_INPUTS            (C_CLOG_MUX_INPUTS),
                    .C_WIDTH                      (32),
                    .C_MUX_TYPE                   ("SELECT")
                    /*AUTOINSTPARAM*/)
             dw_mux_
-                 (// Outputs
+                 (
+                  // Outputs
                   .MUX_OUTPUT                (wTxPkt[32*i +: 32]),
                   // Inputs
                   .MUX_INPUTS                (wTxMuxInputs[i]),
@@ -491,13 +512,15 @@ module tx_alignment_pipeline
     endgenerate
 
     pipeline
-        #(// Parameters
+        #(
+          // Parameters
           .C_DEPTH                      (C_PIPELINE_OUTPUT?1:0),
           .C_WIDTH                      (C_DATA_WIDTH + 2 + C_OFFSET_WIDTH),
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     output_register_inst
-        (// Outputs
+        (
+         // Outputs
          .WR_DATA_READY             (wTxPktReady),
          .RD_DATA                   ({TX_PKT,TX_PKT_START_FLAG,TX_PKT_END_FLAG,TX_PKT_END_OFFSET}),
          .RD_DATA_VALID             (TX_PKT_VALID),
