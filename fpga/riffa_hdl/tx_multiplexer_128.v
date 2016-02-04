@@ -402,7 +402,7 @@ module tx_multiplexer_128
     assign TXR_META_TYPE = rCountIsWr ? `TRLS_REQ_WR : `TRLS_REQ_RD;
     assign TXR_META_ADDR = {rCountAddr,2'b00};
     assign TXR_META_LENGTH = rCountLen;
-    assign TXR_META_LDWBE = rCountLen == 10'd1 ? 0 : 4'b1111;
+    assign TXR_META_LDWBE = rCountLen == 10'd1 ? 0 : 4'b1111; // TODO: This should be retimed
     assign TXR_META_FDWBE = 4'b1111;
     assign TXR_META_TAG = rCountTag;
     assign TXR_META_EP = 1'b0;

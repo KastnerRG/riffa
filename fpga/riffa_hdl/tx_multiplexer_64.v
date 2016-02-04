@@ -411,7 +411,7 @@ module tx_multiplexer_64
     assign TXR_META_TYPE = rCapIsWr ? `TRLS_REQ_WR : `TRLS_REQ_RD;
     assign TXR_META_ADDR = {rCapAddr,2'b00};
     assign TXR_META_LENGTH = rCapLen;
-    assign TXR_META_LDWBE = 4'b1111;
+    assign TXR_META_LDWBE = rCapLen == 10'd1 ? 0 : 4'b1111; // TODO: This should be retimed
     assign TXR_META_FDWBE = 4'b1111;
     assign TXR_META_TAG = rCountTag;
     assign TXR_META_EP = 1'b0;
