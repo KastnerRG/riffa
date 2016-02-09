@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Copyright (c) 2015, The Regents of the University of California All
+# Copyright (c) 2016, The Regents of the University of California All
 # rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -49,7 +49,7 @@ setup(name='riffa',
       license='Other/Proprietary License',
       py_modules=['riffa'],
       long_description='''
-Copyright (c) 2015, The Regents of the University of California All
+Copyright (c) 2016, The Regents of the University of California All
 rights reserved.
 
 Redistribution and use in source and binary forms, with or without
