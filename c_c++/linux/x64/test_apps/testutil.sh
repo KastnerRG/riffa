@@ -35,7 +35,7 @@
 # ----------------------------------------------------------------------
 
 PATH=$PATH:./
-RESULT_PATH=~/results 
+RESULT_PATH=~/
 
 if [ "$#" -lt 2 ]; then 
     echo "usage: $0 <fpga id> <board name>"
