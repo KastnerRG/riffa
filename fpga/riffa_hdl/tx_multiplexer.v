@@ -98,14 +98,15 @@ module tx_multiplexer
      input                                     TXR_SENT);
 
     wire [C_NUM_CHNL-1:0]                      wAckRdData;
-
+    wire                                       wAckValid;
+                                      
     reg [C_NUM_CHNL-1:0]                       rAckWrData; // Registered fifo input (only write acks)
     reg [C_NUM_CHNL-1:0]                       rAckRdData; // Registered fifo output (only write acks)
     reg                                        rAckWrEn,_rAckWrEn; // Fifo write enable (RD or WR_ACK)
     reg                                        rAckRdEn; // Fifo read enable (TXR_SENT)
 
     always @(*) begin
-        _rAckWrEn = (WR_ACK != 0) | (RD_ACK != 0);
+        _rAckWrEn = (WR_ACK != 0);
     end
 
     always @(posedge CLK) begin
@@ -116,7 +117,7 @@ module tx_multiplexer
     always @(posedge CLK) begin
         rAckRdEn <= TXR_SENT;
         if(rAckRdEn) begin
-            rAckRdData <= wAckRdData;
+            rAckRdData <= wAckRdData & {C_NUM_CHNL{wAckValid}};
         end else begin
             rAckRdData <= 0;
         end
@@ -134,7 +135,7 @@ module tx_multiplexer
         (// Outputs
          .WR_READY                      (),
          .RD_DATA                       (wAckRdData),
-         .RD_VALID                      (),
+         .RD_VALID                      (wAckValid),
          // Inputs
          .WR_DATA                       (rAckWrData),
          .WR_VALID                      (rAckWrEn),
