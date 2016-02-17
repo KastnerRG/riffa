@@ -42,11 +42,12 @@
 // Author:				Matt Jacobsen
 // History:				@mattj: Version 2.0
 //-----------------------------------------------------------------------------
-`define S_TXPORTMON64_NEXT	5'b0_0001
-`define S_TXPORTMON64_TXN	5'b0_0010
-`define S_TXPORTMON64_READ	5'b0_0100
-`define S_TXPORTMON64_END_0	5'b0_1000
-`define S_TXPORTMON64_END_1	5'b1_0000
+`define S_TXPORTMON64_NEXT	6'b00_0001
+`define S_TXPORTMON64_EVT_2	6'b00_0010
+`define S_TXPORTMON64_TXN	6'b00_0100
+`define S_TXPORTMON64_READ	6'b00_1000
+`define S_TXPORTMON64_END_0	6'b01_0000
+`define S_TXPORTMON64_END_1	6'b10_0000
 
 `timescale 1ns/1ns
 module tx_port_monitor_64 #(
@@ -84,7 +85,7 @@ module tx_port_monitor_64 #(
 
 (* syn_encoding = "user" *)
 (* fsm_encoding = "user" *)
-reg 	[4:0]				rState=`S_TXPORTMON64_NEXT, _rState=`S_TXPORTMON64_NEXT;
+reg 	[5:0]				rState=`S_TXPORTMON64_NEXT, _rState=`S_TXPORTMON64_NEXT;
 reg 						rRead=0, _rRead=0;
 reg 	[C_VALID_HIST-1:0]	rDataValid={C_VALID_HIST{1'd0}}, _rDataValid={C_VALID_HIST{1'd0}};
 reg 						rEvent=0, _rEvent=0;
@@ -100,7 +101,7 @@ reg							rTxErr=0, _rTxErr=0;
 
 
 wire wEventData = (rDataValid[0] & EVT_DATA[C_DATA_WIDTH]);
-wire wPayloadData = (rDataValid[0] & !EVT_DATA[C_DATA_WIDTH] & rState[2]); // S_TXPORTMON64_READ
+wire wPayloadData = (rDataValid[0] & !EVT_DATA[C_DATA_WIDTH] & rState[3]); // S_TXPORTMON64_READ
 wire wAllWordsRecvd = ((rAlmostAllRecvd | (rLenEQ0Hi & rLenLE2Lo)) & wPayloadData);
 
 assign EVT_DATA_RD_EN = rRead;
@@ -108,12 +109,12 @@ assign EVT_DATA_RD_EN = rRead;
 assign WR_DATA = EVT_DATA[C_DATA_WIDTH-1:0];
 assign WR_EN = wPayloadData; // S_TXPORTMON64_READ
 
-assign TXN = rState[1]; // S_TXPORTMON64_TXN
+assign TXN = rState[2]; // S_TXPORTMON64_TXN
 assign LAST = rReadData[0];
 assign OFF = rReadData[31:1];
 assign LEN = rReadData[63:32];
 assign WORDS_RECVD = rWordsRecvd;
-assign DONE = !rState[2]; // !S_TXPORTMON64_READ
+assign DONE = !rState[3]; // !S_TXPORTMON64_READ
 
 
 
@@ -138,6 +139,11 @@ always @ (*) begin
 	case (rState)
 
 	`S_TXPORTMON64_NEXT: begin // Read, wait for start of transaction event
+		if (rEvent)
+			_rState = `S_TXPORTMON64_EVT_2;
+	end
+
+	`S_TXPORTMON64_EVT_2: begin // Read, wait for start of transaction event
 		if (rEvent)
 			_rState = `S_TXPORTMON64_TXN;
 	end
@@ -195,7 +201,7 @@ always @ (*) begin
 	_rDataValid = ((rDataValid<<1) | (rRead & !EVT_DATA_EMPTY));
 
 	// Read until we get a (valid) event
-	_rRead = (!rState[1] & !wEventData & !rAlmostFull); // !S_TXPORTMON64_TXN
+	_rRead = (!rState[2] & !(rState[1] & rEvent) & !wEventData & !rAlmostFull); // !S_TXPORTMON64_TXN
 
 	// Track detected events
 	_rEvent = wEventData;
