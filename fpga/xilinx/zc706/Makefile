@@ -42,5 +42,5 @@
 BOARD:=zc706
 BOARD_PROJECTS:=ZC706_Gen1x4If64 ZC706_Gen2x4If128
 BOARD_TYPE:=classic
-BOARD_VENDOR:=xilinx
+VENDOR:=xilinx
 include ../vendor.mk

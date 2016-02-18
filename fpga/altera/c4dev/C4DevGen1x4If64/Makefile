@@ -39,7 +39,7 @@
 # Author:              Dustin Richmond (@darichmond)
 #-----------------------------------------------------------------------
 # This make file expects the following variables to be set:
-# RIFFA_PATH -- Path to the riffa_hdl directory in the corresponding RIFFA directory.
+# RIFFA_HDL_PATH -- Path to the riffa_hdl directory in the corresponding RIFFA directory.
 # BOARD_PATH -- Path to the $(BOARD) directory, the board this project corresponds to
 # BOARD_HDL -- A list of an board-specific HDL files not in the riffa_hdl directory
 WIDTH=64
@@ -47,8 +47,8 @@ TYPE=classic
 CURRENT_PATH := $(notdir $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST))))))
 PROJECT=$(shell basename $(CURRENT_PATH))
 
-ifndef RIFFA_PATH
-	RIFFA_PATH:=../../../riffa_hdl
+ifndef RIFFA_HDL_PATH
+	RIFFA_HDL_PATH:=../../../riffa_hdl
 endif
 ifndef BOARD_PATH
 	BOARD_PATH:=..
@@ -56,7 +56,7 @@ endif
 ifndef JOBS
 	JOBS=1
 endif
-include $(RIFFA_PATH)/riffa.mk
+include $(RIFFA_HDL_PATH)/riffa.mk
 include $(BOARD_PATH)/board.mk
 
 PROJECT_IP+=ip/ALTGXPCIeGen1x4.qip ip/ALTPLL50I50O125O250O.qip ip/PCIeGen1x4If64.qip

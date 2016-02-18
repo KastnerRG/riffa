@@ -35,48 +35,31 @@
 #-----------------------------------------------------------------------
 # Filename:            Makefile
 # Version:             1.0
-# Description:         Top-level makefile for building all vendor projects
+# Description:         Makefile for including the C/C++ subdirectory in 
+#                      a RIFFA release. Expects RELEASE_SRC_PATH to be set
+#                      by parent Makefile.
 # Author:              Dustin Richmond (@darichmond)
 #-----------------------------------------------------------------------
 
 CURRENT_PATH := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 CURRENT_DIR := $(shell basename $(CURRENT_PATH))
-RIFFA_ROOT_PATH:=$(CURRENT_PATH)/..
-RIFFA_HDL_PATH:=$(RIFFA_ROOT_PATH)/$(CURRENT_DIR)/riffa_hdl
+
 include $(RIFFA_ROOT_PATH)/release.mk
-.DEFAULT_GOAL := all
-VENDORS:= altera xilinx 
-SUBDIRS = $(VENDORS)
 
-all classic: $(VENDORS)
+all:docs
 
-ultrascale: check-hdl
-	$(MAKE) -C xilinx $(MAKECMDGOALS) RIFFA_HDL_PATH=$(RIFFA_HDL_PATH) RIFFA_ROOT_PATH=$(RIFFA_ROOT_PATH)
+docs: riffa_documentation.pdf
 
-$(VENDORS):: check-hdl
-	$(MAKE) -C $@ $(MAKECMDGOALS) RIFFA_HDL_PATH=$(RIFFA_HDL_PATH) RIFFA_ROOT_PATH=$(RIFFA_ROOT_PATH)
+riffa_documentation.pdf:riffa_documentation.tex images/* images/*/*
+	pdflatex \\nonstopmode\\input riffa_documentation.tex
+	pdflatex \\nonstopmode\\input riffa_documentation.tex
+	pdflatex \\nonstopmode\\input riffa_documentation.tex
 
-clean-release:check-release-src
-	rm -rf $(RELEASE_SRC_PATH)/$(CURRENT_DIR)
+release: check-release-doc docs clean-release
+	cp riffa_documentation.pdf $(RELEASE_DOC_PATH)/RIFFA_$(RELEASE_VER)_Instructions.pdf
 
-destination: $(RELEASE_SRC_PATH)/fpga
+clean-release: check-release-src
+	rm -rf $(RELEASE_SRC_PATH)/documentation
 
-$(RELEASE_SRC_PATH)/fpga: check-release-src
-	mkdir $@
-
-release: check-release-src destination $(VENDORS)
-	cp -r $(CURRENT_PATH)/riffa_hdl $(RELEASE_SRC_PATH)/$(CURRENT_DIR)
-	rm -r $(RELEASE_SRC_PATH)/$(CURRENT_DIR)/riffa_hdl/riffa.mk
-
-.PHONY:clean $(SUBDIRS) clobber release
-
-clean clobber: $(VENDORS)
-	rm -rf *~ *.jou *.log
-
-
-
-
-
-
-
-
+clean:
+	rm -rf *~ *.aux *.toc riffa_documentation.pdf *.log

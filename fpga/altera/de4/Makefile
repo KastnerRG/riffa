@@ -42,5 +42,5 @@
 BOARD=de4
 BOARD_PROJECTS:= DE4Gen1x8If64 DE4Gen2x8If128
 BOARD_TYPE:=classic
-BOARD_VENDOR:=altera
+VENDOR:=altera
 include ../vendor.mk

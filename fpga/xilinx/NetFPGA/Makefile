@@ -42,5 +42,5 @@
 BOARD:=NetFPGA
 BOARD_PROJECTS:=NetFPGA_Gen1x8If64 NetFPGA_Gen2x8If128 NetFPGA_Gen3x4If128
 BOARD_TYPE:=ultrascale
-BOARD_VENDOR:=xilinx
+VENDOR:=xilinx
 include ../vendor.mk

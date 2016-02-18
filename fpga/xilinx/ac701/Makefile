@@ -42,5 +42,5 @@
 BOARD:=ac701
 BOARD_PROJECTS:=AC701_Gen1x4If64 AC701_Gen2x4If128
 BOARD_TYPE:=classic
-BOARD_VENDOR:=xilinx
+VENDOR:=xilinx
 include ../vendor.mk

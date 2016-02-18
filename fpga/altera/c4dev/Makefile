@@ -42,5 +42,5 @@
 BOARD=c4dev
 BOARD_PROJECTS:=C4DevGen1x4If64
 BOARD_TYPE:=classic
-BOARD_VENDOR:=altera
+VENDOR:=altera
 include ../vendor.mk

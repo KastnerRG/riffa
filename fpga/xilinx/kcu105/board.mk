@@ -38,28 +38,40 @@
 # Description:         Board-specific include makefile
 # Author:              Dustin Richmond (@darichmond)
 #-----------------------------------------------------------------------
+include $(RIFFA_ROOT_PATH)/release.mk
+.DEFAULT_GOAL=all
+
 BOARD_HDL:= $(BOARD_PATH)/riffa_wrapper_$(BOARD).v
 
 PROJECT_IP=
-PROJECT_HDL=hdl/$(PROJECT).v $(BOARD_HDL) $(patsubst %, $(RIFFA_PATH)/%,$(RIFFA_HDL)) $(PROJECT_FILES) 
+PROJECT_BIT:= bit/$(PROJECT).bit
+PROJECT_HDL=hdl/$(PROJECT).v $(BOARD_HDL) $(patsubst %, $(RIFFA_HDL_PATH)/%,$(RIFFA_HDL))
 PROJECT_CONSTR=constr/$(PROJECT).xdc
 PROJECT_FILE=prj/$(PROJECT).xpr
 PROJECT_FILES=$(PROJECT_IP) $(PROJECT_CONSTR) $(PROJECT_QSRCS) $(PROJECT_HDL)
 
+RELEASE_BIT:=$(PROJECT_BIT)
+RELEASE_IP=$(PROJECT_IP) # Note the difference between this and the other assignments (Projects add their own IP)
+RELEASE_HDL:=hdl/$(PROJECT).v
+RELEASE_CONSTR:=$(PROJECT_CONSTR)
+RELEASE_FILE:=$(PROJECT_FILE)
+RELEASE_PROJECT_PATH:=$(RELEASE_SRC_PATH)/fpga/$(VENDOR)/$(BOARD)/$(PROJECT)
+copy-files = $(foreach file, $1, cp $(file) $2;)
+
 .PHONY:$(PROJECT) all synthesis implementation clean clobber $(TYPE) $(VENDOR) $(BOARD)
-$(PROJECT): bit/$(PROJECT).bit 
+$(PROJECT): $(PROJECT_BIT)
 	@echo Compiling Project $@
 
-bit/$(PROJECT).bit: $($(PROJECT)_FILES)
+$(PROJECT_BIT): $(PROJECT_FILES)
 	echo "launch_runs impl_1 -to_step write_bitstream -jobs $(JOBS); wait_on_run impl_1" | vivado -mode tcl prj/$(PROJECT).xpr
 	mv prj/$(PROJECT).runs/impl_1/$(PROJECT).bit bit/
 
 synthesis: prj/$(PROJECT).runs/synth_1
-prj/$(PROJECT).runs/synth_1: $($(PROJECT)_FILES)
+prj/$(PROJECT).runs/synth_1: $(PROJECT_FILES)
 	echo "launch_runs synth_1 -jobs $(JOBS); wait_on_run synth_1" | vivado -mode tcl prj/$(PROJECT).xpr
 
 implementation:prj/$(PROJECT).runs/impl_1
-prj/$(PROJECT).runs/impl_1: $($(PROJECT)_FILES)
+prj/$(PROJECT).runs/impl_1: $(PROJECT_FILES)
 	echo "launch_runs impl_1 -jobs $(JOBS); wait_on_run impl1" | vivado -mode tcl prj/$(PROJECT).xpr
 
 all $(TYPE) $(VENDOR) $(BOARD):$(PROJECT)
@@ -70,4 +82,22 @@ clean:
 	rm -rf prj/*.hw prj/*.runs prj/*.cache prj/*~
 
 clobber:
-	rm -rf bit/*.bit
+	rm -rf $(PROJECT_BIT)
+
+destination: $(RELEASE_PROJECT_PATH)
+	mkdir $(RELEASE_PROJECT_PATH)/bit
+	mkdir $(RELEASE_PROJECT_PATH)/constr
+	mkdir $(RELEASE_PROJECT_PATH)/ip
+	mkdir $(RELEASE_PROJECT_PATH)/hdl
+	mkdir $(RELEASE_PROJECT_PATH)/prj
+
+$(RELEASE_PROJECT_PATH): check-release-src
+	mkdir $@
+
+release:check-release-src destination
+	$(call copy-files, $(RELEASE_BIT), $(RELEASE_PROJECT_PATH)/bit)
+	$(call copy-files, $(RELEASE_CONSTR), $(RELEASE_PROJECT_PATH)/constr)
+	$(call copy-files, $(RELEASE_IP), $(RELEASE_PROJECT_PATH)/ip)
+	$(call copy-files, $(RELEASE_HDL), $(RELEASE_PROJECT_PATH)/hdl)
+	$(call copy-files, $(RELEASE_FILE), $(RELEASE_PROJECT_PATH)/prj)
+

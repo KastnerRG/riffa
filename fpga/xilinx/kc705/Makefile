@@ -42,5 +42,5 @@
 BOARD:=kc705
 BOARD_PROJECTS:=KC705_Gen1x8If64 KC705_Gen2x8If128
 BOARD_TYPE:=classic
-BOARD_VENDOR:=xilinx
+VENDOR:=xilinx
 include ../vendor.mk

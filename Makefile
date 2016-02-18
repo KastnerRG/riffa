@@ -35,48 +35,42 @@
 #-----------------------------------------------------------------------
 # Filename:            Makefile
 # Version:             1.0
-# Description:         Top-level makefile for building all vendor projects
+# Description:         Top-level makefile for building a RIFFA distribution
 # Author:              Dustin Richmond (@darichmond)
 #-----------------------------------------------------------------------
-
+include release.mk
 CURRENT_PATH := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
-CURRENT_DIR := $(shell basename $(CURRENT_PATH))
-RIFFA_ROOT_PATH:=$(CURRENT_PATH)/..
-RIFFA_HDL_PATH:=$(RIFFA_ROOT_PATH)/$(CURRENT_DIR)/riffa_hdl
-include $(RIFFA_ROOT_PATH)/release.mk
-.DEFAULT_GOAL := all
-VENDORS:= altera xilinx 
-SUBDIRS = $(VENDORS)
+RIFFA_ROOT_PATH := $(CURRENT_PATH)
 
-all classic: $(VENDORS)
+RELEASE_VER=2.2.1
+RELEASE_DIR=riffa_$(RELEASE_VER)
+RELEASE_PATH=$(CURRENT_PATH)/$(RELEASE_DIR)
+RELEASE_SRC_DIR=$(RELEASE_DIR)/source
+RELEASE_SRC_PATH=$(CURRENT_PATH)/$(RELEASE_SRC_DIR)
+RELEASE_DOC_DIR=$(RELEASE_DIR)/documentation
+RELEASE_DOC_PATH=$(CURRENT_PATH)/$(RELEASE_DOC_DIR)
+RELEASE_INSTALL_DIR=$(RELEASE_DIR)/install
+RELEASE_INSTALL_PATH=$(CURRENT_PATH)/$(RELEASE_INSTALL_DIR)
 
-ultrascale: check-hdl
-	$(MAKE) -C xilinx $(MAKECMDGOALS) RIFFA_HDL_PATH=$(RIFFA_HDL_PATH) RIFFA_ROOT_PATH=$(RIFFA_ROOT_PATH)
+VENDORS=altera xilinx
+SUBDIRS=c_c++ docs driver fpga java matlab python #install
 
-$(VENDORS):: check-hdl
-	$(MAKE) -C $@ $(MAKECMDGOALS) RIFFA_HDL_PATH=$(RIFFA_HDL_PATH) RIFFA_ROOT_PATH=$(RIFFA_ROOT_PATH)
+all-boards: 
+	$(MAKE) -C fpga $(VENDORS)
 
-clean-release:check-release-src
-	rm -rf $(RELEASE_SRC_PATH)/$(CURRENT_DIR)
-
-destination: $(RELEASE_SRC_PATH)/fpga
-
-$(RELEASE_SRC_PATH)/fpga: check-release-src
+$(RELEASE_DIR):
 	mkdir $@
 
-release: check-release-src destination $(VENDORS)
-	cp -r $(CURRENT_PATH)/riffa_hdl $(RELEASE_SRC_PATH)/$(CURRENT_DIR)
-	rm -r $(RELEASE_SRC_PATH)/$(CURRENT_DIR)/riffa_hdl/riffa.mk
+$(RELEASE_SRC_DIR): $(RELEASE_DIR) check-release
+	mkdir $@
 
-.PHONY:clean $(SUBDIRS) clobber release
+$(RELEASE_DOC_DIR): $(RELEASE_DIR) check-release
+	mkdir $@
 
-clean clobber: $(VENDORS)
-	rm -rf *~ *.jou *.log
+release: clean $(RELEASE_DIR) $(RELEASE_SRC_DIR) $(RELEASE_DOC_DIR) $(SUBDIRS) 
 
+$(SUBDIRS)::
+	make -C $@ $(MAKECMDGOALS) RELEASE_SRC_PATH=$(RELEASE_SRC_PATH) RELEASE_VER=$(RELEASE_VER) RIFFA_ROOT_PATH=$(RIFFA_ROOT_PATH) RELEASE_DOC_PATH=$(RELEASE_DOC_PATH)
 
-
-
-
-
-
-
+clean:
+	rm -rf $(RELEASE_DIR)

@@ -42,5 +42,5 @@
 BOARD:=vc707
 BOARD_PROJECTS:=VC707_Gen1x8If64 VC707_Gen2x8If128
 BOARD_TYPE:=classic
-BOARD_VENDOR:=xilinx
+VENDOR:=xilinx
 include ../vendor.mk

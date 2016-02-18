@@ -42,5 +42,5 @@
 BOARD:=kcu105
 BOARD_PROJECTS:=KCU105_Gen1x8If64 KCU105_Gen2x8If128 KCU105_Gen3x4If128
 BOARD_TYPE:=ultrascale
-BOARD_VENDOR:=xilinx
+VENDOR:=xilinx
 include ../vendor.mk

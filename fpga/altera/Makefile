@@ -41,14 +41,20 @@
 VENDOR:=altera
 BOARDS:=de5 de4 de2i c4dev
 CURRENT_PATH := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
-RIFFA_PATH=$(CURRENT_PATH)/../riffa_hdl
+.DEFAULT_GOAL := all
+
+RIFFA_ROOT_PATH=$(CURRENT_PATH)/../../
+RIFFA_HDL_PATH=$(CURRENT_PATH)/../riffa_hdl
+include $(RIFFA_ROOT_PATH)/release.mk
+include $(RIFFA_ROOT_PATH)/fpga/fpga.mk
 
 all classic $(VENDOR): $(BOARDS)
 
-$(BOARDS)::
-	$(MAKE) -C $@ $(MAKECMDGOALS) RIFFA_PATH=$(RIFFA_PATH) VENDOR_PATH=$(CURRENT_PATH)
+$(BOARDS):: check-hdl
+	$(MAKE) -C $@ $(MAKECMDGOALS) VENDOR_PATH=$(CURRENT_PATH) VENDOR=$(VENDOR)
 
 .PHONY:clean $(BOARDS) classic all clobber
 clean clobber: $(VENDOR)
 	rm -rf *~ .qsys_edit
+
 

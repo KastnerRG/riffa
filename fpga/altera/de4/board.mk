@@ -38,20 +38,31 @@
 # Description:         Board-specific include makefile
 # Author:              Dustin Richmond (@darichmond)
 #-----------------------------------------------------------------------
+include $(RIFFA_ROOT_PATH)/release.mk
+.DEFAULT_GOAL=all
+
 BOARD_HDL:= $(BOARD_PATH)/riffa_wrapper_$(BOARD).v
 
-# These rules impact 
 PROJECT_IP=
-PROJECT_HDL=hdl/$(PROJECT).v $(BOARD_HDL) $(patsubst %, $(RIFFA_PATH)/%,$(RIFFA_HDL))
+PROJECT_BIT:= bit/$(PROJECT).sof 
+PROJECT_HDL=hdl/$(PROJECT).v $(BOARD_HDL) $(patsubst %, $(RIFFA_HDL_PATH)/%,$(RIFFA_HDL))
 PROJECT_CONSTR=constr/$(PROJECT).sdc
 PROJECT_FILE=prj/$(PROJECT).qsf prj/$(PROJECT).qpf
 PROJECT_FILES=$(PROJECT_IP) $(PROJECT_CONSTR) $(PROJECT_QSRCS) $(PROJECT_HDL)
 
+RELEASE_BIT:=$(PROJECT_BIT)
+RELEASE_IP:=$(PROJECT_IP)
+RELEASE_HDL:=hdl/$(PROJECT).v
+RELEASE_CONSTR:=$(PROJECT_CONSTR)
+RELEASE_FILE:=$(PROJECT_FILE)
+RELEASE_PROJECT_PATH:=$(RELEASE_SRC_PATH)/fpga/$(VENDOR)/$(BOARD)/$(PROJECT)
+copy-files = $(foreach file, $1, cp $(file) $2;)
+
 .PHONY:$(PROJECT) all synthesis implementation clean clobber $(TYPE) $(VENDOR) $(BOARD)
-$(PROJECT): bit/$(PROJECT).sof 
+$(PROJECT): $(PROJECT_BIT)
 	@echo Compiling Project $@
 
-bit/$(PROJECT).sof: $(PROJECT_FILES)
+$(PROJECT_BIT): $(PROJECT_FILES)
 	quartus_sh --flow compile prj/$(PROJECT).qpf
 
 synthesis: bit/$(PROJECT).map.rpt
@@ -73,4 +84,22 @@ clean:
 	rm -rf *~
 
 clobber:
-	rm -rf bit/*.sof
+	rm -rf $(PROJECT_BIT)
+
+destination: $(RELEASE_PROJECT_PATH)
+	mkdir $(RELEASE_PROJECT_PATH)/bit
+	mkdir $(RELEASE_PROJECT_PATH)/constr
+	mkdir $(RELEASE_PROJECT_PATH)/ip
+	mkdir $(RELEASE_PROJECT_PATH)/hdl
+	mkdir $(RELEASE_PROJECT_PATH)/prj
+
+$(RELEASE_PROJECT_PATH): check-release-src
+	mkdir $@
+
+release:check-release-src destination
+	$(call copy-files, $(RELEASE_BIT), $(RELEASE_PROJECT_PATH)/bit)
+	$(call copy-files, $(RELEASE_CONSTR), $(RELEASE_PROJECT_PATH)/constr)
+	$(call copy-files, $(RELEASE_IP), $(RELEASE_PROJECT_PATH)/ip)
+	$(call copy-files, $(RELEASE_HDL), $(RELEASE_PROJECT_PATH)/hdl)
+	$(call copy-files, $(RELEASE_FILE), $(RELEASE_PROJECT_PATH)/prj)
+

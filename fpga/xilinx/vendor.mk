@@ -38,15 +38,29 @@
 # Description:         Vendor-specific include makefile
 # Author:              Dustin Richmond (@darichmond)
 #-----------------------------------------------------------------------
+
 BOARD_PATH:=$(shell dirname $(realpath $(lastword $(MAKEFILE_LIST))))/$(BOARD)
 BOARD_HDL:= $(BOARD_PATH)/riffa_wrapper_$(BOARD).v
-SUBDIRS = $(BOARD_PROJECTS)
+RIFFA_ROOT_PATH:=$(BOARD_PATH)/../../../
+RIFFA_HDL_PATH:=$(BOARD_PATH)/../../riffa_hdl
+include $(RIFFA_ROOT_PATH)/release.mk
 
-.PHONY:clean clobber $(SUBDIRS) all $(BOARD_VENDOR) $(BOARD) $(BOARD_TYPE)
-all $(BOARD_VENDOR) $(BOARD) $(BOARD_TYPE): $(SUBDIRS)
+RELEASE_BOARD_PATH=$(RELEASE_SRC_PATH)/fpga/$(VENDOR)/$(BOARD)
+SUBDIRS = $(BOARD_PROJECTS)
+.DEFAULT_GOAL=all
+
+.PHONY:clean clobber $(SUBDIRS) all $(VENDOR) $(BOARD) $(BOARD_TYPE)
+all $(VENDOR) $(BOARD) $(BOARD_TYPE): $(SUBDIRS)
 
 $(SUBDIRS)::
-	$(MAKE) -C $@ $(MAKECMDGOALS) BOARD=$(BOARD) TYPE=$(BOARD_TYPE) VENDOR=$(BOARD_VENDOR) BOARD_HDL=$(BOARD_HDL)
-
+	$(MAKE) -C $@ $(MAKECMDGOALS) BOARD=$(BOARD) TYPE=$(BOARD_TYPE) VENDOR=$(VENDOR) BOARD_HDL=$(BOARD_HDL) RIFFA_ROOT_PATH=$(RIFFA_ROOT_PATH)
 clean clobber: $(SUBDIRS)
-	rm -rf *.log *.jou .Xil *~
+	rm -rf *~
+
+release: destination $(SUBDIRS)
+
+destination: $(RELEASE_BOARD_PATH)
+$(RELEASE_BOARD_PATH): check-release-src
+	mkdir $@
+	cp $(BOARD_HDL) $(RELEASE_BOARD_PATH)
+

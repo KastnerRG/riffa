@@ -42,5 +42,5 @@
 BOARD:=vcu108
 BOARD_PROJECTS:=VCU108_Gen1x8If64 VCU108_Gen2x8If128 VCU108_Gen3x4If128
 BOARD_TYPE:=ultrascale
-BOARD_VENDOR:=xilinx
+VENDOR:=xilinx
 include ../vendor.mk

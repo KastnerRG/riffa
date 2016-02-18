@@ -43,7 +43,12 @@ ULTRASCALE:=NetFPGA adm7V3 kcu105 vc709 vcu108
 CLASSIC:=ac701 kc705 vc707 zc706
 BOARDS:=$(CLASSIC) $(ULTRASCALE)
 CURRENT_PATH := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
-RIFFA_PATH=$(CURRENT_PATH)/../riffa_hdl
+.DEFAULT_GOAL=all
+
+RIFFA_ROOT_PATH=$(CURRENT_PATH)/../../
+RIFFA_HDL_PATH=$(CURRENT_PATH)/../riffa_hdl
+include $(RIFFA_ROOT_PATH)/release.mk
+include $(RIFFA_ROOT_PATH)/fpga/fpga.mk
 
 all $(VENDOR): $(BOARDS)
 
@@ -51,7 +56,7 @@ classic:$(CLASSIC)
 ultrascale:$(ULTRASCALE)
 
 $(CLASSIC) $(ULTRASCALE)::
-	$(MAKE) -C $@ $(MAKECMDGOALS) RIFFA_PATH=$(RIFFA_PATH) VENDOR_PATH=$(CURRENT_PATH)
+	$(MAKE) -C $@ $(MAKECMDGOALS) VENDOR_PATH=$(CURRENT_PATH) VENDOR=$(VENDOR) RIFFA_ROOT_PATH=$(RIFFA_ROOT_PATH)
 
 .PHONY:clean $(BOARDS) classic all clobber
 clean clobber: $(BOARDS)
