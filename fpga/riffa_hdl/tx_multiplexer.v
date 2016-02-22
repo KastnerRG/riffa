@@ -106,7 +106,7 @@ module tx_multiplexer
     reg                                        rAckRdEn; // Fifo read enable (TXR_SENT)
 
     always @(*) begin
-        _rAckWrEn = (WR_ACK != 0);
+        _rAckWrEn = (WR_ACK != 0) | (RD_ACK != 0);
     end
 
     always @(posedge CLK) begin
@@ -116,8 +116,8 @@ module tx_multiplexer
 
     always @(posedge CLK) begin
         rAckRdEn <= TXR_SENT;
-        if(rAckRdEn) begin
-            rAckRdData <= wAckRdData & {C_NUM_CHNL{wAckValid}};
+        if(rAckRdEn & wAckValid) begin
+            rAckRdData <= wAckRdData;//
         end else begin
             rAckRdData <= 0;
         end
@@ -128,7 +128,7 @@ module tx_multiplexer
     fifo
         #(// Parameters
           .C_WIDTH                      (C_NUM_CHNL),
-          .C_DEPTH                      (C_DEPTH_PACKETS*3), // This is an extremely conservative estimate...
+          .C_DEPTH                      (C_DEPTH_PACKETS*8), // This is an extremely conservative estimate...
           .C_DELAY                      (0)
           /*AUTOINSTPARAM*/)
     req_ack_fifo
