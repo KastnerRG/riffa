@@ -39,8 +39,8 @@
 # Author:              Dustin Richmond (@darichmond)
 #-----------------------------------------------------------------------
 VENDOR:=xilinx
-ULTRASCALE:=NetFPGA adm7V3 kcu105 vc709 vcu108
-CLASSIC:=ac701 kc705 vc707 zc706
+ULTRASCALE:=NetFPGA adm7V3 vc709 
+CLASSIC:=vc707 zc706
 BOARDS:=$(CLASSIC) $(ULTRASCALE)
 CURRENT_PATH := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 .DEFAULT_GOAL=all
