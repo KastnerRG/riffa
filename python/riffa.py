@@ -1,5 +1,5 @@
 # ----------------------------------------------------------------------
-# Copyright (c) 2016, The Regents of the University of California All
+# Copyright (c) 2015, The Regents of the University of California All
 # rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
@@ -47,6 +47,9 @@ if platform.system() == "Linux":
 	libriffa = ctypes.CDLL("libriffa.so.1")
 else:
 	libriffa = ctypes.CDLL("riffa.dll")
+
+libriffa.fpga_recv.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_longlong]
+libriffa.fpga_send.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_longlong]
 
 class FpgaInfoList(ctypes.Structure):
 	_fields_ = [("num_fpgas", ctypes.c_int),
@@ -156,7 +159,7 @@ def fpga_recv(fd, chnl, data, timeout):
 			ctypes.pythonapi.PyObject_AsReadBuffer(obj, ctypes.byref(a), ctypes.byref(l))
 			ptr = a.value
 			datalen = l.value
-	return libriffa.fpga_recv(fd, chnl, ptr, datalen/4, timeout)
+	return libriffa.fpga_recv(fd, chnl, ptr, datalen//4, timeout)
 
 
 # Resets the state of the FPGA and all transfers across all channels. This is
