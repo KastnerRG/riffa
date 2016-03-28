@@ -48,6 +48,9 @@ if platform.system() == "Linux":
 else:
 	libriffa = ctypes.CDLL("riffa.dll")
 
+libriffa.fpga_recv.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_longlong]
+libriffa.fpga_send.argtypes = [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_int, ctypes.c_longlong]
+
 class FpgaInfoList(ctypes.Structure):
 	_fields_ = [("num_fpgas", ctypes.c_int),
 				("id", ctypes.c_int * NUM_FPGAS),
@@ -156,7 +159,7 @@ def fpga_recv(fd, chnl, data, timeout):
 			ctypes.pythonapi.PyObject_AsReadBuffer(obj, ctypes.byref(a), ctypes.byref(l))
 			ptr = a.value
 			datalen = l.value
-	return libriffa.fpga_recv(fd, chnl, ptr, datalen/4, timeout)
+	return libriffa.fpga_recv(fd, chnl, ptr, datalen//4, timeout)
 
 
 # Resets the state of the FPGA and all transfers across all channels. This is
