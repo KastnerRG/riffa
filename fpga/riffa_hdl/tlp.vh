@@ -203,12 +203,12 @@
 `define TLP_TYPE_CPL 5'b01010
 `define TLP_TYPE_MSG 5'b10001
 
-`define TLP_REQ_RD {{3'bx0x},`TLP_TYPE_REQ}
-`define TLP_REQ_WR {{3'bx1x},`TLP_TYPE_REQ}
-`define TLP_CPL_ND {{3'bx00},`TLP_TYPE_CPL}
-`define TLP_CPL_WD {{3'bx10},`TLP_TYPE_CPL}
-`define TLP_MSG_ND {{3'bx01},`TLP_TYPE_MSG}
-`define TLP_MSG_WD {{3'bx11},`TLP_TYPE_MSG}
+`define TLP_REQ_RD {{3'b000},`TLP_TYPE_REQ}
+`define TLP_REQ_WR {{3'b010},`TLP_TYPE_REQ}
+`define TLP_CPL_ND {{3'b000},`TLP_TYPE_CPL}
+`define TLP_CPL_WD {{3'b010},`TLP_TYPE_CPL}
+`define TLP_MSG_ND {{3'b001},`TLP_TYPE_MSG}
+`define TLP_MSG_WD {{3'b011},`TLP_TYPE_MSG}
 
 function [ `EXT_TYPE_W - 1 : 0 ] tlp_to_trellis_type;
     input [`FMT_W + `TYPE_W - 1 : 0 ] tlp_type;

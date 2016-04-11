@@ -250,7 +250,7 @@ module rxc_engine_classic
         (// Outputs
          .RD_DATA                       (wMetadata[31:0]),
          // Inputs
-         .RST_IN                        (0),
+         .RST_IN                        (rRST),
          .WR_DATA                       (RX_SR_DATA[C_RX_METADW0_INDEX +: 32]),
          .WR_EN                         (wRxSrSop[C_RX_METADW0_CYCLE]),
          /*AUTOINST*/
@@ -264,7 +264,7 @@ module rxc_engine_classic
         (// Outputs
          .RD_DATA                       (wMetadata[63:32]),
          // Inputs
-         .RST_IN                        (0),
+         .RST_IN                        (rRST),
          .WR_DATA                       (RX_SR_DATA[C_RX_METADW1_INDEX +: 32]),
          .WR_EN                         (wRxSrSop[C_RX_METADW1_CYCLE]),
          /*AUTOINST*/
@@ -278,7 +278,7 @@ module rxc_engine_classic
         (// Outputs
          .RD_DATA                       (wMetadata[95:64]),
          // Inputs
-         .RST_IN                        (0),
+         .RST_IN                        (rRST),
          .WR_DATA                       (RX_SR_DATA[C_RX_METADW2_INDEX +: 32]),
          .WR_EN                         (wRxSrSop[C_RX_METADW2_CYCLE]),
          /*AUTOINST*/
@@ -292,7 +292,7 @@ module rxc_engine_classic
         (// Outputs
          .RD_DATA                       (wType),
          // Inputs
-         .RST_IN                        (0),
+         .RST_IN                        (rRST),
          .WR_DATA                       (RX_SR_DATA[(`TLP_TYPE_I + C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES) +: `TLP_TYPE_W]),
          .WR_EN                         (wRxSrSop[`TLP_TYPE_I/C_PCI_DATA_WIDTH  + C_RX_INPUT_STAGES]),
          /*AUTOINST*/
@@ -306,7 +306,7 @@ module rxc_engine_classic
         (// Outputs
          .RD_DATA                       (wLength),
          // Inputs
-         .RST_IN                        (0),
+         .RST_IN                        (rRST),
          .WR_DATA                       (RX_SR_DATA[((`TLP_LEN_I%C_PCI_DATA_WIDTH) + C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES) +: `TLP_LEN_W]),
          .WR_EN                         (wRxSrSop[`TLP_LEN_I/C_PCI_DATA_WIDTH + C_RX_INPUT_STAGES]),
          /*AUTOINST*/
@@ -320,7 +320,7 @@ module rxc_engine_classic
         (// Outputs
          .RD_DATA                       (wAddr),
          // Inputs
-         .RST_IN                        (0),
+         .RST_IN                        (rRST),
          .WR_DATA                       (RX_SR_DATA[((`TLP_CPLADDR_I%C_PCI_DATA_WIDTH) + C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES) +: `TLP_CPLADDR_W]),
          .WR_EN                         (wRxSrSop[`TLP_CPLADDR_I/C_PCI_DATA_WIDTH + C_RX_INPUT_STAGES]),
          /*AUTOINST*/
@@ -336,7 +336,7 @@ module rxc_engine_classic
         (// Outputs
          .RD_DATA                       (wStartFlag),
          // Inputs
-         .RST_IN                        (0),
+         .RST_IN                        (rRST),
          .WR_DATA                       (_wStartFlag),
          .WR_EN                         (1),
          /*AUTOINST*/
