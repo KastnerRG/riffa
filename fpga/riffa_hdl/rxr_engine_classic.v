@@ -91,7 +91,8 @@ module rxr_engine_classic
      input [C_RX_PIPELINE_DEPTH:0]                        RX_SR_EOP,
      input [(C_RX_PIPELINE_DEPTH+1)*`SIG_OFFSET_W-1:0]    RX_SR_END_OFFSET,
      input [C_RX_PIPELINE_DEPTH:0]                        RX_SR_SOP,
-     input [C_RX_PIPELINE_DEPTH:0]                        RX_SR_VALID
+     input [C_RX_PIPELINE_DEPTH:0]                        RX_SR_VALID,
+     input [(C_RX_PIPELINE_DEPTH+1)*`SIG_BARDECODE_W-1:0] RX_SR_BAR
      );
 
     /*AUTOWIRE*/
@@ -153,6 +154,7 @@ module rxr_engine_classic
     wire [clog2s(C_MAX_START_OFFSET)-1:0]                 wStartOffset;
     wire                                                  wInsertBlank;
     wire                                                  wRotateAddressField;
+    wire [`SIG_BARDECODE_W-1:0]                           wBar;
 
 
     wire [C_PCI_DATA_WIDTH-1:0]                           wRxrData;
@@ -166,6 +168,7 @@ module rxr_engine_classic
     wire [(C_PCI_DATA_WIDTH/32)-1:0]                      wRxrDataWordEnable;
     wire                                                  wRxrDataStartFlag;
     wire [C_OFFSET_WIDTH-1:0]                             wRxrDataStartOffset;
+    wire [`SIG_BARDECODE_W-1:0]                           wRxBar;
 
     wire [C_RX_PIPELINE_DEPTH:0]                          wRxSrSop;
 
@@ -202,7 +205,7 @@ module rxr_engine_classic
     assign RXR_DATA_START_FLAG = wRxrDataStartFlag;
     assign RXR_DATA_START_OFFSET = wRxrDataStartOffset;
 
-    assign RXR_META_BAR_DECODED = 0;
+    assign RXR_META_BAR_DECODED = wRxBar;
     assign RXR_META_LENGTH = wRxrMetadata[`TLP_LEN_R];
     assign RXR_META_TC = wRxrMetadata[`TLP_TC_R];
     assign RXR_META_ATTR = {wRxrMetadata[`TLP_ATTR1_R], wRxrMetadata[`TLP_ATTR0_R]};
@@ -492,20 +495,36 @@ module rxr_engine_classic
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK));
-    
+
+    register
+        #(// Parameters
+          .C_WIDTH                      (`SIG_BARDECODE_W),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
+    rxbar_register
+        (// Outputs
+         .RD_DATA                       (wBar),
+         // Inputs
+         .WR_DATA                       (RX_SR_BAR[(`SIG_BARDECODE_W*C_RX_INPUT_STAGES) +: `SIG_BARDECODE_W]),
+         .WR_EN                         (wRxSrSop[C_RX_INPUT_STAGES]),
+         .RST_IN                        (0),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
+
     pipeline
         #(// Parameters
           .C_DEPTH                      (C_RX_OUTPUT_STAGES),
-          .C_WIDTH                      (`TLP_MAXHDR_W + 2*(1 + C_OFFSET_WIDTH)),
+          .C_WIDTH                      (`TLP_MAXHDR_W + 2*(1 + C_OFFSET_WIDTH) + `SIG_BARDECODE_W),
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     output_pipeline
         (// Outputs
          .WR_DATA_READY                 (), // Pinned to 1
-         .RD_DATA                       ({wRxrMetadata,wRxrMetaAddr,wRxrDataStartFlag,wRxrDataStartOffset,wRxrDataEndFlag,wRxrDataEndOffset}),
+         .RD_DATA                       ({wRxrMetadata,wRxrMetaAddr,wRxrDataStartFlag,wRxrDataStartOffset,wRxrDataEndFlag,wRxrDataEndOffset,wRxBar}),
          .RD_DATA_VALID                 (wRxrDataValid),
          // Inputs
-         .WR_DATA                       ({wMetadata, wAddrFmt, wStartFlag,wStartOffset[C_OFFSET_WIDTH-1:0],wEndFlag,wEndOffset[C_OFFSET_WIDTH-1:0]}),
+         .WR_DATA                       ({wMetadata, wAddrFmt, wStartFlag,wStartOffset[C_OFFSET_WIDTH-1:0],wEndFlag,wEndOffset[C_OFFSET_WIDTH-1:0],wBar}),
          .WR_DATA_VALID                 (rValid & RX_SR_VALID[C_TOTAL_STAGES-C_RX_OUTPUT_STAGES]),
          .RD_DATA_READY                 (1'b1),
          .RST_IN                        (rRST),

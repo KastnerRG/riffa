@@ -63,6 +63,7 @@ module translation_altera
      input [0:0]                    RX_ST_VALID,
      output                         RX_ST_READY,
      input [0:0]                    RX_ST_EMPTY,
+     input [7:0]                    RX_ST_BAR,
 
      // Interface: Altera TX
      output [C_PCI_DATA_WIDTH-1:0]  TX_ST_DATA,
@@ -152,6 +153,7 @@ module translation_altera
     assign RX_TLP_END_OFFSET = {3'b000,RX_ST_EMPTY};
     assign RX_TLP_START_FLAG = RX_ST_SOP;
     assign RX_TLP_START_OFFSET = 0;
+    assign RX_TLP_BAR_DECODE = RX_ST_BAR;
 
     // TX Interface (From PCIe Core)
     assign TX_TLP_READY = rTxStReady[C_ALTERA_TX_READY_LATENCY-1];
