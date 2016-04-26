@@ -33,6 +33,7 @@
 // DAMAGE.
 // ----------------------------------------------------------------------
 `include "riffa.vh"
+`include "functions.vh"
 module channel
     #(
       parameter C_DATA_WIDTH = 128,
