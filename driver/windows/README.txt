@@ -4,10 +4,16 @@ To build the Windows driver:
    version 7600.16385.1).
 2) Open a DDK command window environment for Windows 7 (which ever version 
    you're targeting).
-3) Move to the directory containing this README.txt and run: build -ceZ
+3) Move to the directory containing this README.txt and run build -ceZ
 4) The driver should be built and ready in the output directory along with a
    Windows 7 catalog file and the coinstaller DLLs.
-
+5) To build the installer you will need to build the driver using the DDK for
+   each architecture (x86/x64). If you want both setup.exe and setup_dbg.exe
+   executables, you will run the build command FOUR TIMES before step 6.
+6) To build the setup.exe file, run the win7install.bat script from the DDK
+   unchecked/free command window. To build the setup_dbg.exe file, run the 
+   script from the checked command window.
+  
 A few notes:
 
 - You will need to sign the driver (riffa.sys) and catalog file (riffa.cat) 
@@ -15,7 +21,11 @@ A few notes:
   process will attempt to sign the catalog file with the UCSD certificate. You
   don't have that, so you won't get a signed driver simply by building. You'll
   need to get a certificate from a certificate authority that is capable of 
-  cross-certificate kernel driver signing. See this page for more details:
+  cross-certificate kernel driver signing to authenticate yourself (.pfx), 
+  and the cross-signing certificate from that authority (.crt file available 
+  from link). These should both be added to the windows certificate list and
+  and copied into the root folder for the windows driver (same location as this
+  README.txt file). See this page for more details:
   http://msdn.microsoft.com/en-us/windows/hardware/gg487315.aspx
     
 - Debugging on Windows is difficult because there exists no kernel log file.
