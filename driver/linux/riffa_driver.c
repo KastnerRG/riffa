@@ -158,6 +158,24 @@ unsigned long long __udivdi3(unsigned long long num, unsigned long long den)
 #endif
 
 
+// These are not defined in the 2.x.y kernels, so just define them
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,39)
+#define PCI_EXP_DEVCTL2_IDO_REQ_EN 0x100
+#define PCI_EXP_DEVCTL2_IDO_CMP_EN 0x200
+#else
+/** 
+ * These are badly named in pre-3.6.11 kernel versions.  We COULD do the same
+ * check as above, however (annoyingly) linux for tegra (based on post-3.6.11)
+ * picked up the header file from some pre-3.6.11 version, so we'll just make
+ * our code ugly and handle the check here:
+ */ 
+#ifndef PCI_EXP_DEVCTL2_IDO_REQ_EN
+#define PCI_EXP_DEVCTL2_IDO_REQ_EN PCI_EXP_IDO_REQ_EN
+#endif
+#ifndef PCI_EXP_DEVCTL2_IDO_CMP_EN
+#define PCI_EXP_DEVCTL2_IDO_CMP_EN PCI_EXP_IDO_CMP_EN
+#endif
+#endif
 
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(3,6,11)
 /**
@@ -166,13 +184,6 @@ unsigned long long __udivdi3(unsigned long long num, unsigned long long den)
  * easier to copy the declarations verbatim here than a bunch of conditionals
  * everywhere else.
  */
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,39)
-#define PCI_EXP_DEVCTL2_IDO_REQ_EN 0x100
-#define PCI_EXP_DEVCTL2_IDO_CMP_EN 0x200
-#else
-#define PCI_EXP_DEVCTL2_IDO_REQ_EN PCI_EXP_IDO_REQ_EN
-#define PCI_EXP_DEVCTL2_IDO_CMP_EN PCI_EXP_IDO_CMP_EN
-#endif
 
 int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
 {
@@ -259,6 +270,9 @@ int pcie_capability_write_dword(struct pci_dev *dev, int pos, u32 val)
 	return pci_write_config_dword(dev, pci_pcie_cap(dev) + pos, val);
 }
 #endif
+
+
+
 
 ///////////////////////////////////////////////////////
 // INTERRUPT HANDLER
