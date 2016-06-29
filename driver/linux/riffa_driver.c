@@ -55,6 +55,7 @@
 #include <linux/rwsem.h>
 #include <linux/dma-mapping.h>
 #include <linux/pagemap.h>
+#include <linux/slab.h>
 #include <asm/uaccess.h>
 #include <asm/div64.h>
 #include "riffa_driver.h"
