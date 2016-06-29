@@ -157,55 +157,106 @@ unsigned long long __udivdi3(unsigned long long num, unsigned long long den)
 }
 #endif
 
+
+
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(3,6,11)
 /**
- * Used to set ETB and RCB, but not available before 3.7. As it is peppered 
- * throughout the clean up code, it's just easier to define empty implementations
- * here than a bunch of conditionals everywhere else.
+ * Code used to set ETB and RCB, but not available before 3.0, or incorrectly
+ * defined before 3.7. As it is peppered throughout the clean up code, it's just
+ * easier to copy the declarations verbatim here than a bunch of conditionals
+ * everywhere else.
  */
-#ifndef PCI_EXP_DEVCTL
-#define PCI_EXP_DEVCTL 0
-#endif
-#ifndef PCI_EXP_DEVCTL_EXT_TAG
-#define PCI_EXP_DEVCTL_EXT_TAG 0
-#endif
-#ifndef PCI_EXP_DEVCTL_RELAX_EN
-#define PCI_EXP_DEVCTL_RELAX_EN 0
-#endif
-#ifndef PCI_EXP_DEVCTL2
-#define PCI_EXP_DEVCTL2 0
-#endif
-#ifndef PCI_EXP_DEVCTL2_IDO_REQ_EN
-#define PCI_EXP_DEVCTL2_IDO_REQ_EN 0
-#endif
-#ifndef PCI_EXP_DEVCTL2_IDO_CMP_EN
-#define PCI_EXP_DEVCTL2_IDO_CMP_EN 0
-#endif
-#ifndef PCI_EXP_DEVCTL
-#define PCI_EXP_DEVCTL 0
-#endif
-#ifndef PCI_EXP_LNKCTL_RCB
-#define PCI_EXP_LNKCTL_RCB 0
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,39)
+#define PCI_EXP_DEVCTL2_IDO_REQ_EN 0x100
+#define PCI_EXP_DEVCTL2_IDO_CMP_EN 0x200
+#else
+#define PCI_EXP_DEVCTL2_IDO_REQ_EN PCI_EXP_IDO_REQ_EN
+#define PCI_EXP_DEVCTL2_IDO_CMP_EN PCI_EXP_IDO_CMP_EN
 #endif
 
 int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
 {
+	int ret;
+
+	*val = 0;
+	if (pos & 1)
+		return -EINVAL;
+
+	if (pcie_capability_reg_implemented(dev, pos)) {
+		ret = pci_read_config_word(dev, pci_pcie_cap(dev) + pos, val);
+		/*
+		 * Reset *val to 0 if pci_read_config_word() fails, it may
+		 * have been written as 0xFFFF if hardware error happens
+		 * during pci_read_config_word().
+		 */
+		if (ret)
+			*val = 0;
+		return ret;
+	}
+
+	/*
+	 * For Functions that do not implement the Slot Capabilities,
+	 * Slot Status, and Slot Control registers, these spaces must
+	 * be hardwired to 0b, with the exception of the Presence Detect
+	 * State bit in the Slot Status register of Downstream Ports,
+	 * which must be hardwired to 1b.  (PCIe Base Spec 3.0, sec 7.8)
+	 */
+	if (pci_is_pcie(dev) && pos == PCI_EXP_SLTSTA &&
+		pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
+		*val = PCI_EXP_SLTSTA_PDS;
+	}
+
 	return 0;
 }
 
 int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
 {
+	int ret;
+
+	*val = 0;
+	if (pos & 3)
+		return -EINVAL;
+
+	if (pcie_capability_reg_implemented(dev, pos)) {
+		ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
+		/*
+		 * Reset *val to 0 if pci_read_config_dword() fails, it may
+		 * have been written as 0xFFFFFFFF if hardware error happens
+		 * during pci_read_config_dword().
+		 */
+		if (ret)
+			*val = 0;
+		return ret;
+	}
+
+	if (pci_is_pcie(dev) && pos == PCI_EXP_SLTCTL &&
+		pci_pcie_type(dev) == PCI_EXP_TYPE_DOWNSTREAM) {
+		*val = PCI_EXP_SLTSTA_PDS;
+	}
+
 	return 0;
 }
 
 int pcie_capability_write_word(struct pci_dev *dev, int pos, u16 val)
 {
-	return 0;
+	if (pos & 1)
+		return -EINVAL;
+
+	if (!pcie_capability_reg_implemented(dev, pos))
+		return 0;
+
+	return pci_write_config_word(dev, pci_pcie_cap(dev) + pos, val);
 }
 
 int pcie_capability_write_dword(struct pci_dev *dev, int pos, u32 val)
 {
-	return 0;
+	if (pos & 3)
+		return -EINVAL;
+
+	if (!pcie_capability_reg_implemented(dev, pos))
+		return 0;
+
+	return pci_write_config_dword(dev, pci_pcie_cap(dev) + pos, val);
 }
 #endif
 
