@@ -405,7 +405,11 @@ static inline struct sg_mapping * fill_sg_buf(struct fpga_state * sc, int chnl,
 
 		// Page in the user pages.
 		down_read(&current->mm->mmap_sem);
+		#if LINUX_VERSION_CODE < KERNEL_VERSION(4,6,0)
 		num_pages = get_user_pages(current, current->mm, udata, num_pages_reqd, 1, 0, pages, NULL);
+		#else
+		num_pages = get_user_pages(udata, num_pages_reqd, 1, 0, pages, NULL);
+		#endif
 		up_read(&current->mm->mmap_sem);
 		if (num_pages <= 0) {
 			printk(KERN_ERR "riffa: fpga:%d chnl:%d, %s unable to pin any pages in memory\n", sc->id, chnl, dir);
@@ -418,7 +422,11 @@ static inline struct sg_mapping * fill_sg_buf(struct fpga_state * sc, int chnl,
 		if ((sgl = kcalloc(num_pages, sizeof(*sgl), GFP_KERNEL)) == NULL) {
 			printk(KERN_ERR "riffa: fpga:%d chnl:%d, %s could not allocate memory for scatterlist array\n", sc->id, chnl, dir);
 			for (i = 0; i < num_pages; ++i)
+				#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 6, 0)
 				page_cache_release(pages[i]);
+				#else
+				put_page(pages[i]);
+				#endif
 			kfree(pages);
 			kfree(sg_map);
 			return NULL;
@@ -486,12 +494,20 @@ static inline void free_sg_buf(struct fpga_state * sc, struct sg_mapping * sg_ma
 			for (i = 0; i < sg_map->num_pages; ++i) {
 				if (!PageReserved(sg_map->pages[i]))
 					SetPageDirty(sg_map->pages[i]);
+				#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 6, 0)
 				page_cache_release(sg_map->pages[i]);
+				#else
+				put_page(sg_map->pages[i]);
+				#endif
 			}
 		}
 		else {
 			for (i = 0; i < sg_map->num_pages; ++i) {
+				#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 6, 0)
 				page_cache_release(sg_map->pages[i]);
+				#else
+				put_page(sg_map->pages[i]);
+				#endif
 			}
 		}
 	}
