@@ -22,7 +22,7 @@ POST:
             inf2cat /driver:$(OBJ_PATH)\$(O) /os:7_x64
 !       endif 
 !   endif 
-    signtool sign /v /ac "$(_INX)\GlobalSign Root CA.crt" /s my /n "University of California, San Diego" /t http://timestamp.verisign.com/scripts/timestamp.dll $(OBJ_PATH)\$(O)\$(INF_NAME).cat
-    signtool sign /v /ac "$(_INX)\GlobalSign Root CA.crt" /s my /n "University of California, San Diego" /t http://timestamp.verisign.com/scripts/timestamp.dll $(OBJ_PATH)\$(O)\$(INF_NAME).sys
+    signtool sign /v /ac "$(_INX)\..\GlobalSign Root CA.crt" /s my /n "University of California, San Diego" /t http://timestamp.verisign.com/scripts/timestamp.dll $(OBJ_PATH)\$(O)\$(INF_NAME).cat
+    signtool sign /v /ac "$(_INX)\..\GlobalSign Root CA.crt" /s my /n "University of California, San Diego" /t http://timestamp.verisign.com/scripts/timestamp.dll $(OBJ_PATH)\$(O)\$(INF_NAME).sys
 
     

@@ -1,4 +1,4 @@
-@echo off
+@echo on
 
 rmdir /s /q build
 md build
@@ -14,12 +14,21 @@ xcopy /E /H /K /I /Y ..\..\..\c_c++\windows .\build\c_c++
 xcopy /E /H /K /I /Y ..\..\..\java .\build\java
 xcopy /E /H /K /I /Y ..\..\..\python .\build\python
 xcopy /E /H /K /I /Y ..\..\..\matlab .\build\matlab
+echo "%3"
 
 if "%3" == "chk" (
-    "c:\program files\inno setup 5\iscc.exe" /dDebug="1" /o.\build .\build\win7.iss 
+	md .\build.\tmp_dbg
+    "c:\program files (x86)\inno setup 5\iscc.exe" /dDebug="1" /o.\build\tmp_dbg .\build\win7.iss
+	signtool sign /v /ac "..\GlobalSign Root CA.crt" /s my /n "University of California, San Diego" /t http://timestamp.verisign.com/scripts/timestamp.dll .\build\tmp_dbg\setup.exe
+	move .\build\tmp_dbg\setup.exe .\setup_dbg.exe 	
+	rmdir /s /q .\build\tmp_dbg\
 ) else (
-    "c:\program files\inno setup 5\iscc.exe" /o.\build .\build\win7.iss 
+	md .\build\tmp
+    "c:\program files (x86)\inno setup 5\iscc.exe" /o.\build\tmp\ .\build\win7.iss 
+	signtool sign /v /ac "..\GlobalSign Root CA.crt" /s my /n "University of California, San Diego" /t http://timestamp.verisign.com/scripts/timestamp.dll .\build\tmp\setup.exe
+	move .\build\tmp\setup.exe .\setup.exe
+	rmdir /s /q .\build\tmp\
 )
-signtool sign /v /s my /n "University of California, San Diego" /t http://timestamp.verisign.com/scripts/timestamp.dll .\build\setup.exe
+
 
 
