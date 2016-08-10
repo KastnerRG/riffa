@@ -55,6 +55,7 @@
 #include <linux/rwsem.h>
 #include <linux/dma-mapping.h>
 #include <linux/pagemap.h>
+#include <linux/slab.h>
 #include <asm/uaccess.h>
 #include <asm/div64.h>
 #include "riffa_driver.h"
@@ -156,57 +157,92 @@ unsigned long long __udivdi3(unsigned long long num, unsigned long long den)
 }
 #endif
 
-#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,6,11)
-/**
- * Used to set ETB and RCB, but not available before 3.7. As it is peppered 
- * throughout the clean up code, it's just easier to define empty implementations
- * here than a bunch of conditionals everywhere else.
- */
-#ifndef PCI_EXP_DEVCTL
-#define PCI_EXP_DEVCTL 0
-#endif
-#ifndef PCI_EXP_DEVCTL_EXT_TAG
-#define PCI_EXP_DEVCTL_EXT_TAG 0
-#endif
-#ifndef PCI_EXP_DEVCTL_RELAX_EN
-#define PCI_EXP_DEVCTL_RELAX_EN 0
-#endif
-#ifndef PCI_EXP_DEVCTL2
-#define PCI_EXP_DEVCTL2 0
-#endif
+
+// These are not defined in the 2.x.y kernels, so just define them
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,39)
+#define PCI_EXP_DEVCTL2_IDO_REQ_EN 0x100
+#define PCI_EXP_DEVCTL2_IDO_CMP_EN 0x200
+#else
+/** 
+ * These are badly named in pre-3.6.11 kernel versions.  We COULD do the same
+ * check as above, however (annoyingly) linux for tegra (based on post-3.6.11)
+ * picked up the header file from some pre-3.6.11 version, so we'll just make
+ * our code ugly and handle the check here:
+ */ 
 #ifndef PCI_EXP_DEVCTL2_IDO_REQ_EN
-#define PCI_EXP_DEVCTL2_IDO_REQ_EN 0
+#define PCI_EXP_DEVCTL2_IDO_REQ_EN PCI_EXP_IDO_REQ_EN
 #endif
 #ifndef PCI_EXP_DEVCTL2_IDO_CMP_EN
-#define PCI_EXP_DEVCTL2_IDO_CMP_EN 0
+#define PCI_EXP_DEVCTL2_IDO_CMP_EN PCI_EXP_IDO_CMP_EN
 #endif
-#ifndef PCI_EXP_DEVCTL
-#define PCI_EXP_DEVCTL 0
 #endif
-#ifndef PCI_EXP_LNKCTL_RCB
-#define PCI_EXP_LNKCTL_RCB 0
-#endif
+
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(3,6,11)
+/**
+ * Code used to set ETB and RCB, but not available before 3.0, or incorrectly
+ * defined before 3.7. As it is peppered throughout the clean up code, it's just
+ * easier to copy the declarations (not verbatim) here than a bunch of conditionals
+ * everywhere else.
+ */
 
 int pcie_capability_read_word(struct pci_dev *dev, int pos, u16 *val)
 {
-	return 0;
+	int ret;
+
+	*val = 0;
+	if (pos & 1)
+		return -EINVAL;
+
+	ret = pci_read_config_word(dev, pci_pcie_cap(dev) + pos, val);
+	/*
+	 * Reset *val to 0 if pci_read_config_word() fails, it may
+	 * have been written as 0xFFFF if hardware error happens
+	 * during pci_read_config_word().
+	 */
+	if (ret)
+		*val = 0;
+	return ret;
 }
 
 int pcie_capability_read_dword(struct pci_dev *dev, int pos, u32 *val)
 {
-	return 0;
+	int ret;
+
+	*val = 0;
+	if (pos & 3)
+		return -EINVAL;
+
+	ret = pci_read_config_dword(dev, pci_pcie_cap(dev) + pos, val);
+	/*
+	 * Reset *val to 0 if pci_read_config_dword() fails, it may
+	 * have been written as 0xFFFFFFFF if hardware error happens
+	 * during pci_read_config_dword().
+	 */
+	if (ret)
+		*val = 0;
+	return ret;
+
 }
 
 int pcie_capability_write_word(struct pci_dev *dev, int pos, u16 val)
 {
-	return 0;
+	if (pos & 1)
+		return -EINVAL;
+
+	return pci_write_config_word(dev, pci_pcie_cap(dev) + pos, val);
 }
 
 int pcie_capability_write_dword(struct pci_dev *dev, int pos, u32 val)
 {
-	return 0;
+	if (pos & 3)
+		return -EINVAL;
+
+	return pci_write_config_dword(dev, pci_pcie_cap(dev) + pos, val);
 }
 #endif
+
+
+
 
 ///////////////////////////////////////////////////////
 // INTERRUPT HANDLER
@@ -405,7 +441,11 @@ static inline struct sg_mapping * fill_sg_buf(struct fpga_state * sc, int chnl,
 
 		// Page in the user pages.
 		down_read(&current->mm->mmap_sem);
+		#if LINUX_VERSION_CODE < KERNEL_VERSION(4,6,0)
 		num_pages = get_user_pages(current, current->mm, udata, num_pages_reqd, 1, 0, pages, NULL);
+		#else
+		num_pages = get_user_pages(udata, num_pages_reqd, 1, 0, pages, NULL);
+		#endif
 		up_read(&current->mm->mmap_sem);
 		if (num_pages <= 0) {
 			printk(KERN_ERR "riffa: fpga:%d chnl:%d, %s unable to pin any pages in memory\n", sc->id, chnl, dir);
@@ -418,7 +458,11 @@ static inline struct sg_mapping * fill_sg_buf(struct fpga_state * sc, int chnl,
 		if ((sgl = kcalloc(num_pages, sizeof(*sgl), GFP_KERNEL)) == NULL) {
 			printk(KERN_ERR "riffa: fpga:%d chnl:%d, %s could not allocate memory for scatterlist array\n", sc->id, chnl, dir);
 			for (i = 0; i < num_pages; ++i)
+				#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 6, 0)
 				page_cache_release(pages[i]);
+				#else
+				put_page(pages[i]);
+				#endif
 			kfree(pages);
 			kfree(sg_map);
 			return NULL;
@@ -486,12 +530,20 @@ static inline void free_sg_buf(struct fpga_state * sc, struct sg_mapping * sg_ma
 			for (i = 0; i < sg_map->num_pages; ++i) {
 				if (!PageReserved(sg_map->pages[i]))
 					SetPageDirty(sg_map->pages[i]);
+				#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 6, 0)
 				page_cache_release(sg_map->pages[i]);
+				#else
+				put_page(sg_map->pages[i]);
+				#endif
 			}
 		}
 		else {
 			for (i = 0; i < sg_map->num_pages; ++i) {
+				#if LINUX_VERSION_CODE < KERNEL_VERSION(4, 6, 0)
 				page_cache_release(sg_map->pages[i]);
+				#else
+				put_page(sg_map->pages[i]);
+				#endif
 			}
 		}
 	}
