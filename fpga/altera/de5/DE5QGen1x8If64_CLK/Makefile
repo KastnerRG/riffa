@@ -59,5 +59,5 @@ endif
 include $(RIFFA_HDL_PATH)/riffa.mk
 include $(BOARD_PATH)/board.mk
 
-PROJECT_IP+=ip/QSysDE5QGen1x8If64.qsys
-RELEASE_IP+=ip/QSysDE5QGen1x8If64.qsys
+PROJECT_IP+=ip/QSysDE5QGen1x8If64_CLK.qsys
+RELEASE_IP+=ip/QSysDE5QGen1x8If64_CLK.qsys

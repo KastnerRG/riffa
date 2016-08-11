@@ -40,7 +40,7 @@
 # Author:              Dustin Richmond (@darichmond)
 #-----------------------------------------------------------------------
 BOARD=de5
-BOARD_PROJECTS:= DE5QGen1x8If64 DE5QGen2x8If128 DE5QGen3x4If128 DE5Gen1x8If64 DE5Gen2x8If128 DE5Gen3x4If128 
+BOARD_PROJECTS:= DE5QGen1x8If64 DE5QGen2x8If128 DE5QGen3x4If128 DE5Gen1x8If64 DE5Gen2x8If128 DE5Gen3x4If128 DE5QGen1x8If64_CLK DE5QGen2x8If128_CLK
 BOARD_TYPE:=classic
 VENDOR:=altera
 include ../vendor.mk

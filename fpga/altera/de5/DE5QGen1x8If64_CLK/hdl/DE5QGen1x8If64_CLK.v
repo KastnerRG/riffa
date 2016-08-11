@@ -45,7 +45,7 @@
 `include "riffa.vh"
 `include "altera.vh"
 `timescale 1ps / 1ps
-module DE5QGen1x8If64
+module DE5QGen1x8If64_CLK
     #(// Number of RIFFA Channels
       parameter C_NUM_CHNL = 12,
       // Number of PCIe Lanes
@@ -167,7 +167,7 @@ module DE5QGen1x8If64
 
     // ----------LED's----------
     assign LED[7:0] = 8'hff;
-    QSysDE5QGen1x8If64
+    QSysDE5QGen1x8If64_CLK
         pcie_system_inst
             (
              // Outputs
