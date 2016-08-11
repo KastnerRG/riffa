@@ -78,7 +78,9 @@ all $(TYPE) $(VENDOR) $(BOARD):$(PROJECT)
 clean:
 	echo "reset_run impl_1; reset_run synth_1;" | vivado -mode tcl prj/$(PROJECT).xpr
 	rm -rf *.log *.jou *~ .Xil 
-	rm -rf ip/doc ip/sim ip/source ip/synth ip/*.dcp ip/*.v ip/*.xml ip/*.vhdl ip/*.veo ip/*~ ip/*.txt ip/clk_250MIn_2 ip/clk_250MIn_1
+	rm -rf ip/doc ip/sim ip/source ip/synth ip/*.dcp ip/*.v ip/*.xml ip/*.vhdl ip/*.veo ip/*~ ip/*.txt 
+	find ip/clk_250MIn_1/ -name '*' ! -path ip/clk_250MIn_1/ ! -name '*.xci' | xargs rm -rf
+	find ip/clk_250MIn_2/ -name '*' ! -path ip/clk_250MIn_2/ ! -name '*.xci' | xargs rm -rf
 	rm -rf prj/*.hw prj/*.runs prj/*.cache prj/*~
 
 clobber:
