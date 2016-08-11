@@ -224,33 +224,4 @@ always @ (*) begin
 	_rAlmostAllRecvd = ((rWordsRecvdAdv >= LEN) && wPayloadData);
 end
 
-/*
-wire [35:0] wControl0;
-chipscope_icon_1 cs_icon(
-	.CONTROL0(wControl0)
-);
-
-chipscope_ila_t8_512 a0(
-	.CLK(CLK), 
-	.CONTROL(wControl0), 
-	.TRIG0({TXN, wPayloadData, wEventData, rState}),
-	.DATA({201'd0,
-			rWordsRecvd, // 32
-			WR_COUNT, // 10
-			wPayloadData, // 1
-			EVT_DATA_RD_EN, // 1
-			RST, // 1
-			rTxErr, // 1
-			wEventData, // 1
-			rReadData, // 64
-			OFF, // 31
-			LEN, // 32
-			LAST, // 1
-			TXN, // 1
-			EVT_DATA_EMPTY, // 1
-			EVT_DATA, // 129
-			rState}) // 5
-);
-*/
-
 endmodule

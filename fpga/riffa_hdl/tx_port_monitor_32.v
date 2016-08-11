@@ -204,7 +204,7 @@ always @ (*) begin
 	_rDataValid = ((rDataValid<<1) | (rRead & !EVT_DATA_EMPTY));
 
 	// Read until we get a (valid) event
-	_rRead = (!rState[2] & !(rState[1] & rEvent) & !wEventData & !rAlmostFull); // !S_TXPORTMON32_TXN
+	_rRead = (!rState[2] & !(rState[1] & (rEvent | wEventData | ~EVT_DATA_EMPTY)) & !wEventData & !rAlmostFull); // !S_TXPORTMON32_TXN
 
 	// Track detected events
 	_rEvent = wEventData;

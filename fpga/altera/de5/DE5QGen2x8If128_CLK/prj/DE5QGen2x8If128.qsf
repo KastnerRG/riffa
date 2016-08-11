@@ -1,0 +1,493 @@
+# -------------------------------------------------------------------------- #
+#
+# Copyright (C) 1991-2013 Altera Corporation
+# Your use of Altera Corporation's design tools, logic functions 
+# and other software and tools, and its AMPP partner logic 
+# functions, and any output files from any of the foregoing 
+# (including device programming or simulation files), and any 
+# associated documentation or information are expressly subject 
+# to the terms and conditions of the Altera Program License 
+# Subscription Agreement, Altera MegaCore Function License 
+# Agreement, or other applicable license agreement, including, 
+# without limitation, that your use is for the sole purpose of 
+# programming logic devices manufactured by Altera and sold by 
+# Altera or its authorized distributors.  Please refer to the 
+# applicable agreement for further details.
+#
+# -------------------------------------------------------------------------- #
+#
+# Quartus II 64-Bit
+# Version 13.1.0 Build 162 10/23/2013 SJ Full Version
+# Date created = 11:03:06  March 21, 2014
+#
+# -------------------------------------------------------------------------- #
+#
+# Notes:
+#
+# 1) The default values for assignments are stored in the file:
+#		DE5QGen2x8If128_assignment_defaults.qdf
+#    If this file doesn't exist, see file:
+#		assignment_defaults.qdf
+#
+# 2) Altera recommends that you do not modify this file. This
+#    file is updated automatically by the Quartus II software
+#    and any changes you make may be lost or overwritten.
+#
+# -------------------------------------------------------------------------- #
+
+
+set_global_assignment -name FAMILY "Stratix V"
+set_global_assignment -name DEVICE 5SGXEA7N2F45C2
+set_global_assignment -name TOP_LEVEL_ENTITY DE5QGen2x8If128
+set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
+set_global_assignment -name PROJECT_CREATION_TIME_DATE "11:03:06  MARCH 21, 2014"
+set_global_assignment -name LAST_QUARTUS_VERSION 15.1.0
+set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../bit/
+
+################################################################################
+# Timing SDC Files
+################################################################################
+
+################################################################################
+# PCIE Connections
+################################################################################
+# PCIe clk (100 MHz)
+set_location_assignment PIN_AK38 -to PCIE_REFCLK
+set_instance_assignment -name IO_STANDARD HCSL -to PCIE_REFCLK
+
+set_location_assignment PIN_AU33 -to PCIE_RESET_N
+set_instance_assignment -name IO_STANDARD "2.5 V" -to PCIE_RESET_N
+
+################################################################################
+#PCIE Pins
+################################################################################
+# Settings from SV PCIE User Guide (AV-ST)
+# - 1.5V PCML 
+# - XCVR_VCCR_VCCT_VOLTAGE 1_0V 
+# - XCVR_VCCA_VOLTAGE 3_0V 
+# (SV User guide recommends VCCR/VCCT = 0_9 and VCCA = 2_5 , but link does not 
+# train correctly if these settings are used)
+# 
+# We use CMU PLL's (http://www.altera.com/literature/hb/stratix-v/stx5_52003.pdf)
+# Errata: http://www.altera.com/support/kdb/solutions/rd10112012_529.html
+################################################################################
+# Gloabal PCIE assignments (Use if signal problems exist)
+################################################################################
+# set_instance_assignment -name INPUT_TERMINATION "OCT 100 OHMS" -to PCIE_RX_IN[*]
+# set_instance_assignment -name INPUT_TERMINATION "OCT 100 OHMS" -to "PCIE_RX_IN[*](n)"
+# set_instance_assignment -name XCVR_RX_SD_OFF 5 -to PCIE_RX_IN[*]
+# set_instance_assignment -name XCVR_RX_SD_OFF 5 -to "PCIE_RX_IN[*](n)"
+# set_instance_assignment -name XCVR_RX_SD_ON 1 -to PCIE_RX_IN[*]
+# set_instance_assignment -name XCVR_RX_SD_ON 1 -to "PCIE_RX_IN[*](n)"
+# set_instance_assignment -name XCVR_RX_COMMON_MODE_VOLTAGE VTT_0P70V -to PCIE_RX_IN[*]
+# set_instance_assignment -name XCVR_RX_COMMON_MODE_VOLTAGE VTT_0P70V -to "PCIE_RX_IN[*](n)"
+# set_instance_assignment -name XCVR_RX_SD_THRESHOLD 4 -to PCIE_RX_IN[*]
+# set_instance_assignment -name XCVR_RX_SD_THRESHOLD 4 -to "PCIE_RX_IN[*](n)"
+
+# set_instance_assignment -name INPUT_TERMINATION "OCT 100 OHMS" -to PCIE_TX_OUT[*]
+# set_instance_assignment -name INPUT_TERMINATION "OCT 100 OHMS" -to "PCIE_TX_OUT[*](n)"
+# set_instance_assignment -name XCVR_RX_SD_OFF 5 -to PCIE_TX_OUT[*]
+# set_instance_assignment -name XCVR_RX_SD_OFF 5 -to "PCIE_TX_OUT[*](n)"
+# set_instance_assignment -name XCVR_RX_SD_ON 1 -to PCIE_TX_OUT[*]
+# set_instance_assignment -name XCVR_RX_SD_ON 1 -to "PCIE_TX_OUT[*](n)"
+# set_instance_assignment -name XCVR_RX_COMMON_MODE_VOLTAGE VTT_0P70V -to PCIE_TX_OUT[*]
+# set_instance_assignment -name XCVR_RX_COMMON_MODE_VOLTAGE VTT_0P70V -to "PCIE_TX_OUT[*](n)"
+# set_instance_assignment -name XCVR_RX_SD_THRESHOLD 4 -to PCIE_TX_OUT[*]
+# set_instance_assignment -name XCVR_RX_SD_THRESHOLD 4 -to "PCIE_TX_OUT[*](n)"
+
+################################################################################
+#PCIE RX_IN 0
+################################################################################
+
+set_location_assignment PIN_BB43 -to PCIE_RX_IN[0]
+set_location_assignment PIN_BB44 -to "PCIE_RX_IN[0](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_RX_IN[0]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_RX_IN[0]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_RX_IN[0]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_RX_IN[0]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_RX_IN[0](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_RX_IN[0](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_RX_IN[0](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_RX_IN[0](n)"
+
+################################################################################
+#PCIE RX_IN 1
+################################################################################
+
+set_location_assignment PIN_BA41 -to PCIE_RX_IN[1]
+set_location_assignment PIN_BA42 -to "PCIE_RX_IN[1](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_RX_IN[1]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_RX_IN[1]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_RX_IN[1]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_RX_IN[1]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_RX_IN[1](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_RX_IN[1](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_RX_IN[1](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_RX_IN[1](n)"
+
+################################################################################
+#PCIE RX_IN 2
+################################################################################
+
+set_location_assignment PIN_AW41 -to PCIE_RX_IN[2]
+set_location_assignment PIN_AW42 -to "PCIE_RX_IN[2](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_RX_IN[2]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_RX_IN[2]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_RX_IN[2]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_RX_IN[2]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_RX_IN[2](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_RX_IN[2](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_RX_IN[2](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_RX_IN[2](n)"
+
+################################################################################
+#PCIE RX_IN 3
+################################################################################
+
+set_location_assignment PIN_AY43 -to PCIE_RX_IN[3]
+set_location_assignment PIN_AY44 -to "PCIE_RX_IN[3](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_RX_IN[3]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_RX_IN[3]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_RX_IN[3]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_RX_IN[3]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_RX_IN[3](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_RX_IN[3](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_RX_IN[3](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_RX_IN[3](n)"
+
+################################################################################
+#PCIE RX_IN 4
+################################################################################
+
+set_location_assignment PIN_AT43 -to PCIE_RX_IN[4]
+set_location_assignment PIN_AT44 -to "PCIE_RX_IN[4](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_RX_IN[4]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_RX_IN[4]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_RX_IN[4]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_RX_IN[4]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_RX_IN[4](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_RX_IN[4](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_RX_IN[4](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_RX_IN[4](n)"
+
+################################################################################
+#PCIE RX_IN 5
+################################################################################
+
+set_location_assignment PIN_AP43 -to PCIE_RX_IN[5]
+set_location_assignment PIN_AP44 -to "PCIE_RX_IN[5](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_RX_IN[5]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_RX_IN[5]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_RX_IN[5]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_RX_IN[5]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_RX_IN[5](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_RX_IN[5](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_RX_IN[5](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_RX_IN[5](n)"
+
+################################################################################
+#PCIE RX_IN 6
+################################################################################
+
+set_location_assignment PIN_AM43 -to PCIE_RX_IN[6]
+set_location_assignment PIN_AM44 -to "PCIE_RX_IN[6](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_RX_IN[6]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_RX_IN[6]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_RX_IN[6]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_RX_IN[6]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_RX_IN[6](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_RX_IN[6](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_RX_IN[6](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_RX_IN[6](n)"
+
+################################################################################
+#PCIE RX_IN 7
+################################################################################
+
+set_location_assignment PIN_AK43 -to PCIE_RX_IN[7]
+set_location_assignment PIN_AK44 -to "PCIE_RX_IN[7](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_RX_IN[7]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_RX_IN[7]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_RX_IN[7]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_RX_IN[7]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_RX_IN[7](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_RX_IN[7](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_RX_IN[7](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_RX_IN[7](n)"
+
+################################################################################
+#PCIE TX_OUT 0
+################################################################################
+set_location_assignment PIN_AY39 -to PCIE_TX_OUT[0]
+set_location_assignment PIN_AY40 -to "PCIE_TX_OUT[0](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_TX_OUT[0]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_TX_OUT[0]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_TX_OUT[0]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_TX_OUT[0]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_TX_OUT[0](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_TX_OUT[0](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_TX_OUT[0](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_TX_OUT[0](n)"
+
+################################################################################
+#PCIE TX_OUT 1
+################################################################################
+set_location_assignment PIN_AV39 -to PCIE_TX_OUT[1]
+set_location_assignment PIN_AV40 -to "PCIE_TX_OUT[1](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_TX_OUT[1]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_TX_OUT[1]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_TX_OUT[1]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_TX_OUT[1]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_TX_OUT[1](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_TX_OUT[1](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_TX_OUT[1](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_TX_OUT[1](n)"
+
+################################################################################
+#PCIE TX_OUT 2
+################################################################################
+set_location_assignment PIN_AT39 -to PCIE_TX_OUT[2]
+set_location_assignment PIN_AT40 -to "PCIE_TX_OUT[2](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_TX_OUT[2]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_TX_OUT[2]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_TX_OUT[2]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_TX_OUT[2]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_TX_OUT[2](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_TX_OUT[2](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_TX_OUT[2](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_TX_OUT[2](n)"
+
+################################################################################
+#PCIE TX_OUT 3
+################################################################################
+set_location_assignment PIN_AU41 -to PCIE_TX_OUT[3]
+set_location_assignment PIN_AU42 -to "PCIE_TX_OUT[3](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_TX_OUT[3]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_TX_OUT[3]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_TX_OUT[3]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_TX_OUT[3]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_TX_OUT[3](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_TX_OUT[3](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_TX_OUT[3](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_TX_OUT[3](n)"
+
+################################################################################
+#PCIE TX_OUT 4
+################################################################################
+set_location_assignment PIN_AN41 -to PCIE_TX_OUT[4]
+set_location_assignment PIN_AN42 -to "PCIE_TX_OUT[4](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_TX_OUT[4]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_TX_OUT[4]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_TX_OUT[4]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_TX_OUT[4]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_TX_OUT[4](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_TX_OUT[4](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_TX_OUT[4](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_TX_OUT[4](n)"
+
+################################################################################
+#PCIE TX_OUT 5
+################################################################################
+set_location_assignment PIN_AL41 -to PCIE_TX_OUT[5]
+set_location_assignment PIN_AL42 -to "PCIE_TX_OUT[5](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_TX_OUT[5]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_TX_OUT[5]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_TX_OUT[5]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_TX_OUT[5]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_TX_OUT[5](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_TX_OUT[5](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_TX_OUT[5](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_TX_OUT[5](n)"
+
+################################################################################
+#PCIE TX_OUT 6
+################################################################################
+set_location_assignment PIN_AJ41 -to PCIE_TX_OUT[6]
+set_location_assignment PIN_AJ42 -to "PCIE_TX_OUT[6](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_TX_OUT[6]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_TX_OUT[6]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_TX_OUT[6]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_TX_OUT[6]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_TX_OUT[6](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_TX_OUT[6](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_TX_OUT[6](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_TX_OUT[6](n)"
+
+################################################################################
+#PCIE TX_OUT 7
+################################################################################
+
+set_location_assignment PIN_AG41 -to PCIE_TX_OUT[7]
+set_location_assignment PIN_AG42 -to "PCIE_TX_OUT[7](n)"
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to PCIE_TX_OUT[7]
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to PCIE_TX_OUT[7]
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to PCIE_TX_OUT[7]
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to PCIE_TX_OUT[7]
+
+set_instance_assignment -name IO_STANDARD "1.5-V PCML" -to "PCIE_TX_OUT[7](n)"
+set_instance_assignment -name XCVR_ANALOG_SETTINGS_PROTOCOL PCIE_GEN2 -to "PCIE_TX_OUT[7](n)"
+set_instance_assignment -name XCVR_VCCR_VCCT_VOLTAGE 1_0V -to "PCIE_TX_OUT[7](n)"
+set_instance_assignment -name XCVR_VCCA_VOLTAGE 3_0V -to "PCIE_TX_OUT[7](n)"
+
+################################################################################
+# LED's
+################################################################################
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED[0]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED[1]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED[2]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED[3]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED[4]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED[5]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED[6]
+set_instance_assignment -name IO_STANDARD "2.5 V" -to LED[7]
+
+set_location_assignment PIN_AW37 -to LED[0]
+set_location_assignment PIN_AV37 -to LED[1]
+set_location_assignment PIN_BB36 -to LED[2]
+set_location_assignment PIN_BB39 -to LED[3]
+set_location_assignment PIN_AH15 -to LED[4]
+set_location_assignment PIN_AH13 -to LED[5]
+set_location_assignment PIN_AJ13 -to LED[6]
+set_location_assignment PIN_AJ14 -to LED[7]
+
+################################################################################
+# OSCILLATORS
+################################################################################
+
+set_location_assignment PIN_BC28 -to OSC_BANK3D_50MHZ
+set_instance_assignment -name IO_STANDARD "1.8 V" -to OSC_BANK3D_50MHZ
+
+################################################################################
+# End Custom Instantiations
+################################################################################
+
+set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
+set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
+
+set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "2.5 V"
+set_global_assignment -name PARTITION_NETLIST_TYPE SOURCE -section_id Top
+set_global_assignment -name PARTITION_FITTER_PRESERVATION_LEVEL PLACEMENT_AND_ROUTING -section_id Top
+set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
+
+set_global_assignment -name POWER_PRESET_COOLING_SOLUTION "23 MM HEAT SINK WITH 200 LFPM AIRFLOW"
+set_global_assignment -name POWER_BOARD_THERMAL_MODEL "NONE (CONSERVATIVE)"
+set_global_assignment -name VERILOG_INPUT_VERSION SYSTEMVERILOG_2005
+set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
+set_global_assignment -name QSYS_FILE ../ip/QSysDE5QGen2x8If128.qsys
+set_global_assignment -name SDC_FILE ../constr/DE5QGen2x8If128.sdc
+set_global_assignment -name SEARCH_PATH ../../../../riffa_hdl
+set_global_assignment -name VERILOG_FILE ../hdl/DE5QGen2x8If128.v
+set_global_assignment -name VERILOG_FILE ../../riffa_wrapper_de5.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/reset_extender.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/reset_controller.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/txr_engine_classic.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/txc_engine_classic.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_writer.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_monitor_128.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_monitor_64.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_monitor_32.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_channel_gate_128.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_channel_gate_64.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_channel_gate_32.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_buffer_128.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_buffer_64.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_buffer_32.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_128.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_64.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_port_32.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_multiplexer_128.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_multiplexer_64.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_multiplexer_32.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_multiplexer.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_hdr_fifo.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_engine_selector.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_engine_classic.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_engine.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_data_shift.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_data_pipeline.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_data_fifo.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/tx_alignment_pipeline.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/translation_altera.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/syncff.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/sync_fifo.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/shiftreg.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/sg_list_requester.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/sg_list_reader_128.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/sg_list_reader_64.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/sg_list_reader_32.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/scsdpram.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rxr_engine_classic.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rxc_engine_classic.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_port_requester_mux.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_port_reader.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_port_channel_gate.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_port_128.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_port_64.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_port_32.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rx_engine_classic.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/rotate.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/riffa.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/reorder_queue_output.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/reorder_queue_input.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/reorder_queue.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/registers.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/register.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/recv_credit_flow_ctrl.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/ram_2clk_1w_1r.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/ram_1clk_1w_1r.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/pipeline.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/one_hot_mux.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/ohtb.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/offset_to_mask.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/offset_flag_to_one_hot.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/mux.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/interrupt_controller.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/interrupt.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/fifo_packer_128.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/fifo_packer_64.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/fifo_packer_32.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/fifo.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/ff.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/engine_layer.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/demux.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/cross_domain_signal.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/counter.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/chnl_tester.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/channel_128.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/channel_64.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/channel_32.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/channel.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/async_fifo_fwft.v
+set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/async_fifo.v
+set_instance_assignment -name PARTITION_HIERARCHY root_partition -to | -section_id Top

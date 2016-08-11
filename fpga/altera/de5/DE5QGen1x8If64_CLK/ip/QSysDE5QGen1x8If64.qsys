@@ -1,0 +1,883 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<system name="$${FILENAME}">
+ <component
+   name="$${FILENAME}"
+   displayName="$${FILENAME}"
+   version="1.0"
+   description=""
+   tags=""
+   categories="System" />
+ <parameter name="bonusData"><![CDATA[bonusData 
+{
+   element PCIeGen1x8If64
+   {
+      datum _sortIndex
+      {
+         value = "1";
+         type = "int";
+      }
+   }
+   element XCVRCtrlGen1x8
+   {
+      datum _sortIndex
+      {
+         value = "2";
+         type = "int";
+      }
+   }
+   element XCVRDrvGen1x8
+   {
+      datum _sortIndex
+      {
+         value = "3";
+         type = "int";
+      }
+   }
+   element clk_0
+   {
+      datum _sortIndex
+      {
+         value = "0";
+         type = "int";
+      }
+   }
+   element pll_0
+   {
+      datum _sortIndex
+      {
+         value = "4";
+         type = "int";
+      }
+   }
+}
+]]></parameter>
+ <parameter name="clockCrossingAdapter" value="HANDSHAKE" />
+ <parameter name="device" value="5SGXEA7N2F45C2" />
+ <parameter name="deviceFamily" value="Stratix V" />
+ <parameter name="deviceSpeedGrade" value="2_H2" />
+ <parameter name="fabricMode" value="QSYS" />
+ <parameter name="generateLegacySim" value="false" />
+ <parameter name="generationId" value="0" />
+ <parameter name="globalResetBus" value="false" />
+ <parameter name="hdlLanguage" value="VERILOG" />
+ <parameter name="hideFromIPCatalog" value="false" />
+ <parameter name="lockedInterfaceDefinition" value="" />
+ <parameter name="maxAdditionalLatency" value="1" />
+ <parameter name="projectName" value="" />
+ <parameter name="sopcBorderPoints" value="false" />
+ <parameter name="systemHash" value="0" />
+ <parameter name="testBenchDutName" value="" />
+ <parameter name="timeStamp" value="0" />
+ <parameter name="useTestBenchNamingPattern" value="false" />
+ <instanceScript></instanceScript>
+ <interface
+   name="drvstat"
+   internal="XCVRDrvGen1x8.hip_status_drv"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="mgmtclk"
+   internal="XCVRCtrlGen1x8.mgmt_clk_clk"
+   type="clock"
+   dir="end" />
+ <interface
+   name="mgmtrst"
+   internal="XCVRCtrlGen1x8.mgmt_rst_reset"
+   type="reset"
+   dir="end" />
+ <interface
+   name="pciecfg"
+   internal="PCIeGen1x8If64.config_tl"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="pciecoreclk"
+   internal="PCIeGen1x8If64.coreclkout_hip"
+   type="clock"
+   dir="start" />
+ <interface
+   name="pciehip"
+   internal="PCIeGen1x8If64.hip_rst"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="pciemsi"
+   internal="PCIeGen1x8If64.int_msi"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="pcienpor"
+   internal="PCIeGen1x8If64.npor"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="pciepld"
+   internal="PCIeGen1x8If64.pld_clk"
+   type="clock"
+   dir="end" />
+ <interface
+   name="pcierefclk"
+   internal="PCIeGen1x8If64.refclk"
+   type="clock"
+   dir="end" />
+ <interface
+   name="pcieserial"
+   internal="PCIeGen1x8If64.hip_serial"
+   type="conduit"
+   dir="end" />
+ <interface
+   name="pciestat"
+   internal="PCIeGen1x8If64.hip_status"
+   type="conduit"
+   dir="end" />
+ <interface name="pllrefclk" internal="clk_0.clk_in" type="clock" dir="end" />
+ <interface name="pllrst" internal="clk_0.clk_in_reset" type="reset" dir="end" />
+ <interface
+   name="reconfigpldclk"
+   internal="XCVRDrvGen1x8.pld_clk"
+   type="clock"
+   dir="end" />
+ <interface
+   name="reconfigrefclk"
+   internal="XCVRDrvGen1x8.reconfig_xcvr_clk"
+   type="clock"
+   dir="end" />
+ <interface
+   name="reconfigrst"
+   internal="XCVRDrvGen1x8.reconfig_xcvr_rst"
+   type="reset"
+   dir="end" />
+ <interface name="riffa_10" internal="pll_0.outclk1" type="clock" dir="start" />
+ <interface name="riffa_100" internal="pll_0.outclk5" type="clock" dir="start" />
+ <interface name="riffa_125" internal="pll_0.outclk6" type="clock" dir="start" />
+ <interface name="riffa_150" internal="pll_0.outclk7" type="clock" dir="start" />
+ <interface name="riffa_175" internal="pll_0.outclk8" type="clock" dir="start" />
+ <interface name="riffa_200" internal="pll_0.outclk9" type="clock" dir="start" />
+ <interface name="riffa_225" internal="pll_0.outclk10" type="clock" dir="start" />
+ <interface name="riffa_25" internal="pll_0.outclk2" type="clock" dir="start" />
+ <interface name="riffa_250" internal="pll_0.outclk11" type="clock" dir="start" />
+ <interface name="riffa_5" internal="pll_0.outclk0" type="clock" dir="start" />
+ <interface name="riffa_50" internal="pll_0.outclk3" type="clock" dir="start" />
+ <interface name="riffa_75" internal="pll_0.outclk4" type="clock" dir="start" />
+ <interface
+   name="rx_st"
+   internal="PCIeGen1x8If64.rx_st"
+   type="avalon_streaming"
+   dir="start" />
+ <interface
+   name="tx_st"
+   internal="PCIeGen1x8If64.tx_st"
+   type="avalon_streaming"
+   dir="end" />
+ <module
+   name="PCIeGen1x8If64"
+   kind="altera_pcie_sv_hip_ast"
+   version="16.0"
+   enabled="1">
+  <parameter name="INTENDED_DEVICE_FAMILY" value="Stratix V" />
+  <parameter name="advanced_default_hwtcl_atomic_malformed" value="true" />
+  <parameter name="advanced_default_hwtcl_atomic_op_completer_32bit" value="false" />
+  <parameter name="advanced_default_hwtcl_atomic_op_completer_64bit" value="false" />
+  <parameter name="advanced_default_hwtcl_atomic_op_routing" value="false" />
+  <parameter name="advanced_default_hwtcl_bridge_port_ssid_support" value="false" />
+  <parameter name="advanced_default_hwtcl_bridge_port_vga_enable" value="false" />
+  <parameter name="advanced_default_hwtcl_bypass_cdc" value="false" />
+  <parameter name="advanced_default_hwtcl_cas_completer_128bit" value="false" />
+  <parameter name="advanced_default_hwtcl_cdc_dummy_insert_limit" value="11" />
+  <parameter name="advanced_default_hwtcl_d0_pme" value="false" />
+  <parameter name="advanced_default_hwtcl_d1_pme" value="false" />
+  <parameter name="advanced_default_hwtcl_d1_support" value="false" />
+  <parameter name="advanced_default_hwtcl_d2_pme" value="false" />
+  <parameter name="advanced_default_hwtcl_d2_support" value="false" />
+  <parameter name="advanced_default_hwtcl_d3_cold_pme" value="false" />
+  <parameter name="advanced_default_hwtcl_d3_hot_pme" value="false" />
+  <parameter name="advanced_default_hwtcl_data_pack_rx" value="disable" />
+  <parameter name="advanced_default_hwtcl_deskew_comma" value="com_deskw" />
+  <parameter name="advanced_default_hwtcl_device_number" value="0" />
+  <parameter name="advanced_default_hwtcl_disable_link_x2_support" value="false" />
+  <parameter name="advanced_default_hwtcl_disable_snoop_packet" value="false" />
+  <parameter name="advanced_default_hwtcl_ei_delay_powerdown_count" value="10" />
+  <parameter name="advanced_default_hwtcl_eie_before_nfts_count" value="4" />
+  <parameter
+     name="advanced_default_hwtcl_enable_adapter_half_rate_mode"
+     value="false" />
+  <parameter name="advanced_default_hwtcl_enable_l1_aspm" value="false" />
+  <parameter name="advanced_default_hwtcl_enable_rx_buffer_checking" value="false" />
+  <parameter name="advanced_default_hwtcl_extended_format_field" value="false" />
+  <parameter name="advanced_default_hwtcl_extended_tag_reset" value="false" />
+  <parameter name="advanced_default_hwtcl_fc_init_timer" value="1024" />
+  <parameter name="advanced_default_hwtcl_flow_control_timeout_count" value="200" />
+  <parameter name="advanced_default_hwtcl_flow_control_update_count" value="30" />
+  <parameter name="advanced_default_hwtcl_flr_capability" value="false" />
+  <parameter name="advanced_default_hwtcl_gen2_diffclock_nfts_count" value="255" />
+  <parameter name="advanced_default_hwtcl_gen2_sameclock_nfts_count" value="255" />
+  <parameter name="advanced_default_hwtcl_hot_plug_support" value="0" />
+  <parameter name="advanced_default_hwtcl_interrupt_pin" value="inta" />
+  <parameter name="advanced_default_hwtcl_l01_entry_latency" value="31" />
+  <parameter name="advanced_default_hwtcl_l0_exit_latency_diffclock" value="6" />
+  <parameter name="advanced_default_hwtcl_l0_exit_latency_sameclock" value="6" />
+  <parameter name="advanced_default_hwtcl_l1_exit_latency_diffclock" value="0" />
+  <parameter name="advanced_default_hwtcl_l1_exit_latency_sameclock" value="0" />
+  <parameter name="advanced_default_hwtcl_low_priority_vc" value="single_vc" />
+  <parameter name="advanced_default_hwtcl_ltr_mechanism" value="false" />
+  <parameter name="advanced_default_hwtcl_ltssm_1ms_timeout" value="disable" />
+  <parameter name="advanced_default_hwtcl_ltssm_freqlocked_check" value="disable" />
+  <parameter name="advanced_default_hwtcl_maximum_current" value="0" />
+  <parameter name="advanced_default_hwtcl_no_command_completed" value="true" />
+  <parameter name="advanced_default_hwtcl_no_soft_reset" value="false" />
+  <parameter name="advanced_default_hwtcl_pclk_out_sel" value="pclk" />
+  <parameter name="advanced_default_hwtcl_pipex1_debug_sel" value="disable" />
+  <parameter name="advanced_default_hwtcl_register_pipe_signals" value="false" />
+  <parameter name="advanced_default_hwtcl_reserved_debug" value="0" />
+  <parameter
+     name="advanced_default_hwtcl_retry_buffer_last_active_address"
+     value="2047" />
+  <parameter name="advanced_default_hwtcl_rx_l0s_count_idl" value="0" />
+  <parameter name="advanced_default_hwtcl_set_l0s" value="0" />
+  <parameter name="advanced_default_hwtcl_skp_os_gen3_count" value="0" />
+  <parameter name="advanced_default_hwtcl_skp_os_schedule_count" value="0" />
+  <parameter name="advanced_default_hwtcl_ssid" value="0" />
+  <parameter name="advanced_default_hwtcl_ssvid" value="0" />
+  <parameter name="advanced_default_hwtcl_tph_completer" value="false" />
+  <parameter name="advanced_default_hwtcl_tx_cdc_almost_empty" value="5" />
+  <parameter name="advanced_default_hwtcl_vc0_clk_enable" value="true" />
+  <parameter name="advanced_default_hwtcl_wrong_device_id" value="disable" />
+  <parameter name="advanced_default_parameter_override" value="0" />
+  <parameter name="ast_width_hwtcl" value="Avalon-ST 64-bit" />
+  <parameter name="bar0_size_mask_hwtcl" value="10" />
+  <parameter name="bar0_type_hwtcl" value="2" />
+  <parameter name="bar1_size_mask_hwtcl" value="0" />
+  <parameter name="bar1_type_hwtcl" value="0" />
+  <parameter name="bar2_size_mask_hwtcl" value="0" />
+  <parameter name="bar2_type_hwtcl" value="0" />
+  <parameter name="bar3_size_mask_hwtcl" value="0" />
+  <parameter name="bar3_type_hwtcl" value="0" />
+  <parameter name="bar4_size_mask_hwtcl" value="0" />
+  <parameter name="bar4_type_hwtcl" value="0" />
+  <parameter name="bar5_size_mask_hwtcl" value="0" />
+  <parameter name="bar5_type_hwtcl" value="0" />
+  <parameter name="change_deemphasis_hwtcl" value="0" />
+  <parameter name="class_code_hwtcl" value="0" />
+  <parameter name="completion_timeout_hwtcl" value="ABCD" />
+  <parameter name="design_environment_hwtcl" value="QSYS" />
+  <parameter name="device_id_hwtcl" value="1" />
+  <parameter name="dll_active_report_support_hwtcl" value="0" />
+  <parameter name="ecrc_check_capable_hwtcl" value="0" />
+  <parameter name="ecrc_gen_capable_hwtcl" value="0" />
+  <parameter name="enable_completion_timeout_disable_hwtcl" value="1" />
+  <parameter name="enable_function_msix_support_hwtcl" value="0" />
+  <parameter name="enable_pcisigtest_hwtcl" value="0" />
+  <parameter name="enable_pipe32_phyip_ser_driver_hwtcl" value="0" />
+  <parameter name="enable_pipe32_sim_hwtcl" value="0" />
+  <parameter name="enable_power_on_rst_pulse_hwtcl" value="0" />
+  <parameter name="enable_slot_register_hwtcl" value="0" />
+  <parameter name="enable_tl_only_sim_hwtcl" value="0" />
+  <parameter name="endpoint_l0_latency_hwtcl" value="0" />
+  <parameter name="endpoint_l1_latency_hwtcl" value="0" />
+  <parameter name="expansion_base_address_register_hwtcl" value="0" />
+  <parameter name="extend_tag_field_hwtcl" value="64" />
+  <parameter name="fixed_preset_on" value="0" />
+  <parameter name="force_hrc" value="0" />
+  <parameter name="force_src" value="0" />
+  <parameter name="full_swing_hwtcl" value="35" />
+  <parameter name="gen123_lane_rate_mode_hwtcl" value="Gen1 (2.5 Gbps)" />
+  <parameter name="gen3_coeff_10_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_10_hwtcl" value="0" />
+  <parameter name="gen3_coeff_10_nxtber_less_hwtcl">g3_coeff_10_nxtber_less</parameter>
+  <parameter name="gen3_coeff_10_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_10_nxtber_more_hwtcl">g3_coeff_10_nxtber_more</parameter>
+  <parameter name="gen3_coeff_10_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_10_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_10_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_10_sel_hwtcl" value="preset_10" />
+  <parameter name="gen3_coeff_11_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_11_hwtcl" value="0" />
+  <parameter name="gen3_coeff_11_nxtber_less_hwtcl">g3_coeff_11_nxtber_less</parameter>
+  <parameter name="gen3_coeff_11_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_11_nxtber_more_hwtcl">g3_coeff_11_nxtber_more</parameter>
+  <parameter name="gen3_coeff_11_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_11_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_11_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_11_sel_hwtcl" value="preset_11" />
+  <parameter name="gen3_coeff_12_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_12_hwtcl" value="0" />
+  <parameter name="gen3_coeff_12_nxtber_less_hwtcl">g3_coeff_12_nxtber_less</parameter>
+  <parameter name="gen3_coeff_12_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_12_nxtber_more_hwtcl">g3_coeff_12_nxtber_more</parameter>
+  <parameter name="gen3_coeff_12_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_12_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_12_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_12_sel_hwtcl" value="preset_12" />
+  <parameter name="gen3_coeff_13_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_13_hwtcl" value="0" />
+  <parameter name="gen3_coeff_13_nxtber_less_hwtcl">g3_coeff_13_nxtber_less</parameter>
+  <parameter name="gen3_coeff_13_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_13_nxtber_more_hwtcl">g3_coeff_13_nxtber_more</parameter>
+  <parameter name="gen3_coeff_13_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_13_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_13_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_13_sel_hwtcl" value="preset_13" />
+  <parameter name="gen3_coeff_14_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_14_hwtcl" value="0" />
+  <parameter name="gen3_coeff_14_nxtber_less_hwtcl">g3_coeff_14_nxtber_less</parameter>
+  <parameter name="gen3_coeff_14_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_14_nxtber_more_hwtcl">g3_coeff_14_nxtber_more</parameter>
+  <parameter name="gen3_coeff_14_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_14_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_14_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_14_sel_hwtcl" value="preset_14" />
+  <parameter name="gen3_coeff_15_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_15_hwtcl" value="0" />
+  <parameter name="gen3_coeff_15_nxtber_less_hwtcl">g3_coeff_15_nxtber_less</parameter>
+  <parameter name="gen3_coeff_15_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_15_nxtber_more_hwtcl">g3_coeff_15_nxtber_more</parameter>
+  <parameter name="gen3_coeff_15_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_15_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_15_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_15_sel_hwtcl" value="preset_15" />
+  <parameter name="gen3_coeff_16_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_16_hwtcl" value="0" />
+  <parameter name="gen3_coeff_16_nxtber_less_hwtcl">g3_coeff_16_nxtber_less</parameter>
+  <parameter name="gen3_coeff_16_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_16_nxtber_more_hwtcl">g3_coeff_16_nxtber_more</parameter>
+  <parameter name="gen3_coeff_16_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_16_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_16_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_16_sel_hwtcl" value="preset_16" />
+  <parameter name="gen3_coeff_17_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_17_hwtcl" value="0" />
+  <parameter name="gen3_coeff_17_nxtber_less_hwtcl">g3_coeff_17_nxtber_less</parameter>
+  <parameter name="gen3_coeff_17_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_17_nxtber_more_hwtcl">g3_coeff_17_nxtber_more</parameter>
+  <parameter name="gen3_coeff_17_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_17_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_17_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_17_sel_hwtcl" value="preset_17" />
+  <parameter name="gen3_coeff_18_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_18_hwtcl" value="0" />
+  <parameter name="gen3_coeff_18_nxtber_less_hwtcl">g3_coeff_18_nxtber_less</parameter>
+  <parameter name="gen3_coeff_18_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_18_nxtber_more_hwtcl">g3_coeff_18_nxtber_more</parameter>
+  <parameter name="gen3_coeff_18_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_18_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_18_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_18_sel_hwtcl" value="preset_18" />
+  <parameter name="gen3_coeff_19_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_19_hwtcl" value="0" />
+  <parameter name="gen3_coeff_19_nxtber_less_hwtcl">g3_coeff_19_nxtber_less</parameter>
+  <parameter name="gen3_coeff_19_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_19_nxtber_more_hwtcl">g3_coeff_19_nxtber_more</parameter>
+  <parameter name="gen3_coeff_19_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_19_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_19_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_19_sel_hwtcl" value="preset_19" />
+  <parameter name="gen3_coeff_1_ber_meas_hwtcl" value="2" />
+  <parameter name="gen3_coeff_1_hwtcl" value="7" />
+  <parameter name="gen3_coeff_1_nxtber_less_hwtcl">g3_coeff_1_nxtber_less</parameter>
+  <parameter name="gen3_coeff_1_nxtber_less_ptr_hwtcl" value="1" />
+  <parameter name="gen3_coeff_1_nxtber_more_hwtcl">g3_coeff_1_nxtber_more</parameter>
+  <parameter name="gen3_coeff_1_nxtber_more_ptr_hwtcl" value="1" />
+  <parameter name="gen3_coeff_1_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_1_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_1_sel_hwtcl" value="preset_1" />
+  <parameter name="gen3_coeff_20_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_20_hwtcl" value="0" />
+  <parameter name="gen3_coeff_20_nxtber_less_hwtcl">g3_coeff_20_nxtber_less</parameter>
+  <parameter name="gen3_coeff_20_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_20_nxtber_more_hwtcl">g3_coeff_20_nxtber_more</parameter>
+  <parameter name="gen3_coeff_20_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_20_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_20_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_20_sel_hwtcl" value="preset_20" />
+  <parameter name="gen3_coeff_21_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_21_hwtcl" value="0" />
+  <parameter name="gen3_coeff_21_nxtber_less_hwtcl">g3_coeff_21_nxtber_less</parameter>
+  <parameter name="gen3_coeff_21_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_21_nxtber_more_hwtcl">g3_coeff_21_nxtber_more</parameter>
+  <parameter name="gen3_coeff_21_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_21_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_21_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_21_sel_hwtcl" value="preset_21" />
+  <parameter name="gen3_coeff_22_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_22_hwtcl" value="0" />
+  <parameter name="gen3_coeff_22_nxtber_less_hwtcl">g3_coeff_22_nxtber_less</parameter>
+  <parameter name="gen3_coeff_22_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_22_nxtber_more_hwtcl">g3_coeff_22_nxtber_more</parameter>
+  <parameter name="gen3_coeff_22_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_22_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_22_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_22_sel_hwtcl" value="preset_22" />
+  <parameter name="gen3_coeff_23_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_23_hwtcl" value="0" />
+  <parameter name="gen3_coeff_23_nxtber_less_hwtcl">g3_coeff_23_nxtber_less</parameter>
+  <parameter name="gen3_coeff_23_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_23_nxtber_more_hwtcl">g3_coeff_23_nxtber_more</parameter>
+  <parameter name="gen3_coeff_23_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_23_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_23_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_23_sel_hwtcl" value="preset_23" />
+  <parameter name="gen3_coeff_24_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_24_hwtcl" value="0" />
+  <parameter name="gen3_coeff_24_nxtber_less_hwtcl">g3_coeff_24_nxtber_less</parameter>
+  <parameter name="gen3_coeff_24_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_24_nxtber_more_hwtcl">g3_coeff_24_nxtber_more</parameter>
+  <parameter name="gen3_coeff_24_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_24_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_24_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_24_sel_hwtcl" value="preset_24" />
+  <parameter name="gen3_coeff_2_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_2_hwtcl" value="0" />
+  <parameter name="gen3_coeff_2_nxtber_less_hwtcl">g3_coeff_2_nxtber_less</parameter>
+  <parameter name="gen3_coeff_2_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_2_nxtber_more_hwtcl">g3_coeff_2_nxtber_more</parameter>
+  <parameter name="gen3_coeff_2_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_2_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_2_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_2_sel_hwtcl" value="preset_2" />
+  <parameter name="gen3_coeff_3_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_3_hwtcl" value="0" />
+  <parameter name="gen3_coeff_3_nxtber_less_hwtcl">g3_coeff_3_nxtber_less</parameter>
+  <parameter name="gen3_coeff_3_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_3_nxtber_more_hwtcl">g3_coeff_3_nxtber_more</parameter>
+  <parameter name="gen3_coeff_3_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_3_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_3_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_3_sel_hwtcl" value="preset_3" />
+  <parameter name="gen3_coeff_4_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_4_hwtcl" value="0" />
+  <parameter name="gen3_coeff_4_nxtber_less_hwtcl">g3_coeff_4_nxtber_less</parameter>
+  <parameter name="gen3_coeff_4_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_4_nxtber_more_hwtcl">g3_coeff_4_nxtber_more</parameter>
+  <parameter name="gen3_coeff_4_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_4_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_4_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_4_sel_hwtcl" value="preset_4" />
+  <parameter name="gen3_coeff_5_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_5_hwtcl" value="0" />
+  <parameter name="gen3_coeff_5_nxtber_less_hwtcl">g3_coeff_5_nxtber_less</parameter>
+  <parameter name="gen3_coeff_5_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_5_nxtber_more_hwtcl">g3_coeff_5_nxtber_more</parameter>
+  <parameter name="gen3_coeff_5_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_5_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_5_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_5_sel_hwtcl" value="preset_5" />
+  <parameter name="gen3_coeff_6_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_6_hwtcl" value="0" />
+  <parameter name="gen3_coeff_6_nxtber_less_hwtcl">g3_coeff_6_nxtber_less</parameter>
+  <parameter name="gen3_coeff_6_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_6_nxtber_more_hwtcl">g3_coeff_6_nxtber_more</parameter>
+  <parameter name="gen3_coeff_6_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_6_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_6_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_6_sel_hwtcl" value="preset_6" />
+  <parameter name="gen3_coeff_7_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_7_hwtcl" value="0" />
+  <parameter name="gen3_coeff_7_nxtber_less_hwtcl">g3_coeff_7_nxtber_less</parameter>
+  <parameter name="gen3_coeff_7_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_7_nxtber_more_hwtcl">g3_coeff_7_nxtber_more</parameter>
+  <parameter name="gen3_coeff_7_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_7_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_7_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_7_sel_hwtcl" value="preset_7" />
+  <parameter name="gen3_coeff_8_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_8_hwtcl" value="0" />
+  <parameter name="gen3_coeff_8_nxtber_less_hwtcl">g3_coeff_8_nxtber_less</parameter>
+  <parameter name="gen3_coeff_8_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_8_nxtber_more_hwtcl">g3_coeff_8_nxtber_more</parameter>
+  <parameter name="gen3_coeff_8_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_8_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_8_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_8_sel_hwtcl" value="preset_8" />
+  <parameter name="gen3_coeff_9_ber_meas_hwtcl" value="0" />
+  <parameter name="gen3_coeff_9_hwtcl" value="0" />
+  <parameter name="gen3_coeff_9_nxtber_less_hwtcl">g3_coeff_9_nxtber_less</parameter>
+  <parameter name="gen3_coeff_9_nxtber_less_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_9_nxtber_more_hwtcl">g3_coeff_9_nxtber_more</parameter>
+  <parameter name="gen3_coeff_9_nxtber_more_ptr_hwtcl" value="0" />
+  <parameter name="gen3_coeff_9_preset_hint_hwtcl" value="0" />
+  <parameter name="gen3_coeff_9_reqber_hwtcl" value="0" />
+  <parameter name="gen3_coeff_9_sel_hwtcl" value="preset_9" />
+  <parameter name="gen3_full_swing_hwtcl" value="35" />
+  <parameter name="gen3_low_freq_hwtcl" value="0" />
+  <parameter name="gen3_preset_coeff_10_hwtcl" value="0" />
+  <parameter name="gen3_preset_coeff_11_hwtcl" value="0" />
+  <parameter name="gen3_preset_coeff_1_hwtcl" value="0" />
+  <parameter name="gen3_preset_coeff_2_hwtcl" value="0" />
+  <parameter name="gen3_preset_coeff_3_hwtcl" value="0" />
+  <parameter name="gen3_preset_coeff_4_hwtcl" value="0" />
+  <parameter name="gen3_preset_coeff_5_hwtcl" value="0" />
+  <parameter name="gen3_preset_coeff_6_hwtcl" value="0" />
+  <parameter name="gen3_preset_coeff_7_hwtcl" value="0" />
+  <parameter name="gen3_preset_coeff_8_hwtcl" value="0" />
+  <parameter name="gen3_preset_coeff_9_hwtcl" value="0" />
+  <parameter name="gen3_rxfreqlock_counter_hwtcl" value="0" />
+  <parameter name="hip_reconfig_hwtcl" value="0" />
+  <parameter name="hip_tag_checking_hwtcl" value="1" />
+  <parameter name="hwtcl_override_g2_txvod" value="1" />
+  <parameter name="hwtcl_override_g3rxcoef" value="0" />
+  <parameter name="hwtcl_override_g3txcoef" value="0" />
+  <parameter name="in_cvp_mode_hwtcl" value="0" />
+  <parameter name="io_window_addr_width_hwtcl" value="0" />
+  <parameter name="lane_mask_hwtcl" value="x8" />
+  <parameter name="low_latency_mode_hwtcl" value="0" />
+  <parameter name="max_payload_size_hwtcl" value="256" />
+  <parameter name="msi_64bit_addressing_capable_hwtcl" value="true" />
+  <parameter name="msi_masking_capable_hwtcl" value="false" />
+  <parameter name="msi_multi_message_capable_hwtcl" value="1" />
+  <parameter name="msi_support_hwtcl" value="true" />
+  <parameter name="msix_pba_bir_hwtcl" value="0" />
+  <parameter name="msix_pba_offset_hwtcl" value="0" />
+  <parameter name="msix_table_bir_hwtcl" value="0" />
+  <parameter name="msix_table_offset_hwtcl" value="0" />
+  <parameter name="msix_table_size_hwtcl" value="0" />
+  <parameter name="multiple_packets_per_cycle_hwtcl" value="0" />
+  <parameter name="override_rxbuffer_cred_preset" value="0" />
+  <parameter name="override_tbpartner_driver_setting_hwtcl" value="0" />
+  <parameter name="pcie_inspector_hwtcl" value="0" />
+  <parameter name="pcie_qsys" value="1" />
+  <parameter name="pcie_spec_version_hwtcl" value="2.1" />
+  <parameter name="pll_refclk_freq_hwtcl" value="100 MHz" />
+  <parameter name="port_link_number_hwtcl" value="1" />
+  <parameter name="port_type_hwtcl" value="Native endpoint" />
+  <parameter name="prefetchable_mem_window_addr_width_hwtcl" value="0" />
+  <parameter name="revision_id_hwtcl" value="1" />
+  <parameter name="rpre_emph_a_val_hwtcl" value="9" />
+  <parameter name="rpre_emph_b_val_hwtcl" value="0" />
+  <parameter name="rpre_emph_c_val_hwtcl" value="16" />
+  <parameter name="rpre_emph_d_val_hwtcl" value="13" />
+  <parameter name="rpre_emph_e_val_hwtcl" value="5" />
+  <parameter name="rvod_sel_a_val_hwtcl" value="42" />
+  <parameter name="rvod_sel_b_val_hwtcl" value="38" />
+  <parameter name="rvod_sel_c_val_hwtcl" value="38" />
+  <parameter name="rvod_sel_d_val_hwtcl" value="43" />
+  <parameter name="rvod_sel_e_val_hwtcl" value="15" />
+  <parameter name="rxbuffer_rxreq_hwtcl" value="Minimum" />
+  <parameter name="serial_sim_hwtcl" value="1" />
+  <parameter name="set_pld_clk_x1_625MHz_hwtcl" value="0" />
+  <parameter name="slot_number_hwtcl" value="0" />
+  <parameter name="slot_power_limit_hwtcl" value="0" />
+  <parameter name="slot_power_scale_hwtcl" value="0" />
+  <parameter name="slotclkcfg_hwtcl" value="1" />
+  <parameter name="subsystem_device_id_hwtcl" value="0" />
+  <parameter name="subsystem_vendor_id_hwtcl" value="0" />
+  <parameter name="surprise_down_error_support_hwtcl" value="0" />
+  <parameter name="tlp_insp_trg_dw0_hwtcl" value="2049" />
+  <parameter name="tlp_insp_trg_dw1_hwtcl" value="0" />
+  <parameter name="tlp_insp_trg_dw2_hwtcl" value="0" />
+  <parameter name="tlp_insp_trg_dw3_hwtcl" value="0" />
+  <parameter name="tlp_inspector_hwtcl" value="0" />
+  <parameter name="tlp_inspector_use_signal_probe_hwtcl" value="0" />
+  <parameter name="track_rxfc_cplbuf_ovf_hwtcl" value="0" />
+  <parameter name="use_aer_hwtcl" value="0" />
+  <parameter name="use_ast_parity" value="0" />
+  <parameter name="use_atx_pll_hwtcl" value="0" />
+  <parameter name="use_config_bypass_hwtcl" value="0" />
+  <parameter name="use_crc_forwarding_hwtcl" value="0" />
+  <parameter name="use_cvp_update_core_pof_hwtcl" value="0" />
+  <parameter name="use_pci_ext_hwtcl" value="0" />
+  <parameter name="use_pcie_ext_hwtcl" value="0" />
+  <parameter name="use_rx_st_be_hwtcl" value="0" />
+  <parameter name="use_tx_cons_cred_sel_hwtcl" value="0" />
+  <parameter name="user_id_hwtcl" value="0" />
+  <parameter name="vendor_id_hwtcl" value="4466" />
+  <parameter name="vsec_id_hwtcl" value="40960" />
+  <parameter name="vsec_rev_hwtcl" value="0" />
+ </module>
+ <module
+   name="XCVRCtrlGen1x8"
+   kind="alt_xcvr_reconfig"
+   version="16.0"
+   enabled="1">
+  <parameter name="ber_en" value="0" />
+  <parameter name="device_family" value="Stratix V" />
+  <parameter name="enable_adce" value="0" />
+  <parameter name="enable_analog" value="1" />
+  <parameter name="enable_dcd" value="0" />
+  <parameter name="enable_dcd_power_up" value="1" />
+  <parameter name="enable_dfe" value="0" />
+  <parameter name="enable_eyemon" value="0" />
+  <parameter name="enable_mif" value="0" />
+  <parameter name="enable_offset" value="1" />
+  <parameter name="gui_cal_status_port" value="false" />
+  <parameter name="gui_enable_pll" value="0" />
+  <parameter name="gui_split_sizes" value="" />
+  <parameter name="number_of_reconfig_interfaces" value="10" />
+ </module>
+ <module
+   name="XCVRDrvGen1x8"
+   kind="altera_pcie_reconfig_driver"
+   version="16.0"
+   enabled="1">
+  <parameter name="INTENDED_DEVICE_FAMILY" value="Stratix V" />
+  <parameter name="enable_cal_busy_hwtcl" value="0" />
+  <parameter name="gen123_lane_rate_mode_hwtcl" value="Gen1 (2.5 Gbps)" />
+  <parameter name="number_of_reconfig_interfaces" value="10" />
+ </module>
+ <module name="clk_0" kind="clock_source" version="16.0" enabled="1">
+  <parameter name="clockFrequency" value="50000000" />
+  <parameter name="clockFrequencyKnown" value="true" />
+  <parameter name="inputClockFrequency" value="0" />
+  <parameter name="resetSynchronousEdges" value="NONE" />
+ </module>
+ <module name="pll_0" kind="altera_pll" version="16.0" enabled="1">
+  <parameter name="debug_print_output" value="false" />
+  <parameter name="debug_use_rbc_taf_method" value="false" />
+  <parameter name="device" value="5SGXEA7N2F45C2" />
+  <parameter name="device_family" value="Stratix V" />
+  <parameter name="gui_active_clk" value="false" />
+  <parameter name="gui_actual_output_clock_frequency0" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency1" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency10" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency11" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency12" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency13" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency14" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency15" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency16" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency17" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency2" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency3" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency4" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency5" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency6" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency7" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency8" value="0 MHz" />
+  <parameter name="gui_actual_output_clock_frequency9" value="0 MHz" />
+  <parameter name="gui_actual_phase_shift0" value="0" />
+  <parameter name="gui_actual_phase_shift1" value="0" />
+  <parameter name="gui_actual_phase_shift10" value="0" />
+  <parameter name="gui_actual_phase_shift11" value="0" />
+  <parameter name="gui_actual_phase_shift12" value="0" />
+  <parameter name="gui_actual_phase_shift13" value="0" />
+  <parameter name="gui_actual_phase_shift14" value="0" />
+  <parameter name="gui_actual_phase_shift15" value="0" />
+  <parameter name="gui_actual_phase_shift16" value="0" />
+  <parameter name="gui_actual_phase_shift17" value="0" />
+  <parameter name="gui_actual_phase_shift2" value="0" />
+  <parameter name="gui_actual_phase_shift3" value="0" />
+  <parameter name="gui_actual_phase_shift4" value="0" />
+  <parameter name="gui_actual_phase_shift5" value="0" />
+  <parameter name="gui_actual_phase_shift6" value="0" />
+  <parameter name="gui_actual_phase_shift7" value="0" />
+  <parameter name="gui_actual_phase_shift8" value="0" />
+  <parameter name="gui_actual_phase_shift9" value="0" />
+  <parameter name="gui_cascade_counter0" value="false" />
+  <parameter name="gui_cascade_counter1" value="false" />
+  <parameter name="gui_cascade_counter10" value="false" />
+  <parameter name="gui_cascade_counter11" value="false" />
+  <parameter name="gui_cascade_counter12" value="false" />
+  <parameter name="gui_cascade_counter13" value="false" />
+  <parameter name="gui_cascade_counter14" value="false" />
+  <parameter name="gui_cascade_counter15" value="false" />
+  <parameter name="gui_cascade_counter16" value="false" />
+  <parameter name="gui_cascade_counter17" value="false" />
+  <parameter name="gui_cascade_counter2" value="false" />
+  <parameter name="gui_cascade_counter3" value="false" />
+  <parameter name="gui_cascade_counter4" value="false" />
+  <parameter name="gui_cascade_counter5" value="false" />
+  <parameter name="gui_cascade_counter6" value="false" />
+  <parameter name="gui_cascade_counter7" value="false" />
+  <parameter name="gui_cascade_counter8" value="false" />
+  <parameter name="gui_cascade_counter9" value="false" />
+  <parameter name="gui_cascade_outclk_index" value="0" />
+  <parameter name="gui_channel_spacing" value="0.0" />
+  <parameter name="gui_clk_bad" value="false" />
+  <parameter name="gui_device_speed_grade" value="1" />
+  <parameter name="gui_divide_factor_c0" value="1" />
+  <parameter name="gui_divide_factor_c1" value="1" />
+  <parameter name="gui_divide_factor_c10" value="1" />
+  <parameter name="gui_divide_factor_c11" value="1" />
+  <parameter name="gui_divide_factor_c12" value="1" />
+  <parameter name="gui_divide_factor_c13" value="1" />
+  <parameter name="gui_divide_factor_c14" value="1" />
+  <parameter name="gui_divide_factor_c15" value="1" />
+  <parameter name="gui_divide_factor_c16" value="1" />
+  <parameter name="gui_divide_factor_c17" value="1" />
+  <parameter name="gui_divide_factor_c2" value="1" />
+  <parameter name="gui_divide_factor_c3" value="1" />
+  <parameter name="gui_divide_factor_c4" value="1" />
+  <parameter name="gui_divide_factor_c5" value="1" />
+  <parameter name="gui_divide_factor_c6" value="1" />
+  <parameter name="gui_divide_factor_c7" value="1" />
+  <parameter name="gui_divide_factor_c8" value="1" />
+  <parameter name="gui_divide_factor_c9" value="1" />
+  <parameter name="gui_divide_factor_n" value="1" />
+  <parameter name="gui_dps_cntr" value="C0" />
+  <parameter name="gui_dps_dir" value="Positive" />
+  <parameter name="gui_dps_num" value="1" />
+  <parameter name="gui_dsm_out_sel" value="1st_order" />
+  <parameter name="gui_duty_cycle0" value="50" />
+  <parameter name="gui_duty_cycle1" value="50" />
+  <parameter name="gui_duty_cycle10" value="50" />
+  <parameter name="gui_duty_cycle11" value="50" />
+  <parameter name="gui_duty_cycle12" value="50" />
+  <parameter name="gui_duty_cycle13" value="50" />
+  <parameter name="gui_duty_cycle14" value="50" />
+  <parameter name="gui_duty_cycle15" value="50" />
+  <parameter name="gui_duty_cycle16" value="50" />
+  <parameter name="gui_duty_cycle17" value="50" />
+  <parameter name="gui_duty_cycle2" value="50" />
+  <parameter name="gui_duty_cycle3" value="50" />
+  <parameter name="gui_duty_cycle4" value="50" />
+  <parameter name="gui_duty_cycle5" value="50" />
+  <parameter name="gui_duty_cycle6" value="50" />
+  <parameter name="gui_duty_cycle7" value="50" />
+  <parameter name="gui_duty_cycle8" value="50" />
+  <parameter name="gui_duty_cycle9" value="50" />
+  <parameter name="gui_en_adv_params" value="false" />
+  <parameter name="gui_en_dps_ports" value="false" />
+  <parameter name="gui_en_phout_ports" value="false" />
+  <parameter name="gui_en_reconf" value="false" />
+  <parameter name="gui_enable_cascade_in" value="false" />
+  <parameter name="gui_enable_cascade_out" value="false" />
+  <parameter name="gui_enable_mif_dps" value="false" />
+  <parameter name="gui_feedback_clock" value="Global Clock" />
+  <parameter name="gui_frac_multiply_factor" value="1" />
+  <parameter name="gui_fractional_cout" value="32" />
+  <parameter name="gui_mif_generate" value="false" />
+  <parameter name="gui_multiply_factor" value="1" />
+  <parameter name="gui_number_of_clocks" value="12" />
+  <parameter name="gui_operation_mode" value="direct" />
+  <parameter name="gui_output_clock_frequency0" value="5.0" />
+  <parameter name="gui_output_clock_frequency1" value="10.0" />
+  <parameter name="gui_output_clock_frequency10" value="225.0" />
+  <parameter name="gui_output_clock_frequency11" value="250.0" />
+  <parameter name="gui_output_clock_frequency12" value="100.0" />
+  <parameter name="gui_output_clock_frequency13" value="100.0" />
+  <parameter name="gui_output_clock_frequency14" value="100.0" />
+  <parameter name="gui_output_clock_frequency15" value="100.0" />
+  <parameter name="gui_output_clock_frequency16" value="100.0" />
+  <parameter name="gui_output_clock_frequency17" value="100.0" />
+  <parameter name="gui_output_clock_frequency2" value="25.0" />
+  <parameter name="gui_output_clock_frequency3" value="50.0" />
+  <parameter name="gui_output_clock_frequency4" value="75.0" />
+  <parameter name="gui_output_clock_frequency5" value="100.0" />
+  <parameter name="gui_output_clock_frequency6" value="125.0" />
+  <parameter name="gui_output_clock_frequency7" value="150.0" />
+  <parameter name="gui_output_clock_frequency8" value="175.0" />
+  <parameter name="gui_output_clock_frequency9" value="200.0" />
+  <parameter name="gui_phase_shift0" value="0" />
+  <parameter name="gui_phase_shift1" value="0" />
+  <parameter name="gui_phase_shift10" value="0" />
+  <parameter name="gui_phase_shift11" value="0" />
+  <parameter name="gui_phase_shift12" value="0" />
+  <parameter name="gui_phase_shift13" value="0" />
+  <parameter name="gui_phase_shift14" value="0" />
+  <parameter name="gui_phase_shift15" value="0" />
+  <parameter name="gui_phase_shift16" value="0" />
+  <parameter name="gui_phase_shift17" value="0" />
+  <parameter name="gui_phase_shift2" value="0" />
+  <parameter name="gui_phase_shift3" value="0" />
+  <parameter name="gui_phase_shift4" value="0" />
+  <parameter name="gui_phase_shift5" value="0" />
+  <parameter name="gui_phase_shift6" value="0" />
+  <parameter name="gui_phase_shift7" value="0" />
+  <parameter name="gui_phase_shift8" value="0" />
+  <parameter name="gui_phase_shift9" value="0" />
+  <parameter name="gui_phase_shift_deg0" value="0.0" />
+  <parameter name="gui_phase_shift_deg1" value="0.0" />
+  <parameter name="gui_phase_shift_deg10" value="0.0" />
+  <parameter name="gui_phase_shift_deg11" value="0.0" />
+  <parameter name="gui_phase_shift_deg12" value="0.0" />
+  <parameter name="gui_phase_shift_deg13" value="0.0" />
+  <parameter name="gui_phase_shift_deg14" value="0.0" />
+  <parameter name="gui_phase_shift_deg15" value="0.0" />
+  <parameter name="gui_phase_shift_deg16" value="0.0" />
+  <parameter name="gui_phase_shift_deg17" value="0.0" />
+  <parameter name="gui_phase_shift_deg2" value="0.0" />
+  <parameter name="gui_phase_shift_deg3" value="0.0" />
+  <parameter name="gui_phase_shift_deg4" value="0.0" />
+  <parameter name="gui_phase_shift_deg5" value="0.0" />
+  <parameter name="gui_phase_shift_deg6" value="0.0" />
+  <parameter name="gui_phase_shift_deg7" value="0.0" />
+  <parameter name="gui_phase_shift_deg8" value="0.0" />
+  <parameter name="gui_phase_shift_deg9" value="0.0" />
+  <parameter name="gui_phout_division" value="1" />
+  <parameter name="gui_pll_auto_reset" value="Off" />
+  <parameter name="gui_pll_bandwidth_preset" value="Auto" />
+  <parameter name="gui_pll_cascading_mode">Create an adjpllin signal to connect with an upstream PLL</parameter>
+  <parameter name="gui_pll_mode" value="Integer-N PLL" />
+  <parameter name="gui_ps_units0" value="ps" />
+  <parameter name="gui_ps_units1" value="ps" />
+  <parameter name="gui_ps_units10" value="ps" />
+  <parameter name="gui_ps_units11" value="ps" />
+  <parameter name="gui_ps_units12" value="ps" />
+  <parameter name="gui_ps_units13" value="ps" />
+  <parameter name="gui_ps_units14" value="ps" />
+  <parameter name="gui_ps_units15" value="ps" />
+  <parameter name="gui_ps_units16" value="ps" />
+  <parameter name="gui_ps_units17" value="ps" />
+  <parameter name="gui_ps_units2" value="ps" />
+  <parameter name="gui_ps_units3" value="ps" />
+  <parameter name="gui_ps_units4" value="ps" />
+  <parameter name="gui_ps_units5" value="ps" />
+  <parameter name="gui_ps_units6" value="ps" />
+  <parameter name="gui_ps_units7" value="ps" />
+  <parameter name="gui_ps_units8" value="ps" />
+  <parameter name="gui_ps_units9" value="ps" />
+  <parameter name="gui_refclk1_frequency" value="100.0" />
+  <parameter name="gui_refclk_switch" value="false" />
+  <parameter name="gui_reference_clock_frequency" value="50.0" />
+  <parameter name="gui_switchover_delay" value="0" />
+  <parameter name="gui_switchover_mode">Automatic Switchover</parameter>
+  <parameter name="gui_use_locked" value="false" />
+ </module>
+ <connection
+   kind="avalon"
+   version="16.0"
+   start="XCVRDrvGen1x8.reconfig_mgmt"
+   end="XCVRCtrlGen1x8.reconfig_mgmt">
+  <parameter name="arbitrationPriority" value="1" />
+  <parameter name="baseAddress" value="0x0000" />
+  <parameter name="defaultConnection" value="false" />
+ </connection>
+ <connection kind="clock" version="16.0" start="clk_0.clk" end="pll_0.refclk" />
+ <connection
+   kind="conduit"
+   version="16.0"
+   start="XCVRDrvGen1x8.hip_currentspeed"
+   end="PCIeGen1x8If64.hip_currentspeed">
+  <parameter name="endPort" value="" />
+  <parameter name="endPortLSB" value="0" />
+  <parameter name="startPort" value="" />
+  <parameter name="startPortLSB" value="0" />
+  <parameter name="width" value="0" />
+ </connection>
+ <connection
+   kind="conduit"
+   version="16.0"
+   start="XCVRDrvGen1x8.reconfig_busy"
+   end="XCVRCtrlGen1x8.reconfig_busy">
+  <parameter name="endPort" value="" />
+  <parameter name="endPortLSB" value="0" />
+  <parameter name="startPort" value="" />
+  <parameter name="startPortLSB" value="0" />
+  <parameter name="width" value="0" />
+ </connection>
+ <connection
+   kind="conduit"
+   version="16.0"
+   start="XCVRCtrlGen1x8.reconfig_from_xcvr"
+   end="PCIeGen1x8If64.reconfig_from_xcvr">
+  <parameter name="endPort" value="" />
+  <parameter name="endPortLSB" value="0" />
+  <parameter name="startPort" value="" />
+  <parameter name="startPortLSB" value="0" />
+  <parameter name="width" value="0" />
+ </connection>
+ <connection
+   kind="conduit"
+   version="16.0"
+   start="XCVRCtrlGen1x8.reconfig_to_xcvr"
+   end="PCIeGen1x8If64.reconfig_to_xcvr">
+  <parameter name="endPort" value="" />
+  <parameter name="endPortLSB" value="0" />
+  <parameter name="startPort" value="" />
+  <parameter name="startPortLSB" value="0" />
+  <parameter name="width" value="0" />
+ </connection>
+ <connection kind="reset" version="16.0" start="clk_0.clk_reset" end="pll_0.reset" />
+ <interconnectRequirement for="$system" name="qsys_mm.clockCrossingAdapter" value="HANDSHAKE" />
+ <interconnectRequirement for="$system" name="qsys_mm.insertDefaultSlave" value="false" />
+ <interconnectRequirement for="$system" name="qsys_mm.maxAdditionalLatency" value="1" />
+</system>

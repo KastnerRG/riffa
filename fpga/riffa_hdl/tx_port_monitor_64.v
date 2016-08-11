@@ -99,7 +99,6 @@ reg 						rLenEQ0Lo=0, _rLenEQ0Lo=0;
 reg 						rLenLE2Lo=0, _rLenLE2Lo=0;
 reg							rTxErr=0, _rTxErr=0;
 
-
 wire wEventData = (rDataValid[0] & EVT_DATA[C_DATA_WIDTH]);
 wire wPayloadData = (rDataValid[0] & !EVT_DATA[C_DATA_WIDTH] & rState[3]); // S_TXPORTMON64_READ
 wire wAllWordsRecvd = ((rAlmostAllRecvd | (rLenEQ0Hi & rLenLE2Lo)) & wPayloadData);
@@ -201,7 +200,7 @@ always @ (*) begin
 	_rDataValid = ((rDataValid<<1) | (rRead & !EVT_DATA_EMPTY));
 
 	// Read until we get a (valid) event
-	_rRead = (!rState[2] & !(rState[1] & rEvent) & !wEventData & !rAlmostFull); // !S_TXPORTMON64_TXN
+	_rRead = (!rState[2] & !(rState[1] & (rEvent | wEventData | ~EVT_DATA_EMPTY)) & !wEventData & !rAlmostFull); // !S_TXPORTMON64_TXN
 
 	// Track detected events
 	_rEvent = wEventData;
@@ -224,33 +223,5 @@ always @ (*) begin
 	_rWordsRecvdAdv = (ACK ? 2*(C_DATA_WIDTH/32) : rWordsRecvdAdv + (wPayloadData<<1));
 	_rAlmostAllRecvd = ((rWordsRecvdAdv >= LEN) && wPayloadData);
 end
-
-/*
-wire [35:0] wControl0;
-chipscope_icon_1 cs_icon(
-	.CONTROL0(wControl0)
-);
-
-chipscope_ila_t8_512 a0(
-	.CLK(CLK), 
-	.CONTROL(wControl0), 
-	.TRIG0({TXN, wPayloadData, wEventData, rState}),
-	.DATA({297'd0,
-			WR_COUNT, // 10
-			wPayloadData, // 1
-			EVT_DATA_RD_EN, // 1
-			RST, // 1
-			rTxErr, // 1
-			wEventData, // 1
-			rReadData, // 64
-			OFF, // 31
-			LEN, // 32
-			LAST, // 1
-			TXN, // 1
-			EVT_DATA_EMPTY, // 1
-			EVT_DATA, // 65
-			rState}) // 5
-);
-*/
 
 endmodule
