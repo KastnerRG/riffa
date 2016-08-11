@@ -40,7 +40,7 @@
 # Author:              Dustin Richmond (@darichmond)
 #-----------------------------------------------------------------------
 BOARD:=vc709
-BOARD_PROJECTS:=VC709_Gen1x8If64 VC709_Gen2x8If128 VC709_Gen3x4If128
+BOARD_PROJECTS:=VC709_Gen1x8If64 VC709_Gen2x8If128 VC709_Gen3x4If128 VC709_Gen1x8If64_CLK VC709_Gen2x8If128_CLK
 BOARD_TYPE:=ultrascale
 VENDOR:=xilinx
 include ../vendor.mk

@@ -59,4 +59,4 @@ endif
 include $(RIFFA_HDL_PATH)/riffa.mk
 include $(BOARD_PATH)/board.mk
 
-PROJECT_IP+=ip/PCIeGen1x8If64.xci
+PROJECT_IP+=ip/PCIeGen1x8If64.xci ip/clk_250MIn_2/clk_250MIn_2.xci ip/clk_250MIn_1/clk_250MIn_1.xci
