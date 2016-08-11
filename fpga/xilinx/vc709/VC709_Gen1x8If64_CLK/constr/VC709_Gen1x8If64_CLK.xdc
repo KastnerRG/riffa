@@ -1,24 +1,24 @@
 # ----------------------------------------------------------------------
 # Copyright (c) 2016, The Regents of the University of California All
 # rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
 # met:
-# 
+#
 #     * Redistributions of source code must retain the above copyright
 #       notice, this list of conditions and the following disclaimer.
-# 
+#
 #     * Redistributions in binary form must reproduce the above
 #       copyright notice, this list of conditions and the following
 #       disclaimer in the documentation and/or other materials provided
 #       with the distribution.
-# 
+#
 #     * Neither the name of The Regents of the University of California
 #       nor the names of its contributors may be used to endorse or
 #       promote products derived from this software without specific
 #       prior written permission.
-# 
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 # "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 # LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -33,12 +33,12 @@
 # DAMAGE.
 # ----------------------------------------------------------------------
 #----------------------------------------------------------------------------
-# Filename:            VC709_Top.xdc
+# Filename:            VC709_Gen1x8If64_CLK.xdc
 # Version:             1.00.a
 # Verilog Standard:    Verilog-2001
 # Description:         Xilinx Design Constraints for the VC709 board.
 # These constrain the PCIE_REFCLK, its DSBUF, LED Pins, and PCIE_RESET_N pin
-# 
+#
 # Author:              Dustin Richmond (@darichmond)
 #-----------------------------------------------------------------------------
 #
@@ -135,7 +135,6 @@ set_false_path -from [get_ports PCIE_RESET_N]
 ###############################################################################
 # End
 ###############################################################################
-
 
 set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins pcie3_7x_0_i/inst/gt_top_i/pipe_wrapper_i/pipe_clock_int.pipe_clock_i/mmcm_i/CLKOUT2]] -group [get_clocks -of_objects [get_pins clkgen/inst/mmcm_adv_inst/CLKOUT0]]
 set_clock_groups -asynchronous -group [get_clocks -of_objects [get_pins clkgen/inst/mmcm_adv_inst/CLKOUT1]] -group [get_clocks -of_objects [get_pins pcie3_7x_0_i/inst/gt_top_i/pipe_wrapper_i/pipe_clock_int.pipe_clock_i/mmcm_i/CLKOUT2]]
