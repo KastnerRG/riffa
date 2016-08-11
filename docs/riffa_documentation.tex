@@ -50,7 +50,7 @@
 \newcommand{\figurewidth}{350px}
 \newcommand{\VivadoVer}{2014.4}
 \newcommand{\QuartusVer}{14.1}
-\newcommand{\RIFFAVer}{2.2.0}
+\newcommand{\RIFFAVer}{2.2.2}
 \newcommand{\Directory}[1]{\textit{#1}}
 \newcommand{\EnvVariable}[1]{\textbf{#1}}
 \newcommand{\TermCmd}[1]{\$ \texttt{#1}}
@@ -282,6 +282,50 @@ project directory has 5 sub-directories:
 \end{figure}
 
 \section{Release Notes}
+\subsection{Version 2.2.2}
+\begin{itemize}
+\item Fixed: Unsigned Windows Driver (Commit: 4e989fc)
+
+\item Fixed: A bug in the clock-crossing interface where a low-frequency user
+  clock (<40 MHz) could cause incorrect channel behavior. (Commit: 778c42e)
+
+\item Fixed: Support for 64-bit pointers in Python 3. Shout out to 
+  @jrobrien (Commit: af7c592)
+
+\item Fixed: Includes in linux driver. linux/slab.h was not included in 
+  riffa\_driver.c (Commit: cd494e1)
+
+\item Fixed: Capability backwards/forwards compatibility issues to support Linux
+  for Tegra. (Commit: 1d228c1)
+
+\item New: Support for new get\_user\_pages API in the linux kernel. Shout out to
+  @marzoul (Commit: TBD)
+
+\item Removed: Non-Qsys DE5 Board Example Designs (QSys > IP Generator)
+  @marzoul (Commit: TBD)
+
+\end{itemize}
+\subsection{Version 2.2.1}
+\begin{itemize}
+\item New: Reset logic for the Engine layer to handle RIFFA induced resets
+
+\item New: Stability/multi-thread-concurrency warnings in the Linux driver 
+  (Shoutout to @marzoul)
+
+\item Fixed: A bug in the Linux Driver that prevented compilation on older kernels
+
+\item Fixed: Windows driver issue for back-to-back small transfers (See 2.2.0)
+
+\item Fixed: WORD\_ENABLE bug fix for the Classic Xilinx (VC707, ZC706, AC701, 
+  KC705) 128-bit interface
+
+\item Fixed: TX Engine Buffer sizing (high-bandwidth transfers occasionally had 
+  corruption)
+
+\item Fixed: RX Engine rx\_st\_valid bug fix for Altera IP Compiler for PCI express 
+  (Cyclone IV, Stratix IV)
+\end{itemize}
+
 \subsection{Version 2.2.0}
 \begin{itemize}
 \item Added: Support for the new Gen3 Integrated Block for PCIe Express, and the VC709 Development board.
@@ -325,8 +369,8 @@ project directory has 5 sub-directories:
 \item Fixed: Updated common functions to avoid assigning input values.
 \item Fixed: FIFO overflow error causing data corruption in tx\_engine\_upper and
   breaking the Xilinx Endpoint.
-\item Fixed: Missing default cases in rx\_port\_reader, sg\_list\_requester, 
-  tx\_engine\_upper, and tx\_port\_writer.
+\item Fixed: Missing default cases in rx\_port\_reader, \\
+  sg\_list\_requester, tx\_engine\_upper, and tx\_port\_writer.
 \item Fixed: Bug in tx\_engine\_lower\_128 corrupting s\_axis\_tx\_tkeep, causing Xilinx
   PCIe endpoint core to shut down.
 \item Fixed: Bug in tx\_engine\_upper\_128 causing incomplete TX data timeouts.
@@ -380,13 +424,6 @@ See the following notes for issues we are currently tracking:
 \subsection{Linux}
 No open issues
 \subsection{Altera}
-\textbf{Issue 1: Inexplicable DE4 behavior} We are seeing inexplicable behavior
-on the DE4 boards. In particular, this affects both upstream and downstream data
-transfers on the Gen2 128-bit interface. In the channel tester, this problem
-manifests as an incorrect number of words recieved, and incorrrect data sent.
-
-\textbf{Issue 2: DE4 Designs intermittently fail timing} Particularly on the
-128-bit interface. Working to fix.
 
 \textbf{Issue 3: No support for the 256-bit, Gen3x8 Interface} Coming soon...
 \subsection{Xilinx (Classic)}
