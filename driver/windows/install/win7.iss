@@ -13,7 +13,7 @@
 
 [Setup]
 AppName=RIFFA
-AppVersion=2.2.1
+AppVersion=2.2.2
 AppPublisher=University of California, San Diego
 AppPublisherURL=https://sites.google.com/a/eng.ucsd.edu/matt-jacobsen/riffa
 AppCopyright=Copyright (C) 2016 The Regents of the University of California. All Rights Reserved.
