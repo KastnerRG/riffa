@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2015 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="10" Path="/data/drichmond/Research/repositories/git/riffa/fpga/xilinx/adm7V3/ADM7V3_Gen2x8If128/prj/ADM7V3_Gen2x8If128.xpr">
+<Project Version="7" Minor="10" Path="/home/drichmond/Research/repositories/git/riffa/fpga/xilinx/adm7V3/ADM7V3_Gen2x8If128/prj/ADM7V3_Gen2x8If128.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="0e6774b4d2f941beabc11dd88355dde5"/>

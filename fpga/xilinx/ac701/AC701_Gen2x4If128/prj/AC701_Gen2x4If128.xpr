@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2015 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="10" Path="/data/drichmond/Research/repositories/git/riffa/fpga/xilinx/ac701/AC701_Gen2x4If128/prj/AC701_Gen2x4If128.xpr">
+<Project Version="7" Minor="10" Path="/home/drichmond/Research/repositories/git/riffa/fpga/xilinx/ac701/AC701_Gen2x4If128/prj/AC701_Gen2x4If128.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="91b0f64634d74c568297d2f88f9aee86"/>

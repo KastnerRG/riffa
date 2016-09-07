@@ -41,7 +41,7 @@ set_global_assignment -name DEVICE EP4SGX230KF40C2
 set_global_assignment -name TOP_LEVEL_ENTITY DE4Gen1x8If64
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "11:42:13  MARCH 24, 2014"
-set_global_assignment -name LAST_QUARTUS_VERSION 15.1.0
+set_global_assignment -name LAST_QUARTUS_VERSION 16.0.0
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../bit/
 set_global_assignment -name MIN_CORE_JUNCTION_TEMP 0
 set_global_assignment -name MAX_CORE_JUNCTION_TEMP 85
@@ -180,11 +180,11 @@ set_global_assignment -name PARTITION_COLOR 16764057 -section_id Top
 set_global_assignment -name VERILOG_INPUT_VERSION SYSTEMVERILOG_2005
 set_global_assignment -name VERILOG_SHOW_LMF_MAPPING_MESSAGES OFF
 set_global_assignment -name STRATIX_DEVICE_IO_STANDARD "2.5 V"
+set_global_assignment -name SEARCH_PATH ../../../../riffa_hdl
 set_global_assignment -name QIP_FILE ../ip/ALTGXPCIeGen1x8.qip
 set_global_assignment -name QIP_FILE ../ip/ALTPLL50I50O125O250O.qip
 set_global_assignment -name QIP_FILE ../ip/PCIeGen1x8If64.qip
 set_global_assignment -name SDC_FILE ../constr/DE4Gen1x8If64.sdc
-set_global_assignment -name SEARCH_PATH ../../../../riffa_hdl
 set_global_assignment -name VERILOG_FILE ../hdl/DE4Gen1x8If64.v
 set_global_assignment -name VERILOG_FILE ../../riffa_wrapper_de4.v
 set_global_assignment -name VERILOG_FILE ../../../../riffa_hdl/txr_engine_ultrascale.v

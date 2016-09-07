@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2015 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="10" Path="/data/drichmond/Research/repositories/git/riffa/fpga/xilinx/NetFPGA/NetFPGA_Gen1x8If64/prj/NetFPGA_Gen1x8If64.xpr">
+<Project Version="7" Minor="10" Path="/home/drichmond/Research/repositories/git/riffa/fpga/xilinx/NetFPGA/NetFPGA_Gen1x8If64/prj/NetFPGA_Gen1x8If64.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="771e255770ec4edc86ac461b1b604342"/>

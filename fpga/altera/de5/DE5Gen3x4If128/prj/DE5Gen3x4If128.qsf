@@ -41,7 +41,7 @@ set_global_assignment -name DEVICE 5SGXEA7N2F45C2
 set_global_assignment -name TOP_LEVEL_ENTITY DE5Gen3x4If128
 set_global_assignment -name ORIGINAL_QUARTUS_VERSION 13.1
 set_global_assignment -name PROJECT_CREATION_TIME_DATE "11:03:06  MARCH 21, 2014"
-set_global_assignment -name LAST_QUARTUS_VERSION 15.1.0
+set_global_assignment -name LAST_QUARTUS_VERSION 16.0.0
 set_global_assignment -name PROJECT_OUTPUT_DIRECTORY ../bit/
 
 ################################################################################

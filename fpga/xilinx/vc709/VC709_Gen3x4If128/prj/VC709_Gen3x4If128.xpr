@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2015 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="10" Path="/data/drichmond/Research/repositories/git/riffa/fpga/xilinx/vc709/VC709_Gen3x4If128/prj/VC709_Gen3x4If128.xpr">
+<Project Version="7" Minor="10" Path="/home/drichmond/Research/repositories/git/riffa/fpga/xilinx/vc709/VC709_Gen3x4If128/prj/VC709_Gen3x4If128.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="ee5dbb325de3470e81ad85e793306c9a"/>
@@ -750,12 +750,11 @@
     </Simulator>
   </Simulators>
   <Runs Version="1" Minor="10">
-    <Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7vx690tffg1761-2" ConstrsSet="constrs_1" Description="Vivado Synthesis Defaults" State="current" Dir="$PRUNDIR/synth_1" IncludeInArchive="true">
+    <Run Id="synth_1" Type="Ft3:Synth" SrcSet="sources_1" Part="xc7vx690tffg1761-2" ConstrsSet="constrs_1" Description="Vivado Synthesis Defaults" State="current" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Synthesis Defaults" Flow="Vivado Synthesis 2014"/>
         <Step Id="synth_design"/>
       </Strategy>
-      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
     </Run>
     <Run Id="PCIeGen3x4If128_synth_1" Type="Ft3:Synth" SrcSet="PCIeGen3x4If128" Part="xc7vx690tffg1761-2" ConstrsSet="PCIeGen3x4If128" Description="Vivado Synthesis Defaults" Dir="$PRUNDIR/PCIeGen3x4If128_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
@@ -764,7 +763,7 @@
       </Strategy>
       <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
     </Run>
-    <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7vx690tffg1761-2" ConstrsSet="constrs_1" Description="Vivado Implementation Defaults" State="current" Dir="$PRUNDIR/impl_1" SynthRun="synth_1" IncludeInArchive="true">
+    <Run Id="impl_1" Type="Ft2:EntireDesign" Part="xc7vx690tffg1761-2" ConstrsSet="constrs_1" Description="Vivado Implementation Defaults" State="current" SynthRun="synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">
         <StratHandle Name="Vivado Implementation Defaults" Flow="Vivado Implementation 2014"/>
         <Step Id="init_design"/>
@@ -777,7 +776,6 @@
         <Step Id="post_route_phys_opt_design"/>
         <Step Id="write_bitstream"/>
       </Strategy>
-      <GeneratedRun Dir="$PRUNDIR" File="gen_run.xml"/>
     </Run>
     <Run Id="PCIeGen3x4If128_impl_1" Type="Ft2:EntireDesign" Part="xc7vx690tffg1761-2" ConstrsSet="PCIeGen3x4If128" Description="Vivado Implementation Defaults" SynthRun="PCIeGen3x4If128_synth_1" IncludeInArchive="true">
       <Strategy Version="1" Minor="2">

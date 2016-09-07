@@ -3,7 +3,7 @@
 <!--                                                         -->
 <!-- Copyright 1986-2015 Xilinx, Inc. All Rights Reserved.   -->
 
-<Project Version="7" Minor="10" Path="/data/drichmond/Research/repositories/git/riffa/fpga/xilinx/zc706/ZC706_Gen2x4If128/prj/ZC706_Gen2x4If128.xpr">
+<Project Version="7" Minor="10" Path="/home/drichmond/Research/repositories/git/riffa/fpga/xilinx/zc706/ZC706_Gen2x4If128/prj/ZC706_Gen2x4If128.xpr">
   <DefaultLaunch Dir="$PRUNDIR"/>
   <Configuration>
     <Option Name="Id" Val="bab8c5489eca4c569ec4ae8a72850622"/>

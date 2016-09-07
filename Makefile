@@ -42,7 +42,7 @@ include release.mk
 CURRENT_PATH := $(patsubst %/,%,$(dir $(abspath $(lastword $(MAKEFILE_LIST)))))
 RIFFA_ROOT_PATH := $(CURRENT_PATH)
 
-RELEASE_VER=2.2.1
+RELEASE_VER=2.2.2
 RELEASE_DIR=riffa_$(RELEASE_VER)
 RELEASE_PATH=$(CURRENT_PATH)/$(RELEASE_DIR)
 RELEASE_SRC_DIR=$(RELEASE_DIR)/source
