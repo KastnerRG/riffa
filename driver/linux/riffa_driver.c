@@ -145,18 +145,25 @@ static inline void write_reg(struct fpga_state * sc, int offset, unsigned int va
 	writel(val, sc->bar0 + (offset<<2));
 }
 
-#ifdef BUILD_32
 /**
- * Needed for 32 bit OS because dma_map_sg macro eventually does some 64 bit
- * division.
+ * Converts a 64-bit RIFFA API timeout to 32-bit jiffies
  */
-unsigned long long __udivdi3(unsigned long long num, unsigned long long den)
+static inline long timeout64_to_jiffies(uint64_t timeout)
 {
-	do_div(num, den);
-	return num;
-}
-#endif
+	uint32_t denom;
 
+	if (timeout == 0)
+		return MAX_SCHEDULE_TIMEOUT;
+	else {
+		denom = 1000;
+		timeout = timeout * HZ;
+		do_div(timeout, denom);
+		if (timeout > LONG_MAX)
+			return LONG_MAX;
+		else
+			return (long) timeout;
+	}
+}
 
 // These are not defined in the 2.x.y kernels, so just define them
 #if LINUX_VERSION_CODE <= KERNEL_VERSION(2,6,39)
@@ -586,7 +593,7 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
 	DEFINE_WAIT(wait);
 
 	// Convert timeout to jiffies.
-	tymeout = (timeout == 0 ? MAX_SCHEDULE_TIMEOUT : (timeout * HZ/1000 > LONG_MAX ? LONG_MAX : timeout * HZ/1000));
+        tymeout = timeout64_to_jiffies(timeout);
 	tymeouto = tymeout;
 
 	// Initialize the sg_maps
@@ -780,7 +787,7 @@ static inline unsigned int chnl_send(struct fpga_state * sc, int chnl,
 	DEFINE_WAIT(wait);
 
 	// Convert timeout to jiffies.
-	tymeout = (timeout == 0 ? MAX_SCHEDULE_TIMEOUT : (timeout * HZ/1000 > LONG_MAX ? LONG_MAX : timeout * HZ/1000));
+	tymeout = timeout64_to_jiffies(timeout);
 	tymeouto = tymeout;
 
 	// Clear the message queue.
