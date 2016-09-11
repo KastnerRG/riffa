@@ -43,14 +43,14 @@
 # like, but make sure they will work in your system.
 # The VENDOR_ID _must_ match what is configured on your FPGA's PCIe endpoint 
 # header. Xilinx has a VENDOR_ID = 10EE.
-NAME := riffa
-VENDOR_ID0 := 10EE
-VENDOR_ID1 := 1172
-MAJNUM := 100
+NAME ?= riffa
+VENDOR_ID0 ?= 10EE
+VENDOR_ID1 ?= 1172
+MAJNUM ?= 100
 
 # Build variables
-KVER := $(shell uname -r)
-KDIR := /lib/modules/`uname -r`/build
+KVER ?= $(shell uname -r)
+KDIR ?= /lib/modules/`uname -r`/build
 RHR := /etc/redhat-release
 LIB_SRCS := riffa.c
 LIB_OBJS := $(patsubst %.c,%.o,$(LIB_SRCS))
@@ -61,8 +61,7 @@ LIB_VER := $(LIB_VER_MAJ).$(LIB_VER_MIN)
 DRVR_HDR := riffa_driver.h
 DBUGVAL := DBUG
 
-obj-m += $(NAME).o
-$(NAME)-y := riffa_driver.o circ_queue.o
+CC=$(CROSS_COMPILE)cc
 
 # Helper functions
 define assert
@@ -88,17 +87,15 @@ all: builddvr
 debug: CC += -DDEBUG -g
 debug: DBUGVAL = DEBUG
 debug: builddvr
+$(NAME).so.$(LIB_VER): CC += -DDEVICE_NAME='"$(NAME)"' \
+                             -DMAJOR_NUM=$(MAJNUM) \
+                             -DVENDOR_ID0=0x$(VENDOR_ID0) \
+                             -DVENDOR_ID1=0x$(VENDOR_ID1)
 builddvr: $(NAME).ko $(NAME).so.$(LIB_VER)
 
 $(NAME).ko: *.c *.h
 	$(call assert-variables)
-	sed -i 's/#define MAJOR_NUM [^\n]*/#define MAJOR_NUM $(MAJNUM)/g' $(DRVR_HDR)
-	sed -i 's/#define DEVICE_NAME [^\n]*/#define DEVICE_NAME "$(NAME)"/g' $(DRVR_HDR)
-	sed -i 's/#define VENDOR_ID0 [^\n]*/#define VENDOR_ID0 0x$(VENDOR_ID0)/g' $(DRVR_HDR)
-	sed -i 's/#define VENDOR_ID1 [^\n]*/#define VENDOR_ID1 0x$(VENDOR_ID1)/g' $(DRVR_HDR)
-	sed -i 's/#define DEBUG [^\n]*/#define DBUG 1/g' $(DRVR_HDR)
-	sed -i 's/#define DBUG [^\n]*/#define $(DBUGVAL) 1/g' $(DRVR_HDR)
-	make -C $(KDIR) SUBDIRS=`pwd` modules
+	make -C $(KDIR) M=$(PWD)
 	rm -rf $(LIB_OBJS)
 
 $(NAME).so.$(LIB_VER): $(LIB_OBJS)
@@ -109,7 +106,7 @@ $(LIB_OBJS): $(LIB_SRCS)
 
 load: $(NAME).ko
 	insmod $(NAME).ko
-	
+
 unload:
 	rmmod $(NAME)
 
