@@ -375,6 +375,11 @@ static irqreturn_t intrpt_handler(int irq, void *dev_id)
 		return IRQ_HANDLED;
 	}
 
+	if (sc->id == -1) {
+		printk(KERN_ERR "riffa: interrupted during initialization\n");
+		return IRQ_HANDLED;
+	}
+
 	if (!atomic_read(&sc->intr_disabled)) {
 		// Read the interrupt vector(s):
 		vect0 = read_reg(sc, IRQ_REG0_OFF);
@@ -1116,10 +1121,26 @@ static int __devinit fpga_probe(struct pci_dev *dev, const struct pci_device_id 
 	u32 devctl_result = 0;
 	u32 devctl2_result = 0;
 
+	// Allocate device structure.
+	sc = kzalloc(sizeof(*sc), GFP_KERNEL);
+	if (sc == NULL) {
+		printk(KERN_ERR "riffa: not enough memory to allocate sc\n");
+		pci_disable_device(dev);
+		return (-ENOMEM);
+	}
+
+	// set id field to indicate not yet initialized
+	sc->id = -1;
+
+	// Save pointer to structure
+	pci_set_drvdata(dev, sc);
+	sc->dev = dev;
+
 	// Setup the PCIe device.
 	error = pci_enable_device(dev);
 	if (error < 0) {
 		printk(KERN_ERR "riffa: pci_enable_device returned %d\n", error);
+ 		kfree(sc);
 		return (-ENODEV);
 	}
 
@@ -1133,16 +1154,10 @@ static int __devinit fpga_probe(struct pci_dev *dev, const struct pci_device_id 
 	if (error) {
 		printk(KERN_ERR "riffa: cannot set 64 bit DMA mode\n");
 		pci_disable_device(dev);
+		kfree(sc);
 		return error;
 	}
 
-	// Allocate device structure.
-	sc = kzalloc(sizeof(*sc), GFP_KERNEL);
-	if (sc == NULL) {
-		printk(KERN_ERR "riffa: not enough memory to allocate sc\n");
-		pci_disable_device(dev);
-		return (-ENOMEM);
-	}
 	atomic_set(&sc->intr_disabled, 0);
 	snprintf(sc->name, sizeof(sc->name), "%s%d", pci_name(dev), 0);
 	sc->vendor_id = dev->vendor;
@@ -1435,10 +1450,6 @@ static int __devinit fpga_probe(struct pci_dev *dev, const struct pci_device_id 
 		kfree(sc);
 	}
 
-	// Save pointer to structure 
-	pci_set_drvdata(dev, sc);
-	sc->dev = dev;
-	sc->id = -1;
 	for (i = 0; i < NUM_FPGAS; i++) {
 		if (!atomic_xchg(&used_fpgas[i], 1)) {
 			sc->id = i;
