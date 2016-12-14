@@ -1530,7 +1530,12 @@ static void __devexit fpga_remove(struct pci_dev *dev)
 // MODULE INIT/EXIT FUNCTIONS
 ///////////////////////////////////////////////////////
 
-static DEFINE_PCI_DEVICE_TABLE(fpga_ids) = {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,8,0)
+static DEFINE_PCI_DEVICE_TABLE(fpga_ids) =
+#else
+static const struct pci_device_id fpga_ids[] =
+#endif
+{
 	{PCI_DEVICE(VENDOR_ID0, PCI_ANY_ID)},
 	{PCI_DEVICE(VENDOR_ID1, PCI_ANY_ID)},
 	{0},
