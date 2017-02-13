@@ -443,8 +443,10 @@ static inline struct sg_mapping * fill_sg_buf(struct fpga_state * sc, int chnl,
 		down_read(&current->mm->mmap_sem);
 		#if LINUX_VERSION_CODE < KERNEL_VERSION(4,6,0)
 		num_pages = get_user_pages(current, current->mm, udata, num_pages_reqd, 1, 0, pages, NULL);
-		#else
+		#elsif LINUX_VERSION_CODE < KERNEL_VERSION(4,9,0)
 		num_pages = get_user_pages(udata, num_pages_reqd, 1, 0, pages, NULL);
+		#else
+		num_pages = get_user_pages(udata, num_pages_reqd, FOLL_WRITE, pages, NULL);
 		#endif
 		up_read(&current->mm->mmap_sem);
 		if (num_pages <= 0) {
