@@ -32,6 +32,7 @@
 // USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 // ----------------------------------------------------------------------
+`include "functions.vh"
 module reset_extender
     #(parameter C_RST_COUNT = 10)
     (input  CLK,

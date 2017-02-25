@@ -90,6 +90,7 @@ module rx_engine_classic
      // Interface: RXR Engine
      output [C_PCI_DATA_WIDTH-1:0]            RXR_DATA,
      output                                   RXR_DATA_VALID,
+     input                                    RXR_DATA_READY,
      output [(C_PCI_DATA_WIDTH/32)-1:0]       RXR_DATA_WORD_ENABLE,
      output                                   RXR_DATA_START_FLAG,
      output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] RXR_DATA_START_OFFSET,
@@ -118,6 +119,7 @@ module rx_engine_classic
     wire [(C_RX_PIPELINE_DEPTH+1)*`SIG_OFFSET_W-1:0]    wRxSrEoff;
     wire [(C_RX_PIPELINE_DEPTH+1)*`SIG_OFFSET_W-1:0]    wRxSrSoff;
     wire [C_RX_PIPELINE_DEPTH:0]                        wRxSrDataValid;
+    wire [(C_RX_PIPELINE_DEPTH+1)*`SIG_BARDECODE_W-1:0] wRxBar;
 
     generate
         if(C_VENDOR == "XILINX") begin : xilinx_data
@@ -145,7 +147,7 @@ module rx_engine_classic
         end
     endgenerate
 
-    assign RX_TLP_READY = 1'b1;
+    assign RX_TLP_READY = RXR_DATA_READY;
     // Shift register for input data with output taps for each delayed
     // cycle.  Shared by RXC and RXR engines.
     shiftreg
@@ -251,6 +253,23 @@ module rx_engine_classic
          .RD_DATA                       (wRxSrSoff),
          // Inputs
          .WR_DATA                       (RX_TLP_START_OFFSET),
+         .RST_IN                        (0),
+         /*AUTOINST*/
+         // Inputs
+         .CLK                           (CLK));
+
+    shiftreg
+        #(// Parameters
+          .C_DEPTH                      (C_RX_PIPELINE_DEPTH),
+          .C_WIDTH                      (`SIG_BARDECODE_W),
+          .C_VALUE                      (0)
+          /*AUTOINSTPARAM*/)
+    rxbar_shiftreg_inst
+        (
+         // Outputs
+         .RD_DATA                       (wRxBar),
+         // Inputs
+         .WR_DATA                       (RX_TLP_BAR_DECODE),
          .RST_IN                        (0),
          /*AUTOINST*/
          // Inputs
@@ -367,6 +386,7 @@ module rx_engine_classic
                  .RX_SR_END_OFFSET                 (wRxSrEoff),
                  .RX_SR_SOP                        (wRxSrSop),
                  .RX_SR_VALID                      (wRxSrDataValid),
+                 .RX_SR_BAR                        (wRxBar),
                  // Outputs
                  .RXR_DATA                      (_RXR_DATA[C_PCI_DATA_WIDTH-1:0]),
                  /*AUTOINST*/

@@ -136,6 +136,7 @@ module engine_layer
      // Interface: RXR Engine
      output [C_PCI_DATA_WIDTH-1:0]            RXR_DATA,
      output                                   RXR_DATA_VALID,
+     input                                    RXR_DATA_READY,
      output [(C_PCI_DATA_WIDTH/32)-1:0]       RXR_DATA_WORD_ENABLE,
      output                                   RXR_DATA_START_FLAG,
      output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] RXR_DATA_START_OFFSET,
@@ -272,6 +273,7 @@ module engine_layer
                  .CLK                   (CLK),
                  .RST_BUS               (RST_BUS),
                  .RST_LOGIC             (RST_LOGIC),
+                 .RXR_DATA_READY        (RXR_DATA_READY),
                  .RX_TLP                (RX_TLP[C_PCI_DATA_WIDTH-1:0]),
                  .RX_TLP_VALID          (RX_TLP_VALID),
                  .RX_TLP_START_FLAG     (RX_TLP_START_FLAG),

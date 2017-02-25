@@ -47,7 +47,7 @@
 `define TD_W 1
 
 `define BARDECODE_W 8
-`define OFFSET_W 4
+`define OFFSET_W 2
 `define EP_W 1
 `define TC_W 3
 `define TYPE_W 5

@@ -283,7 +283,7 @@ module riffa
 
     genvar                                        i;
 
-    
+    wire wPendingRst;
     assign wRxEngRdComplete = RXC_DATA_END_FLAG & RXC_DATA_VALID & 
                               (RXC_META_LENGTH >= RXC_META_BYTES_REMAINING[`SIG_BYTECNT_W-1:2]);// TODO: Retime (if possible)
 
