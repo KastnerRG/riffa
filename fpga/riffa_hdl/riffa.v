@@ -274,6 +274,7 @@ module riffa
     wire                                          wRxBufSpaceAvail;
     wire                                          wTxEngRdReqSent;
     wire                                          wRxEngRdComplete;
+    wire                                          wPendingRst;
 
     wire [31:0]                                   wCPciDataWidth;
     reg [31:0]                                    wCFpgaId;
