@@ -51,7 +51,13 @@
 #include <linux/fs.h>
 #include <linux/pci.h>
 #include <linux/interrupt.h>
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,11,0)
 #include <linux/sched.h>
+#else
+#include <linux/sched/signal.h>
+#endif
+
 #include <linux/rwsem.h>
 #include <linux/dma-mapping.h>
 #include <linux/pagemap.h>
