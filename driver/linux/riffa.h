@@ -85,8 +85,8 @@ void fpga_close(fpga_t * fpga);
  * On success, returns the number of words sent. On error returns a negative 
  * value. 
  */
-int fpga_send(fpga_t * fpga, int chnl, void * data, int len, int destoff, 
-	int last, long long timeout);
+//int fpga_send(fpga_t * fpga, int chnl, void * data, int len, int destoff, int last, long long timeout);
+void* fpga_send(void * arg);
 
 /**
  * Receives data from the FPGA channel chnl to the data pointer, using the 
@@ -103,7 +103,8 @@ int fpga_send(fpga_t * fpga, int chnl, void * data, int len, int destoff,
  * On success, returns the number of words written to the data array. On error 
  * returns a negative value. 
  */
-int fpga_recv(fpga_t * fpga, int chnl, void * data, int len, long long timeout);
+//int fpga_recv(fpga_t * fpga, int chnl, void * data, int len, long long timeout);
+void* fpga_recv(void * arg);
 
 /**
  * Resets the state of the FPGA and all transfers across all channels. This is

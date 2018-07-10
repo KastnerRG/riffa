@@ -85,7 +85,7 @@ define assert-variables
 endef
 
 all: builddvr
-debug: CC += -DDEBUG -g
+debug: CC += -DDEBUG -g -pthread
 debug: DBUGVAL = DEBUG
 debug: builddvr
 builddvr: $(NAME).ko $(NAME).so.$(LIB_VER)

@@ -51,7 +51,13 @@
 #include <linux/fs.h>
 #include <linux/pci.h>
 #include <linux/interrupt.h>
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,11,0)
 #include <linux/sched.h>
+#else
+#include <linux/sched/signal.h>
+#endif
+
 #include <linux/rwsem.h>
 #include <linux/dma-mapping.h>
 #include <linux/pagemap.h>
@@ -443,8 +449,10 @@ static inline struct sg_mapping * fill_sg_buf(struct fpga_state * sc, int chnl,
 		down_read(&current->mm->mmap_sem);
 		#if LINUX_VERSION_CODE < KERNEL_VERSION(4,6,0)
 		num_pages = get_user_pages(current, current->mm, udata, num_pages_reqd, 1, 0, pages, NULL);
-		#else
+		#elsif LINUX_VERSION_CODE < KERNEL_VERSION(4,9,0)
 		num_pages = get_user_pages(udata, num_pages_reqd, 1, 0, pages, NULL);
+		#else
+		num_pages = get_user_pages(udata, num_pages_reqd, FOLL_WRITE, pages, NULL);
 		#endif
 		up_read(&current->mm->mmap_sem);
 		if (num_pages <= 0) {
@@ -616,7 +624,7 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
 			}
 		}
 		tymeout = tymeouto;
-
+		printk(KERN_INFO "msg_type: %d\n", msg_type); // added by cheng fei
 		// Process the message.
 		switch (msg_type) {
 		case EVENT_TXN_OFFLAST:
@@ -1530,7 +1538,12 @@ static void __devexit fpga_remove(struct pci_dev *dev)
 // MODULE INIT/EXIT FUNCTIONS
 ///////////////////////////////////////////////////////
 
-static DEFINE_PCI_DEVICE_TABLE(fpga_ids) = {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,8,0)
+static DEFINE_PCI_DEVICE_TABLE(fpga_ids) =
+#else
+static const struct pci_device_id fpga_ids[] =
+#endif
+{
 	{PCI_DEVICE(VENDOR_ID0, PCI_ANY_ID)},
 	{PCI_DEVICE(VENDOR_ID1, PCI_ANY_ID)},
 	{0},
