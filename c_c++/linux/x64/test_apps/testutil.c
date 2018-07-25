@@ -181,7 +181,7 @@ int main(int argc, char** argv) {
 
 				unsigned int offset_for_sending = 0;
 				unsigned int is_last_send = 1;
-				unsigned int chnl_timeout = 25000;  // timeout is 5ms, for low-latency purpose, please see the description at http://xillybus.com/doc/xillybus-latency
+				unsigned int chnl_timeout = 5;  // timeout is 5ms, for low-latency purpose, please see the description at http://xillybus.com/doc/xillybus-latency
 
 				assert(tinfo != NULL); // null check
 
@@ -238,6 +238,8 @@ int main(int argc, char** argv) {
 					}
 					printf("Overall bandwidth: %f GBps\n\n", (double)BIRECTION*numWords*(double)BYTES_PER_WORD/(double)GIGA_CONVERSION/total_execution_time);
 				}
+				
+				if(numWords == maxWords) break; // last iteration, so exit the loop
 		}
 
 		// Done with device
