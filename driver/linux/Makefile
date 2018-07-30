@@ -139,6 +139,8 @@ install: $(NAME).so.$(LIB_VER) $(NAME).ko
 	ln -sf /usr/local/lib/lib$(NAME).so.$(LIB_VER) /usr/local/lib/lib$(NAME).so
 	ldconfig
 	depmod
+	make unload
+	make load
 
 uninstall: 
 	rm -f /usr/local/lib/lib$(NAME).so*
