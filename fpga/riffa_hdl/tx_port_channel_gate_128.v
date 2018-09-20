@@ -89,7 +89,7 @@ module tx_port_channel_gate_128
     reg                             rOpen=0, _rOpen=0;
 
     assign CHNL_TX_ACK = rAck;
-    assign CHNL_TX_DATA_REN = (rOpen & !wFifoFull); // S_TXPORTGATE128_OPEN
+    assign CHNL_TX_DATA_REN = ((rState == `S_TXPORTGATE128_OPEN) && (!wFifoFull)); // (rOpen & !wFifoFull); 
 
     // Buffer the input signals that come from outside the tx_port.
     always @ (posedge CHNL_CLK) begin
