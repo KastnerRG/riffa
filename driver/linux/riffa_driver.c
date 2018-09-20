@@ -618,9 +618,9 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
 				break;
 			if (tymeout == 0) {
 				printk(KERN_ERR "riffa: fpga:%d chnl:%d, recv timed out\n", sc->id, chnl);
-				free_sg_buf(sc, sc->recv[chnl]->sg_map_0);
+				/*free_sg_buf(sc, sc->recv[chnl]->sg_map_0);
 				free_sg_buf(sc, sc->recv[chnl]->sg_map_1);
-				return (unsigned int)(recvd>>2);
+				return (unsigned int)(recvd>>2);*/
 			}
 		}
 		tymeout = tymeouto;
@@ -636,6 +636,7 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
 		case EVENT_TXN_LEN:
 			// Read the length
 			length = (((unsigned long long)msg)<<2);
+			//length = tx_len;
 			recvd = 0;
 			overflow = 0;
 			// Check for address overflow
@@ -815,6 +816,12 @@ static inline unsigned int chnl_send(struct fpga_state * sc, int chnl,
 	length -= sg_map->length;
 	sc->send[chnl]->sg_map_1 = sg_map;
 
+	DEBUG_MSG(KERN_INFO "prepare_to_wait(&sc->send[chnl]->waitq, &wait, TASK_UNINTERRUPTIBLE);\n");
+	prepare_to_wait(&sc->send[chnl]->waitq, &wait, TASK_UNINTERRUPTIBLE); // unintteruptible such that user thread schduler does not screw up the following schedule_timeout()
+	schedule_timeout(tymeout);
+	finish_wait(&sc->send[chnl]->waitq, &wait);
+	DEBUG_MSG(KERN_INFO "finish_wait(&sc->send[chnl]->waitq, &wait);\n");
+
 	// Let FPGA know about the scatter gather buffer.
 	write_reg(sc, CHNL_REG(chnl, RX_SG_ADDR_LO_REG_OFF), (sc->send[chnl]->buf_hw_addr & 0xFFFFFFFF));
 	write_reg(sc, CHNL_REG(chnl, RX_SG_ADDR_HI_REG_OFF), ((sc->send[chnl]->buf_hw_addr>>32) & 0xFFFFFFFF));
@@ -838,9 +845,9 @@ static inline unsigned int chnl_send(struct fpga_state * sc, int chnl,
 				break;
 			if (tymeout == 0) {
 				printk(KERN_ERR "riffa: fpga:%d chnl:%d, send timed out\n", sc->id, chnl);
-				free_sg_buf(sc, sc->send[chnl]->sg_map_0);
+				/*free_sg_buf(sc, sc->send[chnl]->sg_map_0);
 				free_sg_buf(sc, sc->send[chnl]->sg_map_1);
-				return (unsigned int)(sent>>2);
+				return (unsigned int)(sent>>2);*/
 			}
 		}
 		tymeout = tymeouto;
@@ -1611,4 +1618,3 @@ static void __exit fpga_exit(void)
 
 module_init(fpga_init);
 module_exit(fpga_exit);
-
