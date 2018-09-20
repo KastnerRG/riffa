@@ -82,6 +82,7 @@ reg [C_PCI_DATA_WIDTH-1:0] tData={C_PCI_DATA_WIDTH{1'b0}};
 
 reg [31:0] rCount=0;
 reg [31:0] tCount=0;
+reg [31:0] tCount_prev=0;
 reg [1:0] rState=0;   // Receiver states
 reg [1:0] tState=0;   // Transmitter states
 reg TX_IN_PROGRESS = 0;
@@ -91,7 +92,7 @@ assign CHNL_RX_ACK = (rState == 2'd1);
 assign CHNL_RX_DATA_REN = (rState == 2'd1); 
 
 assign CHNL_TX_CLK = CLK;
-assign CHNL_TX = (CHNL_RX_DATA_REN & CHNL_RX_DATA_VALID) | TX_IN_PROGRESS;   //  modify the CHNL_TX timing such that (assertion of both CHNL_TX_DATA_REN and CHNL_TX_DATA_VALID signals) are aligned "RIGHT AFTER (not until after all data had been received)" (assertion of both CHNL_RX_DATA_REN and CHNL_RX_DATA_VALID signals).  Please refer to https://i.imgur.com/9a1AYiZ.png (Rx and Tx control signals are not overlapping)
+assign CHNL_TX = (CHNL_RX && !CHNL_RX_DATA_VALID && (tCount_prev != CHNL_TX_LEN)) || (CHNL_RX_DATA_REN && CHNL_RX_DATA_VALID) || TX_IN_PROGRESS;   //  modify the CHNL_TX timing such that (assertion of both CHNL_TX_DATA_REN and CHNL_TX_DATA_VALID signals) are aligned "RIGHT AFTER (not until after all data had been received)" (assertion of both CHNL_RX_DATA_REN and CHNL_RX_DATA_VALID signals).  Please refer to https://i.imgur.com/9a1AYiZ.png (Rx and Tx control signals are not overlapping)
 assign CHNL_TX_LAST = 1'd1;
 assign CHNL_TX_LEN = CHNL_RX_LEN; // in words
 assign CHNL_TX_OFF = 0;
@@ -150,6 +151,8 @@ always @(posedge CLK) begin  // have to modify the logic flow for this always bl
 	tData <= data_reg;	
 end
 
+always @(posedge CLK) tCount_prev <= tCount;
+
 always @(posedge CLK) begin
 
 	if (RST) begin
@@ -164,7 +167,7 @@ always @(posedge CLK) begin
 			2'd0: begin // Prepare for TX
 				if(CHNL_TX) begin   // linux driver replied that it is ready for the first piece of data again after acknowledging it can receive the first piece of data (this piece of data is not consumed by linux driver yet until next state). Please refer to Tx timing diagram at http://riffa.ucsd.edu/node/3
 					tState <= #1 2'd1;
-					tCount <= #1 (C_PCI_DATA_WIDTH/32);
+					tCount <= #1 0; //(C_PCI_DATA_WIDTH/32);
 					TX_IN_PROGRESS <=#1 1;  // continues to assert "CHNL_TX" signal until the assertion of "CHNL_TX_ACK"signal
 				end
 			end
