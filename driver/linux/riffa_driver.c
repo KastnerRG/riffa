@@ -131,6 +131,8 @@ static dev_t devt;
 static atomic_t used_fpgas[NUM_FPGAS];
 static struct fpga_state * fpgas[NUM_FPGAS];
 
+static unsigned int tx_len;
+
 ///////////////////////////////////////////////////////
 // MEMORY ALLOCATION & HELPER FUNCTIONS
 ///////////////////////////////////////////////////////
@@ -320,15 +322,15 @@ static inline void process_intr_vector(struct fpga_state * sc, int off,
 			recv = 1; 
 			// Read the offset/last and length
 			offlast = read_reg(sc, CHNL_REG(chnl, TX_OFFLAST_REG_OFF));
-			len = read_reg(sc, CHNL_REG(chnl, TX_LEN_REG_OFF));
+			tx_len = read_reg(sc, CHNL_REG(chnl, TX_LEN_REG_OFF));
 			// Keep track of this transaction
 			if (push_circ_queue(sc->recv[chnl]->msgs, EVENT_TXN_OFFLAST, offlast)) {
 				printk(KERN_ERR "riffa: fpga:%d chnl:%d, recv txn offlast msg queue full\n", sc->id, chnl);
 			}
-			if (push_circ_queue(sc->recv[chnl]->msgs, EVENT_TXN_LEN, len)) {
+			/*if (push_circ_queue(sc->recv[chnl]->msgs, EVENT_TXN_LEN, len)) {
 				printk(KERN_ERR "riffa: fpga:%d chnl:%d, recv txn len msg queue full\n", sc->id, chnl);
-			}
-			DEBUG_MSG(KERN_INFO "riffa: fpga:%d chnl:%d, recv txn (len:%d off:%d last:%d)\n", sc->id, chnl, len, (offlast>>1), (offlast & 0x1));
+			}*/
+			DEBUG_MSG(KERN_INFO "riffa: fpga:%d chnl:%d, recv txn (len:%d off:%d last:%d)\n", sc->id, chnl, tx_len, (offlast>>1), (offlast & 0x1));
 		}
 
 		// RX (PC send) scatter gather buffer is read.
@@ -624,19 +626,19 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
 			}
 		}
 		tymeout = tymeouto;
-		printk(KERN_INFO "msg_type: %d\n", msg_type); // added by cheng fei
+		DEBUG_MSG(KERN_INFO "msg_type: %d\n", msg_type); // added by cheng fei
 		// Process the message.
 		switch (msg_type) {
 		case EVENT_TXN_OFFLAST:
 			// Read the offset and last flags (always before reading length)
 			offset = (((unsigned long long)(msg>>1))<<2);
 			last = (msg & 0x1);
-			break;
+			//break;
 
-		case EVENT_TXN_LEN:
+		//case EVENT_TXN_LEN:
 			// Read the length
-			length = (((unsigned long long)msg)<<2);
-			//length = tx_len;
+			//length = (((unsigned long long)msg)<<2);
+			length = tx_len << 2;
 			recvd = 0;
 			overflow = 0;
 			// Check for address overflow
@@ -818,7 +820,7 @@ static inline unsigned int chnl_send(struct fpga_state * sc, int chnl,
 
 	DEBUG_MSG(KERN_INFO "prepare_to_wait(&sc->send[chnl]->waitq, &wait, TASK_UNINTERRUPTIBLE);\n");
 	prepare_to_wait(&sc->send[chnl]->waitq, &wait, TASK_UNINTERRUPTIBLE); // unintteruptible such that user thread schduler does not screw up the following schedule_timeout()
-	schedule_timeout(tymeout);
+	schedule_timeout(tymeout);  // gives time for software chnl_recv() thread to populate recv sg buf parameter
 	finish_wait(&sc->send[chnl]->waitq, &wait);
 	DEBUG_MSG(KERN_INFO "finish_wait(&sc->send[chnl]->waitq, &wait);\n");
 
