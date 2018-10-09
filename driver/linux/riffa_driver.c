@@ -132,6 +132,7 @@ static atomic_t used_fpgas[NUM_FPGAS];
 static struct fpga_state * fpgas[NUM_FPGAS];
 
 static unsigned int tx_len;
+static bool recv_sg_buf_populated;
 
 ///////////////////////////////////////////////////////
 // MEMORY ALLOCATION & HELPER FUNCTIONS
@@ -320,6 +321,8 @@ static inline void process_intr_vector(struct fpga_state * sc, int off,
 		// New TX (PC receive) transaction.
 		if (vect & (1<<((5*i)+0))) { 
 			recv = 1; 
+			recv_sg_buf_populated = 0; // resets for new transaction
+
 			// Read the offset/last and length
 			offlast = read_reg(sc, CHNL_REG(chnl, TX_OFFLAST_REG_OFF));
 			tx_len = read_reg(sc, CHNL_REG(chnl, TX_LEN_REG_OFF));
@@ -674,7 +677,13 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
 				write_reg(sc, CHNL_REG(chnl, TX_SG_ADDR_LO_REG_OFF), (sc->recv[chnl]->buf_hw_addr & 0xFFFFFFFF));
 				write_reg(sc, CHNL_REG(chnl, TX_SG_ADDR_HI_REG_OFF), ((sc->recv[chnl]->buf_hw_addr>>32) & 0xFFFFFFFF));
 				write_reg(sc, CHNL_REG(chnl, TX_SG_LEN_REG_OFF), 4 * sg_map->num_sg);
+
+				recv_sg_buf_populated = 1;
+				
 				DEBUG_MSG(KERN_INFO "riffa: fpga:%d chnl:%d, recv sg buf populated, %d sent\n", sc->id, chnl, sg_map->num_sg);
+
+				wake_up(&sc->send[chnl]->waitq);  // https://elixir.bootlin.com/linux/v4.19-rc7/source/include/linux/wait.h#L476  
+				// The @condition is checked each time the waitqueue @wq_head is woken up. wake_up() has to be called after changing any variable that could change the result of the wait condition.
 			}
 			break;
 
@@ -709,6 +718,8 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
 			break;
 
 		case EVENT_TXN_DONE:
+			recv_sg_buf_populated = 0; // resets recv sg buf parameters for next transaction.
+
 			// Ignore if we haven't received offlast/len.
 			if (last == -1)
 				break;
@@ -818,11 +829,11 @@ static inline unsigned int chnl_send(struct fpga_state * sc, int chnl,
 	length -= sg_map->length;
 	sc->send[chnl]->sg_map_1 = sg_map;
 
-	DEBUG_MSG(KERN_INFO "prepare_to_wait(&sc->send[chnl]->waitq, &wait, TASK_UNINTERRUPTIBLE);\n");
-	prepare_to_wait(&sc->send[chnl]->waitq, &wait, TASK_UNINTERRUPTIBLE); // unintteruptible such that user thread schduler does not screw up the following schedule_timeout()
-	schedule_timeout(tymeout);  // gives time for software chnl_recv() thread to populate recv sg buf parameter
-	finish_wait(&sc->send[chnl]->waitq, &wait);
-	DEBUG_MSG(KERN_INFO "finish_wait(&sc->send[chnl]->waitq, &wait);\n");
+	if(tx_len > 0) { // FPGA initiates new Tx transaction, so "yield" to software chnl_recv() thread
+		
+		// gives time for software chnl_recv() thread to populate recv sg buf parameter
+		wait_event_interruptible_timeout(sc->send[chnl]->waitq, (recv_sg_buf_populated == 1), timeout);
+	}
 
 	// Let FPGA know about the scatter gather buffer.
 	write_reg(sc, CHNL_REG(chnl, RX_SG_ADDR_LO_REG_OFF), (sc->send[chnl]->buf_hw_addr & 0xFFFFFFFF));
