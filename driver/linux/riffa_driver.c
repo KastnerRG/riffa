@@ -1006,6 +1006,13 @@ static inline void reset(int id)
 		for (i = 0; i < sc->num_chnls; ++i) {
 			while (!pop_circ_queue(sc->send[i]->msgs, &dummy0, &dummy1));
 			while (!pop_circ_queue(sc->recv[i]->msgs, &dummy0, &dummy1));
+			
+			// resets read and write pointers of the circular queue
+			atomic_set(&sc->recv[i]->msgs->writeIndex, 0);
+			atomic_set(&sc->recv[i]->msgs->readIndex, 0);
+			atomic_set(&sc->send[i]->msgs->writeIndex, 0);
+			atomic_set(&sc->send[i]->msgs->readIndex, 0);
+			
 			wake_up(&sc->send[i]->waitq);
 			wake_up(&sc->recv[i]->waitq);
 			clear_bit(CHNL_FLAG_BUSY, &sc->send[i]->flags);
