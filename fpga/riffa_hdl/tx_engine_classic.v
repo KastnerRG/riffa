@@ -74,17 +74,17 @@ module tx_engine_classic
      output [C_PCI_DATA_WIDTH-1:0]            TX_TLP,
      output                                   TX_TLP_VALID,
      output                                   TX_TLP_START_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_START_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_START_OFFSET,
      output                                   TX_TLP_END_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_END_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_END_OFFSET,
 
      // Interface: TXC Engine
      input                                    TXC_DATA_VALID,
      input [C_PCI_DATA_WIDTH-1:0]             TXC_DATA,
      input                                    TXC_DATA_START_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_DATA_START_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_DATA_START_OFFSET,
      input                                    TXC_DATA_END_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_DATA_END_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_DATA_END_OFFSET,
      output                                   TXC_DATA_READY,
 
      input                                    TXC_META_VALID,
@@ -106,9 +106,9 @@ module tx_engine_classic
      input                                    TXR_DATA_VALID,
      input [C_PCI_DATA_WIDTH-1:0]             TXR_DATA,
      input                                    TXR_DATA_START_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_DATA_START_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_DATA_START_OFFSET,
      input                                    TXR_DATA_END_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_DATA_END_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_DATA_END_OFFSET,
      output                                   TXR_DATA_READY,
 
      input                                    TXR_META_VALID,
@@ -134,26 +134,26 @@ module tx_engine_classic
     wire [C_PCI_DATA_WIDTH-1:0]               _TXR_DATA;
     wire [C_PCI_DATA_WIDTH-1:0]               wTxcTlp;
     wire                                      wTxcTlpEndFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxcTlpEndOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxcTlpEndOffset;
     wire                                      wTxcTlpReady;
     wire                                      wTxcTlpStartFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxcTlpStartOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxcTlpStartOffset;
     wire                                      wTxcTlpValid;
 
     wire [C_PCI_DATA_WIDTH-1:0]               wTxrTlp;
     wire                                      wTxrTlpEndFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxrTlpEndOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxrTlpEndOffset;
     wire                                      wTxrTlpReady;
     wire                                      wTxrTlpStartFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxrTlpStartOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxrTlpStartOffset;
     wire                                      wTxrTlpValid;
 
     wire [C_PCI_DATA_WIDTH-1:0]               wTxTlp;
     wire                                      wTxTlpEndFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxTlpEndOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxTlpEndOffset;
     wire                                      wTxTlpReady;
     wire                                      wTxTlpStartFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxTlpStartOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxTlpStartOffset;
     wire                                      wTxTlpValid;
 
     wire                                      wDoneTxcEngRst;
@@ -228,9 +228,9 @@ module tx_engine_classic
          .TXC_TLP                       (wTxcTlp[C_PCI_DATA_WIDTH-1:0] ),
          .TXC_TLP_VALID                 (wTxcTlpValid),
          .TXC_TLP_START_FLAG            (wTxcTlpStartFlag),
-         .TXC_TLP_START_OFFSET          (wTxcTlpStartOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXC_TLP_START_OFFSET          (wTxcTlpStartOffset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXC_TLP_END_FLAG              (wTxcTlpEndFlag),
-         .TXC_TLP_END_OFFSET            (wTxcTlpEndOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXC_TLP_END_OFFSET            (wTxcTlpEndOffset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .DONE_TXC_RST                  (wDoneTxcEngRst),
          // Inputs
          .TXC_TLP_READY                 (wTxcTlpReady),
@@ -245,9 +245,9 @@ module tx_engine_classic
          .CONFIG_COMPLETER_ID           (CONFIG_COMPLETER_ID[`SIG_CPLID_W-1:0]),
          .TXC_DATA_VALID                (TXC_DATA_VALID),
          .TXC_DATA_START_FLAG           (TXC_DATA_START_FLAG),
-         .TXC_DATA_START_OFFSET         (TXC_DATA_START_OFFSET[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXC_DATA_START_OFFSET         (TXC_DATA_START_OFFSET[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXC_DATA_END_FLAG             (TXC_DATA_END_FLAG),
-         .TXC_DATA_END_OFFSET           (TXC_DATA_END_OFFSET[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXC_DATA_END_OFFSET           (TXC_DATA_END_OFFSET[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXC_META_VALID                (TXC_META_VALID),
          .TXC_META_FDWBE                (TXC_META_FDWBE[`SIG_FBE_W-1:0]),
          .TXC_META_LDWBE                (TXC_META_LDWBE[`SIG_LBE_W-1:0]),
@@ -275,9 +275,9 @@ module tx_engine_classic
          .TXR_TLP                       (wTxrTlp[C_PCI_DATA_WIDTH-1:0]),
          .TXR_TLP_VALID                 (wTxrTlpValid),
          .TXR_TLP_START_FLAG            (wTxrTlpStartFlag),
-         .TXR_TLP_START_OFFSET          (wTxrTlpStartOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXR_TLP_START_OFFSET          (wTxrTlpStartOffset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXR_TLP_END_FLAG              (wTxrTlpEndFlag),
-         .TXR_TLP_END_OFFSET            (wTxrTlpEndOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXR_TLP_END_OFFSET            (wTxrTlpEndOffset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXR_DATA                      (_TXR_DATA[C_PCI_DATA_WIDTH-1:0]),
          .DONE_TXR_RST                  (wDoneTxrEngRst),
          // Inputs
@@ -292,9 +292,9 @@ module tx_engine_classic
          .CONFIG_COMPLETER_ID           (CONFIG_COMPLETER_ID[`SIG_CPLID_W-1:0]),
          .TXR_DATA_VALID                (TXR_DATA_VALID),
          .TXR_DATA_START_FLAG           (TXR_DATA_START_FLAG),
-         .TXR_DATA_START_OFFSET         (TXR_DATA_START_OFFSET[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXR_DATA_START_OFFSET         (TXR_DATA_START_OFFSET[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXR_DATA_END_FLAG             (TXR_DATA_END_FLAG),
-         .TXR_DATA_END_OFFSET           (TXR_DATA_END_OFFSET[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXR_DATA_END_OFFSET           (TXR_DATA_END_OFFSET[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXR_META_VALID                (TXR_META_VALID),
          .TXR_META_FDWBE                (TXR_META_FDWBE[`SIG_FBE_W-1:0]),
          .TXR_META_LDWBE                (TXR_META_LDWBE[`SIG_LBE_W-1:0]),
@@ -319,15 +319,15 @@ module tx_engine_classic
          .TXC_TLP                       (wTxcTlp[C_PCI_DATA_WIDTH-1:0]),
          .TXC_TLP_VALID                 (wTxcTlpValid),
          .TXC_TLP_START_FLAG            (wTxcTlpStartFlag),
-         .TXC_TLP_START_OFFSET          (wTxcTlpStartOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXC_TLP_START_OFFSET          (wTxcTlpStartOffset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXC_TLP_END_FLAG              (wTxcTlpEndFlag),
-         .TXC_TLP_END_OFFSET            (wTxcTlpEndOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXC_TLP_END_OFFSET            (wTxcTlpEndOffset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXR_TLP                       (wTxrTlp[C_PCI_DATA_WIDTH-1:0]),
          .TXR_TLP_VALID                 (wTxrTlpValid),
          .TXR_TLP_START_FLAG            (wTxrTlpStartFlag),
-         .TXR_TLP_START_OFFSET          (wTxrTlpStartOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXR_TLP_START_OFFSET          (wTxrTlpStartOffset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXR_TLP_END_FLAG              (wTxrTlpEndFlag),
-         .TXR_TLP_END_OFFSET            (wTxrTlpEndOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXR_TLP_END_OFFSET            (wTxrTlpEndOffset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .RST_IN                        (wRstEng),
          // Outputs
          .TXC_TLP_READY                 (wTxcTlpReady),
@@ -335,9 +335,9 @@ module tx_engine_classic
          .TX_TLP                        (wTxTlp[C_PCI_DATA_WIDTH-1:0]),
          .TX_TLP_VALID                  (wTxTlpValid),
          .TX_TLP_START_FLAG             (wTxTlpStartFlag),
-         .TX_TLP_START_OFFSET           (wTxTlpStartOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TX_TLP_START_OFFSET           (wTxTlpStartOffset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TX_TLP_END_FLAG               (wTxTlpEndFlag),
-         .TX_TLP_END_OFFSET             (wTxTlpEndOffset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TX_TLP_END_OFFSET             (wTxTlpEndOffset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TX_TLP_READY                  (wTxTlpReady),
          /*AUTOINST*/
          // Inputs
@@ -381,7 +381,7 @@ module tx_engine_classic
         #(// Parameters
           .C_DEPTH                      (1),
           .C_WIDTH                      (C_PCI_DATA_WIDTH + 
-                                         2*(1 + clog2s(C_PCI_DATA_WIDTH/32))),
+                                         2*(1 + `clog2s(C_PCI_DATA_WIDTH/32))),
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     output_reg_inst
@@ -450,17 +450,17 @@ module tx_mux
      output                                   TXC_TLP_READY,
      input                                    TXC_TLP_VALID,
      input                                    TXC_TLP_START_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_TLP_START_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_TLP_START_OFFSET,
      input                                    TXC_TLP_END_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_TLP_END_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_TLP_END_OFFSET,
 
      // Interface: TXR
      input [C_PCI_DATA_WIDTH-1:0]             TXR_TLP,
      input                                    TXR_TLP_VALID,
      input                                    TXR_TLP_START_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_TLP_START_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_TLP_START_OFFSET,
      input                                    TXR_TLP_END_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_TLP_END_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_TLP_END_OFFSET,
      output                                   TXR_TLP_READY,
 
      // Interface: TX Classic
@@ -468,11 +468,11 @@ module tx_mux
      output [C_PCI_DATA_WIDTH-1:0]            TX_TLP,
      output                                   TX_TLP_VALID,
      output                                   TX_TLP_START_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_START_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_START_OFFSET,
      output                                   TX_TLP_END_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_END_OFFSET);
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_END_OFFSET);
     
-    localparam C_WIDTH = (C_PCI_DATA_WIDTH + 2 * (clog2s(C_PCI_DATA_WIDTH/32) + 1));
+    localparam C_WIDTH = (C_PCI_DATA_WIDTH + 2 * (`clog2s(C_PCI_DATA_WIDTH/32) + 1));
     localparam C_TXC_PRIORITY = 1;
     localparam C_TXR_PRIORITY = 2;
     /*AUTOWIRE*/
@@ -484,26 +484,26 @@ module tx_mux
     wire                                      wTxcTlpReady;
     wire                                      wTxcTlpValid;
     wire                                      wTxcTlpStartFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxcTlpStartOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxcTlpStartOffset;
     wire                                      wTxcTlpEndFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxcTlpEndOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxcTlpEndOffset;
 
     wire [C_PCI_DATA_WIDTH-1:0]               wTxrTlp;
     wire                                      wTxrTlpReady;
     wire                                      wTxrTlpValid;
     wire                                      wTxrTlpStartFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxrTlpStartOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxrTlpStartOffset;
     wire                                      wTxrTlpEndFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxrTlpEndOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxrTlpEndOffset;
 
     // Output of Mux to 
     wire [C_PCI_DATA_WIDTH-1:0]               wTxTlp;
     wire                                      wTxTlpReady;
     wire                                      wTxTlpValid;
     wire                                      wTxTlpStartFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxTlpStartOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxTlpStartOffset;
     wire                                      wTxTlpEndFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxTlpEndOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]    wTxTlpEndOffset;
 
     pipeline
         #(// Parameters
@@ -695,7 +695,7 @@ module tx_arbiter
     wire    wTxcReq;
     wire    wTxcDone;
 
-    reg [clog2s(C_NUM_STATES):0] rArbState,_rArbState;
+    reg [`clog2s(C_NUM_STATES):0] rArbState,_rArbState;
 
     reg                          rTxrLast,_rTxrLast; // Reset on RST_IN or TXC_TLP_READY
     reg                          rTxcLast,_rTxcLast; // Reset on RST_IN or TXR_TLP_READY
@@ -703,8 +703,8 @@ module tx_arbiter
     reg                          rTxrActive,_rTxrActive; // Reset on RST_IN or TXC_TLP_READY
     reg                          rTxcActive,_rTxcActive; // Reset on RST_IN or TXR_TLP_READY
 
-    reg [clog2s(C_TXC_PRIORITY)-1:0] rTxcCounter,_rTxcCounter; // Reset on RST_IN or TXC_TLP_READY
-    reg [clog2s(C_TXR_PRIORITY)-1:0] rTxrCounter,_rTxrCounter; // Reset on RST_IN or TXR_TLP_READY
+    reg [`clog2s(C_TXC_PRIORITY)-1:0] rTxcCounter,_rTxcCounter; // Reset on RST_IN or TXC_TLP_READY
+    reg [`clog2s(C_TXR_PRIORITY)-1:0] rTxrCounter,_rTxrCounter; // Reset on RST_IN or TXR_TLP_READY
 
     assign TXR_TLP_READY = wTxrGrant & TX_TLP_READY; // TODO: Not great
     assign wTxrReq = TXR_TLP_START_FLAG & TXR_TLP_VALID;
@@ -836,7 +836,7 @@ endmodule
 module tx_phi
     #(parameter C_PCI_DATA_WIDTH = 10'd128,
       parameter C_MUX_TYPE = "SHIFT",
-      parameter C_WIDTH = (C_PCI_DATA_WIDTH + 2 * (clog2s(C_PCI_DATA_WIDTH/32) + 1)))
+      parameter C_WIDTH = (C_PCI_DATA_WIDTH + 2 * (`clog2s(C_PCI_DATA_WIDTH/32) + 1)))
     (// Interface: Clocks
      input                                    CLK,
 
@@ -853,28 +853,28 @@ module tx_phi
      input [C_PCI_DATA_WIDTH-1:0]             TXC_TLP,
      input                                    TXC_TLP_VALID,
      input                                    TXC_TLP_START_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_TLP_START_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_TLP_START_OFFSET,
      input                                    TXC_TLP_END_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_TLP_END_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_TLP_END_OFFSET,
 
      // Interface: TXR
      input [C_PCI_DATA_WIDTH-1:0]             TXR_TLP,
      input                                    TXR_TLP_VALID,
      input                                    TXR_TLP_START_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_TLP_START_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_TLP_START_OFFSET,
      input                                    TXR_TLP_END_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_TLP_END_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_TLP_END_OFFSET,
 
      // Interface: TX Classic
      output [C_PCI_DATA_WIDTH-1:0]            TX_TLP,
      output                                   TX_TLP_VALID,
      output                                   TX_TLP_START_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_START_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_START_OFFSET,
      output                                   TX_TLP_END_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_END_OFFSET);
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0] TX_TLP_END_OFFSET);
 
     // Width = 2 * (DATA WIDTH + VALID + START FLAG + START OFFSET + END FLAG + END OFFSET)
-    localparam C_MUX_WIDTH = C_PCI_DATA_WIDTH + 3 + 2*clog2s(C_PCI_DATA_WIDTH/32);
+    localparam C_MUX_WIDTH = C_PCI_DATA_WIDTH + 3 + 2*`clog2s(C_PCI_DATA_WIDTH/32);
     
     wire [2*C_MUX_WIDTH-1:0]                  wAggregate;
 

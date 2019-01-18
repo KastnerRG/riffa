@@ -1,24 +1,24 @@
 // ----------------------------------------------------------------------
 // Copyright (c) 2016, The Regents of the University of California All
 // rights reserved.
-// 
+//
 // Redistribution and use in source and binary forms, with or without
 // modification, are permitted provided that the following conditions are
 // met:
-// 
+//
 //     * Redistributions of source code must retain the above copyright
 //       notice, this list of conditions and the following disclaimer.
-// 
+//
 //     * Redistributions in binary form must reproduce the above
 //       copyright notice, this list of conditions and the following
 //       disclaimer in the documentation and/or other materials provided
 //       with the distribution.
-// 
+//
 //     * Neither the name of The Regents of the University of California
 //       nor the names of its contributors may be used to endorse or
 //       promote products derived from this software without specific
 //       prior written permission.
-// 
+//
 // THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
 // "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
 // LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
@@ -54,19 +54,19 @@
 // value of wWrTxDataStartOffset. These registers are enabled when
 // wWrTxDataStartFlag is 1 and their value set based on the value of
 // wWrTxDataStartOffset.
-// 
+//
 // Each bit in the VALID bus is determined by the result of two masks,
 // wRdTxEndFlagMask and wRdTxStartFlagMask, to make wRdTxDataValid. The start flag
 // mask is active when wWrTxDataStartFlag is 1, based on wWrTxDataStartOffset. The
 // end flag mask is active when wWrTxDataEndFlag is 1, based on
 // wWrTxDataEndOffset.
-// 
-// TODO: 
+//
+// TODO:
 // - Using WORD_VALID is a little bit confusing. I should bring back VALID as well
 // - WORD_VALID should be DWORD_VALID
 // - Use a uniform naming scheme for C_DATA_WIDTH/32
 // - Is there a more efficient way to implement the wRdTxStartMaskFlag? Perhaps using the reset of a register?
-// Author: Dustin Richmond (@darichmond) 
+// Author: Dustin Richmond (@darichmond)
 //-----------------------------------------------------------------------------
 `timescale 1ns/1ns
 `include "trellis.vh"
@@ -88,9 +88,9 @@ module tx_data_shift
      input                               WR_TX_DATA_VALID,
      input [C_DATA_WIDTH-1:0]            WR_TX_DATA,
      input                               WR_TX_DATA_START_FLAG,
-     input [clog2s(C_DATA_WIDTH/32)-1:0] WR_TX_DATA_START_OFFSET,
+     input [`clog2s(C_DATA_WIDTH/32)-1:0] WR_TX_DATA_START_OFFSET,
      input                               WR_TX_DATA_END_FLAG,
-     input [clog2s(C_DATA_WIDTH/32)-1:0] WR_TX_DATA_END_OFFSET,
+     input [`clog2s(C_DATA_WIDTH/32)-1:0] WR_TX_DATA_END_OFFSET,
      output                              WR_TX_DATA_READY,
 
      // Interface: RD TX DATA
@@ -101,20 +101,20 @@ module tx_data_shift
      output [(C_DATA_WIDTH/32)-1:0]      RD_TX_DATA_END_FLAGS,
      output                              RD_TX_DATA_VALID
      );
-    localparam C_ROTATE_BITS = clog2s(C_DATA_WIDTH/32);
+    localparam C_ROTATE_BITS = `clog2s(C_DATA_WIDTH/32);
     localparam C_NUM_MUXES = (C_DATA_WIDTH/32);
     localparam C_SELECT_WIDTH = C_DATA_WIDTH/32;
     localparam C_MASK_WIDTH = C_DATA_WIDTH/32;
     localparam C_AGGREGATE_WIDTH = C_DATA_WIDTH;
-    
+
     genvar                               i;
 
     wire                                 wWrTxDataValid;
     wire [C_DATA_WIDTH-1:0]              wWrTxData;
     wire                                 wWrTxDataStartFlag;
-    wire [clog2s(C_DATA_WIDTH/32)-1:0]   wWrTxDataStartOffset;
+    wire [`clog2s(C_DATA_WIDTH/32)-1:0]  wWrTxDataStartOffset;
     wire                                 wWrTxDataEndFlag;
-    wire [clog2s(C_DATA_WIDTH/32)-1:0]   wWrTxDataEndOffset;
+    wire [`clog2s(C_DATA_WIDTH/32)-1:0]  wWrTxDataEndOffset;
     wire [(C_DATA_WIDTH/32)-1:0]         wWrTxEndFlagMask;
     wire [(C_DATA_WIDTH/32)-1:0]         wWrTxDataEndFlags;
     wire                                 wWrTxDataReady;
@@ -130,17 +130,17 @@ module tx_data_shift
 
     // wSelectDefault is the default select value for each mux, 1 << i where i
     // is the mux/dword index.
-    wire [C_SELECT_WIDTH-1:0]            wSelectDefault[C_NUM_MUXES-1:0]; 
+    wire [C_SELECT_WIDTH-1:0]            wSelectDefault[C_NUM_MUXES-1:0];
     // wSelectRotated is the value the select for each mux after the data's
     // start offset has been applied and until the end flag is seen.
     wire [C_SELECT_WIDTH-1:0]            wSelectRotated[C_NUM_MUXES-1:0];
 
     reg [C_SELECT_WIDTH-1:0]             rMuxSelect[C_NUM_MUXES-1:0],_rMuxSelect[C_NUM_MUXES-1:0];
-    reg [clog2s(C_DATA_WIDTH/32)-1:0]    rStartOffset,_rStartOffset;
+    reg [`clog2s(C_DATA_WIDTH/32)-1:0]    rStartOffset,_rStartOffset;
 
     assign wWrTxDataReady = wRdTxDataReady;
 
-    assign wRdTxStartFlagMask = wWrTxDataStartFlag ? 
+    assign wRdTxStartFlagMask = wWrTxDataStartFlag ?
                                 {(C_DATA_WIDTH/32){1'b1}} >> wWrTxDataStartOffset:
                                 {(C_DATA_WIDTH/32){1'b1}};
     assign wRdTxDataWordValid = wRdTxEndFlagMask & wRdTxStartFlagMask;
@@ -176,10 +176,10 @@ module tx_data_shift
             end
         end
     endgenerate
-    
+
     pipeline
         #(// Parameters
-          .C_WIDTH                      (C_DATA_WIDTH+2*(1+clog2s(C_DATA_WIDTH/32))),
+          .C_WIDTH                      (C_DATA_WIDTH+2*(1+`clog2s(C_DATA_WIDTH/32))),
           .C_USE_MEMORY                 (0),
           .C_DEPTH                      (C_PIPELINE_INPUT?1:0)
           /*AUTOINSTPARAM*/)
@@ -198,7 +198,7 @@ module tx_data_shift
          // Inputs
          .CLK                           (CLK),
          .RST_IN                        (RST_IN));
-    
+
     // The pipeline carries the data bus and SOF/EOF.
     pipeline
         #(// Parameters
@@ -249,7 +249,7 @@ module tx_data_shift
          .RD_DATA                       (wRdTxEndFlagMask),
          // Inputs
          .WR_DATA                       (wWrTxEndFlagMask),
-         .WR_SHIFTAMT                   (rStartOffset[clog2s(C_DATA_WIDTH/32)-1:0])
+         .WR_SHIFTAMT                   (rStartOffset[`clog2s(C_DATA_WIDTH/32)-1:0])
          /*AUTOINST*/);
 
     // Determine the 1-hot dword end flag
@@ -262,7 +262,7 @@ module tx_data_shift
          // Outputs
          .RD_ONE_HOT                    (wWrTxDataEndFlags),
          // Inputs
-         .WR_OFFSET                     (wWrTxDataEndOffset[clog2s(C_DATA_WIDTH/32)-1:0]),
+         .WR_OFFSET                     (wWrTxDataEndOffset[`clog2s(C_DATA_WIDTH/32)-1:0]),
          .WR_FLAG                       (wWrTxDataEndFlag)
          /*AUTOINST*/);
 
@@ -278,7 +278,7 @@ module tx_data_shift
          .RD_DATA                       (wRdTxDataEndFlags),
          // Inputs
          .WR_DATA                       (wWrTxDataEndFlags),
-         .WR_SHIFTAMT                   (rStartOffset[clog2s(C_DATA_WIDTH/32)-1:0])
+         .WR_SHIFTAMT                   (rStartOffset[`clog2s(C_DATA_WIDTH/32)-1:0])
          /*AUTOINST*/);
 
     generate
@@ -322,5 +322,4 @@ module tx_data_shift
 endmodule
 // Local Variables:
 // verilog-library-directories:("." "../../../common/" "../../common/")
-// End:    
-
+// End:

@@ -64,7 +64,7 @@ module rx_port_reader #(
 	parameter C_FIFO_DEPTH = 1024,
 	parameter C_MAX_READ_REQ = 2,				// Max read: 000=128B, 001=256B, 010=512B, 011=1024B, 100=2048B, 101=4096B
 	// Local parameters
-	parameter C_DATA_WORD_WIDTH = clog2((C_DATA_WIDTH/32)+1),
+	parameter C_DATA_WORD_WIDTH = $clog2((C_DATA_WIDTH/32)+1),
 	parameter C_FIFO_WORDS = (C_DATA_WIDTH/32)*C_FIFO_DEPTH
 )
 (

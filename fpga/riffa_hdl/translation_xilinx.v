@@ -98,9 +98,9 @@ module translation_xilinx
      output [C_PCI_DATA_WIDTH-1:0]            RX_TLP,
      output                                   RX_TLP_VALID,
      output                                   RX_TLP_START_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] RX_TLP_START_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0] RX_TLP_START_OFFSET,
      output                                   RX_TLP_END_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] RX_TLP_END_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0] RX_TLP_END_OFFSET,
      output [`SIG_BARDECODE_W-1:0]            RX_TLP_BAR_DECODE,
      input                                    RX_TLP_READY,
 
@@ -109,9 +109,9 @@ module translation_xilinx
      input [C_PCI_DATA_WIDTH-1:0]             TX_TLP,
      input                                    TX_TLP_VALID,
      input                                    TX_TLP_START_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TX_TLP_START_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TX_TLP_START_OFFSET,
      input                                    TX_TLP_END_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TX_TLP_END_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TX_TLP_END_OFFSET,
 
      // Interface: Configuration
      output [`SIG_CPLID_W-1:0]                CONFIG_COMPLETER_ID,
@@ -196,13 +196,13 @@ module translation_xilinx
     generate
         if (C_PCI_DATA_WIDTH == 9'd32) begin : gen_xilinx_32
             assign RX_TLP_START_FLAG = ~rRxTlpValid | rRxTlpEndFlag;
-            assign RX_TLP_START_OFFSET = {clog2s(C_PCI_DATA_WIDTH/32){1'b0}};
+            assign RX_TLP_START_OFFSET = {`clog2s(C_PCI_DATA_WIDTH/32){1'b0}};
             assign RX_TLP_END_OFFSET = 0;
             assign RX_TLP_END_FLAG = M_AXIS_RX_TLAST;
             assign S_AXIS_TX_TKEEP = 4'hF;
         end else if (C_PCI_DATA_WIDTH == 9'd64) begin : gen_xilinx_64
             assign RX_TLP_START_FLAG = ~rRxTlpValid | rRxTlpEndFlag;
-            assign RX_TLP_START_OFFSET = {clog2s(C_PCI_DATA_WIDTH/32){1'b0}};
+            assign RX_TLP_START_OFFSET = {`clog2s(C_PCI_DATA_WIDTH/32){1'b0}};
             assign RX_TLP_END_OFFSET = M_AXIS_RX_TKEEP[4];
             assign RX_TLP_END_FLAG = M_AXIS_RX_TLAST;
             assign S_AXIS_TX_TKEEP = {{4{TX_TLP_END_OFFSET | ~TX_TLP_END_FLAG}},4'hF};

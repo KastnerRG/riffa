@@ -122,7 +122,7 @@ module translation_altera
      );
     
     localparam C_ALTERA_TX_READY_LATENCY = 1;// TODO: HMmmmmm 2?
-    localparam C_OFFSET_WIDTH  = clog2s(C_PCI_DATA_WIDTH/32);
+    localparam C_OFFSET_WIDTH  = `clog2s(C_PCI_DATA_WIDTH/32);
 
     reg [C_PCI_DATA_WIDTH-1:0]      rRxStData;
     reg                             rRxStValid;

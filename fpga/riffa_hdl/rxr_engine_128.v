@@ -68,9 +68,9 @@ module rxr_engine_128
      output                                               RXR_DATA_VALID,
      output [(C_PCI_DATA_WIDTH/32)-1:0]                   RXR_DATA_WORD_ENABLE,
      output                                               RXR_DATA_START_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0]             RXR_DATA_START_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]             RXR_DATA_START_OFFSET,
      output                                               RXR_DATA_END_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0]             RXR_DATA_END_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]             RXR_DATA_END_OFFSET,
     
      output [`SIG_FBE_W-1:0]                              RXR_META_FDWBE,
      output [`SIG_LBE_W-1:0]                              RXR_META_LDWBE,
@@ -104,10 +104,10 @@ module rxr_engine_128
     localparam C_RX_HDR_STAGES = 1; // Specific to the Xilinx 128-bit RXR Engine
     localparam C_TOTAL_STAGES = C_RX_COMPUTATION_STAGES + C_RX_OUTPUT_STAGES + C_RX_INPUT_STAGES + C_RX_HDR_STAGES;
     
-    localparam C_OFFSET_WIDTH = clog2s(C_PCI_DATA_WIDTH/32);
+    localparam C_OFFSET_WIDTH = `clog2s(C_PCI_DATA_WIDTH/32);
     localparam C_STRADDLE_W = 64;
     localparam C_HDR_NOSTRADDLE_I = C_RX_INPUT_STAGES * C_PCI_DATA_WIDTH;
-    localparam C_OUTPUT_STAGE_WIDTH = (C_PCI_DATA_WIDTH/32) + 2 + clog2s(C_PCI_DATA_WIDTH/32) + 1 + `SIG_FBE_W + `SIG_LBE_W + `SIG_TC_W + `SIG_ATTR_W + `SIG_TAG_W + `SIG_TYPE_W + `SIG_ADDR_W + `SIG_BARDECODE_W + `SIG_REQID_W + `SIG_LEN_W;
+    localparam C_OUTPUT_STAGE_WIDTH = (C_PCI_DATA_WIDTH/32) + 2 + `clog2s(C_PCI_DATA_WIDTH/32) + 1 + `SIG_FBE_W + `SIG_LBE_W + `SIG_TC_W + `SIG_ATTR_W + `SIG_TAG_W + `SIG_TYPE_W + `SIG_ADDR_W + `SIG_BARDECODE_W + `SIG_REQID_W + `SIG_LEN_W;
 
     // Header Reg Inputs
     wire [`SIG_OFFSET_W-1:0]                              __wRxrStartOffset; 
@@ -174,9 +174,9 @@ module rxr_engine_128
     wire                                                  wRxrDataValid;
     wire [(C_PCI_DATA_WIDTH/32)-1:0]                      wRxrDataWordEnable;
     wire                                                  wRxrDataStartFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]                wRxrDataStartOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]                wRxrDataStartOffset;
     wire                                                  wRxrDataEndFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]                wRxrDataEndOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]                wRxrDataEndOffset;
     wire [`SIG_FBE_W-1:0]                                 wRxrMetaFdwbe;
     wire [`SIG_LBE_W-1:0]                                 wRxrMetaLdwbe;
     wire [`SIG_TC_W-1:0]                                  wRxrMetaTC;

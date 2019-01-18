@@ -70,9 +70,9 @@ module rxc_engine_classic
      output                                               RXC_DATA_VALID,
      output [(C_PCI_DATA_WIDTH/32)-1:0]                   RXC_DATA_WORD_ENABLE,
      output                                               RXC_DATA_START_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0]             RXC_DATA_START_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]             RXC_DATA_START_OFFSET,
      output                                               RXC_DATA_END_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0]             RXC_DATA_END_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]             RXC_DATA_END_OFFSET,
 
      output [`SIG_LBE_W-1:0]                              RXC_META_LDWBE,
      output [`SIG_FBE_W-1:0]                              RXC_META_FDWBE,
@@ -119,7 +119,7 @@ module rxc_engine_classic
     localparam C_RX_METADW1_INDEX = C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES + (`TLP_CPLMETADW1_I%C_PCI_DATA_WIDTH);
     localparam C_RX_METADW2_INDEX = C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES + (`TLP_CPLMETADW2_I%C_PCI_DATA_WIDTH);
 
-    localparam C_OFFSET_WIDTH = clog2s(C_PCI_DATA_WIDTH/32);
+    localparam C_OFFSET_WIDTH = `clog2s(C_PCI_DATA_WIDTH/32);
     localparam C_MAX_ABLANK_WIDTH = 32;
     localparam C_MAX_START_OFFSET = (`TLP_MAXHDR_W + C_MAX_ABLANK_WIDTH)/32;
     localparam C_STD_START_DELAY = (64/C_PCI_DATA_WIDTH);
@@ -132,7 +132,7 @@ module rxc_engine_classic
     wire [2:0]                                            wHdrLengthM1;
     wire [(C_PCI_DATA_WIDTH/32)-1:0]                      wEndMask;
     wire                                                  wEndFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]                wEndOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]                wEndOffset;
     wire [(C_PCI_DATA_WIDTH/32)-1:0]                      wStartMask;
     wire                                                  wStartFlag;
     wire                                                  _wStartFlag;
@@ -146,9 +146,9 @@ module rxc_engine_classic
     wire [95:0]                                           wRxcMetadata;
     wire                                                  wRxcDataValid;
     wire                                                  wRxcDataEndFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]                wRxcDataEndOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]                wRxcDataEndOffset;
     wire                                                  wRxcDataStartFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]                wRxcDataStartOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]                wRxcDataStartOffset;
     wire [(C_PCI_DATA_WIDTH/32)-1:0]                      wRxcDataWordEnable;
     wire [C_RX_PIPELINE_DEPTH:0]                          wRxSrSop;
 
@@ -404,7 +404,7 @@ module rxc_engine_classic
     pipeline
         #(// Parameters
           .C_DEPTH                      (C_RX_OUTPUT_STAGES),
-          .C_WIDTH                      (`TLP_CPLHDR_W + 2*(clog2s(C_PCI_DATA_WIDTH/32) + 1)),
+          .C_WIDTH                      (`TLP_CPLHDR_W + 2*(`clog2s(C_PCI_DATA_WIDTH/32) + 1)),
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     output_pipeline

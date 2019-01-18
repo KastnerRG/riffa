@@ -55,10 +55,10 @@ module registers
      input [C_PCI_DATA_WIDTH-1:0]              RXR_DATA,
      input                                     RXR_DATA_VALID,
      input                                     RXR_DATA_START_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]   RXR_DATA_START_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]   RXR_DATA_START_OFFSET,
      input [`SIG_FBE_W-1:0]                    RXR_META_FDWBE,
      input                                     RXR_DATA_END_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]   RXR_DATA_END_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]   RXR_DATA_END_OFFSET,
      input [`SIG_LBE_W-1:0]                    RXR_META_LDWBE,
      input [`SIG_TC_W-1:0]                     RXR_META_TC,
      input [`SIG_ATTR_W-1:0]                   RXR_META_ATTR,
@@ -73,9 +73,9 @@ module registers
      output                                    TXC_DATA_VALID,
      output [C_PCI_DATA_WIDTH-1:0]             TXC_DATA,
      output                                    TXC_DATA_START_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_DATA_START_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_DATA_START_OFFSET,
      output                                    TXC_DATA_END_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_DATA_END_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXC_DATA_END_OFFSET,
      input                                     TXC_DATA_READY,
     
      output                                    TXC_META_VALID,
@@ -128,8 +128,8 @@ module registers
     localparam C_FIELDS_WIDTH = 4;
     localparam C_OUTPUT_STAGES = C_PIPELINE_OUTPUT > 0 ? 1:0;
     localparam C_INPUT_STAGES = C_PIPELINE_INPUT > 0 ? 1:0;
-    localparam C_TXC_REGISTER_WIDTH = C_PCI_DATA_WIDTH + 2*(1 + clog2(C_PCI_DATA_WIDTH/32) + `SIG_FBE_W) + `SIG_LOWADDR_W + `SIG_TYPE_W + `SIG_LEN_W + `SIG_BYTECNT_W + `SIG_TAG_W + `SIG_REQID_W + `SIG_TC_W + `SIG_ATTR_W + 1;
-    localparam C_RXR_REGISTER_WIDTH = C_PCI_DATA_WIDTH + 2*(1 + clog2(C_PCI_DATA_WIDTH/32) + `SIG_FBE_W) + `SIG_ADDR_W + `SIG_TYPE_W + `SIG_LEN_W + `SIG_TAG_W + `SIG_REQID_W + `SIG_TC_W + `SIG_ATTR_W;
+    localparam C_TXC_REGISTER_WIDTH = C_PCI_DATA_WIDTH + 2*(1 + `clog2s(C_PCI_DATA_WIDTH/32) + `SIG_FBE_W) + `SIG_LOWADDR_W + `SIG_TYPE_W + `SIG_LEN_W + `SIG_BYTECNT_W + `SIG_TAG_W + `SIG_REQID_W + `SIG_TC_W + `SIG_ATTR_W + 1;
+    localparam C_RXR_REGISTER_WIDTH = C_PCI_DATA_WIDTH + 2*(1 + `clog2s(C_PCI_DATA_WIDTH/32) + `SIG_FBE_W) + `SIG_ADDR_W + `SIG_TYPE_W + `SIG_LEN_W + `SIG_TAG_W + `SIG_REQID_W + `SIG_TC_W + `SIG_ATTR_W;
     
     // The Mem/IO read/write address space should be at least 8 bits wide. This 
     // means we'll need at least 10 bits of BAR 0, at least 1024 bytes. The bottom
@@ -164,10 +164,10 @@ module registers
     wire [C_PCI_DATA_WIDTH-1:0]                wRxrData;
     wire                                       wRxrDataValid;
     wire                                       wRxrDataStartFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]     wRxrDataStartOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]     wRxrDataStartOffset;
     wire [`SIG_FBE_W-1:0]                      wRxrMetaFdwbe;
     wire                                       wRxrDataEndFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]     wRxrDataEndOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]     wRxrDataEndOffset;
     wire [`SIG_LBE_W-1:0]                      wRxrMetaLdwbe;
     wire [`SIG_TC_W-1:0]                       wRxrMetaTc;
     wire [`SIG_ATTR_W-1:0]                     wRxrMetaAttr;
@@ -180,10 +180,10 @@ module registers
     wire [C_PCI_DATA_WIDTH-1:0]                wTxcData;
     wire                                       wTxcDataValid;
     wire                                       wTxcDataStartFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]     wTxcDataStartOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]     wTxcDataStartOffset;
     wire [`SIG_FBE_W-1:0]                      wTxcMetaFdwbe;
     wire                                       wTxcDataEndFlag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]     wTxcDataEndOffset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]     wTxcDataEndOffset;
     wire [`SIG_LBE_W-1:0]                      wTxcMetaLdwbe;
     wire [`SIG_LOWADDR_W-1:0]                  wTxcMetaAddr;
     wire [`SIG_TYPE_W-1:0]                     wTxcMetaType;
@@ -196,7 +196,7 @@ module registers
     wire                                       wTxcMetaEp;
     wire                                       wTxcDataReady;
 
-    wire [clog2s(C_NUM_CHNL)-1:0]              wReqChnl;
+    wire [`clog2s(C_NUM_CHNL)-1:0]              wReqChnl;
     wire [C_FIELDS_WIDTH-1:0]                  wReqField;
     wire [(1<<C_FIELDS_WIDTH)-1:0]             wReqFieldDemux;
 
@@ -224,7 +224,7 @@ module registers
     genvar                                     channel;
     genvar                                     vector;
 
-    assign wReqChnl = wRxrMetaAddr[(C_FIELDS_WIDTH + 2) +:clog2s(C_NUM_CHNL)];
+    assign wReqChnl = wRxrMetaAddr[(C_FIELDS_WIDTH + 2) +:`clog2s(C_NUM_CHNL)];
     assign wReqField = wRxrMetaAddr[2 +: C_FIELDS_WIDTH];
     assign wChnlReqData[31:0] = wRxrData[32*wRxrDataStartOffset +: 32];
     

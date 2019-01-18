@@ -71,9 +71,9 @@ module rxc_engine_ultrascale
      output                                   RXC_DATA_VALID,
      output [(C_PCI_DATA_WIDTH/32)-1:0]       RXC_DATA_WORD_ENABLE,
      output                                   RXC_DATA_START_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] RXC_DATA_START_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0] RXC_DATA_START_OFFSET,
      output                                   RXC_DATA_END_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] RXC_DATA_END_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0] RXC_DATA_END_OFFSET,
 
      output [`SIG_LBE_W-1:0]                  RXC_META_LDWBE,
      output [`SIG_FBE_W-1:0]                  RXC_META_FDWBE,
@@ -107,7 +107,7 @@ module rxc_engine_ultrascale
     localparam C_RX_BE_INDEX = C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES;
 
     // Mask width of the calculated SOF/EOF fields
-    localparam C_OFFSET_WIDTH = clog2(C_PCI_DATA_WIDTH/32);
+    localparam C_OFFSET_WIDTH = $clog2(C_PCI_DATA_WIDTH/32);
 
     wire                                      wMAxisRcSop;
     wire                                      wMAxisRcTlast;
@@ -121,9 +121,9 @@ module rxc_engine_ultrascale
     wire                                                wRxcDataReady; // Pinned High
     wire [(C_PCI_DATA_WIDTH/32)-1:0]                    wRxcDataWordEnable;
     wire                                                wRxcDataEndFlag;
-    wire [clog2(C_PCI_DATA_WIDTH/32)-1:0]               wRxcDataEndOffset;
+    wire [$clog2(C_PCI_DATA_WIDTH/32)-1:0]               wRxcDataEndOffset;
     wire                                                wRxcDataStartFlag;
-    wire [clog2(C_PCI_DATA_WIDTH/32)-1:0]               wRxcDataStartOffset;
+    wire [$clog2(C_PCI_DATA_WIDTH/32)-1:0]               wRxcDataStartOffset;
     wire [`SIG_BYTECNT_W-1:0]                           wRxcMetaBytesRemaining;
     wire [`SIG_CPLID_W-1:0]                             wRxcMetaCompleterId;
     wire [`UPKT_RXC_MAXHDR_W-1:0]                       wRxcHdr;
@@ -137,12 +137,12 @@ module rxc_engine_ultrascale
     wire                                                _wEndFlag;
     wire                                                wEndFlag;
     wire                                                wEndFlagLastCycle;
-    wire [clog2(C_PCI_DATA_WIDTH/32)-1:0]               wEndOffset;
+    wire [$clog2(C_PCI_DATA_WIDTH/32)-1:0]               wEndOffset;
     wire [(C_PCI_DATA_WIDTH/32)-1:0]                    wEndMask;
     wire                                                _wStartFlag;
     wire                                                wStartFlag;
     wire [1:0]                                          wStartFlags;
-    wire [clog2(C_PCI_DATA_WIDTH/32)-1:0]               wStartOffset;
+    wire [$clog2(C_PCI_DATA_WIDTH/32)-1:0]               wStartOffset;
     wire [(C_PCI_DATA_WIDTH/32)-1:0]                    wStartMask;
     wire [C_OFFSET_WIDTH-1:0]                           wOffsetMask;
 
@@ -430,7 +430,7 @@ module rxc_engine_ultrascale
           // Parameters
           .C_DEPTH                      (C_RX_OUTPUT_STAGES),
           .C_WIDTH                      (`UPKT_RXC_MAXHDR_W + 
-                                         2*(1 + clog2(C_PCI_DATA_WIDTH/32))+`SIG_TYPE_W),
+                                         2*(1 + $clog2(C_PCI_DATA_WIDTH/32))+`SIG_TYPE_W),
           .C_USE_MEMORY                 (0)
           /*AUTOINSTPARAM*/)
     output_pipeline

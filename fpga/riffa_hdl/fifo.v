@@ -62,8 +62,8 @@ module fifo
      );
 
     // Local parameters
-    localparam C_POW2_DEPTH = 2**clog2(C_DEPTH);
-    localparam C_DEPTH_WIDTH = clog2s(C_POW2_DEPTH);
+    localparam C_POW2_DEPTH = 2**$clog2(C_DEPTH);
+    localparam C_DEPTH_WIDTH = `clog2s(C_POW2_DEPTH);
 
     wire [C_DELAY:0]      wDelayTaps;
     wire                  wDelayWrEn;

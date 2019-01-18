@@ -55,7 +55,7 @@ module tx_port_monitor_128 #(
 	parameter C_FIFO_DEPTH = 512,
 	// Local parameters
 	parameter C_FIFO_DEPTH_THRESH = (C_FIFO_DEPTH - 4),
-	parameter C_FIFO_DEPTH_WIDTH = clog2((2**clog2(C_FIFO_DEPTH))+1),
+	parameter C_FIFO_DEPTH_WIDTH = $clog2((2**$clog2(C_FIFO_DEPTH))+1),
 	parameter C_VALID_HIST = 1
 )
 (
