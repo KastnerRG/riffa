@@ -247,6 +247,12 @@ int pcie_capability_write_dword(struct pci_dev *dev, int pos, u32 val)
 }
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,18,0)
+	#define pci_alloc_consistent(d, s, a)     dma_alloc_coherent(&(d)->dev, s, a, GFP_ATOMIC)
+	#define pci_free_consistent(d, s, a, b)   dma_free_coherent(&(d)->dev, s, a, b)
+	#define pci_set_dma_mask(d, m)            dma_set_mask(&(d)->dev, m)
+	#define pci_set_consistent_dma_mask(d, m) dma_set_coherent_mask(&(d)->dev, m)
+#endif
 
 
 
