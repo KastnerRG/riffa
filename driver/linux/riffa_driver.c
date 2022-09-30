@@ -51,7 +51,13 @@
 #include <linux/fs.h>
 #include <linux/pci.h>
 #include <linux/interrupt.h>
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,11,0)
 #include <linux/sched.h>
+#else
+#include <linux/sched/signal.h>
+#endif
+
 #include <linux/rwsem.h>
 #include <linux/dma-mapping.h>
 #include <linux/pagemap.h>
@@ -241,6 +247,12 @@ int pcie_capability_write_dword(struct pci_dev *dev, int pos, u32 val)
 }
 #endif
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(5,18,0)
+	#define pci_alloc_consistent(d, s, a)     dma_alloc_coherent(&(d)->dev, s, a, GFP_ATOMIC)
+	#define pci_free_consistent(d, s, a, b)   dma_free_coherent(&(d)->dev, s, a, b)
+	#define pci_set_dma_mask(d, m)            dma_set_mask(&(d)->dev, m)
+	#define pci_set_consistent_dma_mask(d, m) dma_set_coherent_mask(&(d)->dev, m)
+#endif
 
 
 
@@ -440,13 +452,27 @@ static inline struct sg_mapping * fill_sg_buf(struct fpga_state * sc, int chnl,
 		}
 
 		// Page in the user pages.
+
+		#if LINUX_VERSION_CODE < KERNEL_VERSION(5,8,0)
 		down_read(&current->mm->mmap_sem);
+		#else
+		mmap_read_lock(current->mm);
+		#endif
+
 		#if LINUX_VERSION_CODE < KERNEL_VERSION(4,6,0)
 		num_pages = get_user_pages(current, current->mm, udata, num_pages_reqd, 1, 0, pages, NULL);
-		#else
+		#elsif LINUX_VERSION_CODE < KERNEL_VERSION(4,9,0)
 		num_pages = get_user_pages(udata, num_pages_reqd, 1, 0, pages, NULL);
+		#else
+		num_pages = get_user_pages(udata, num_pages_reqd, FOLL_WRITE, pages, NULL);
 		#endif
+
+		#if LINUX_VERSION_CODE < KERNEL_VERSION(5,8,0)
 		up_read(&current->mm->mmap_sem);
+		#else
+		mmap_read_unlock(current->mm);
+		#endif
+
 		if (num_pages <= 0) {
 			printk(KERN_ERR "riffa: fpga:%d chnl:%d, %s unable to pin any pages in memory\n", sc->id, chnl, dir);
 			kfree(pages);
@@ -1530,7 +1556,12 @@ static void __devexit fpga_remove(struct pci_dev *dev)
 // MODULE INIT/EXIT FUNCTIONS
 ///////////////////////////////////////////////////////
 
-static DEFINE_PCI_DEVICE_TABLE(fpga_ids) = {
+#if LINUX_VERSION_CODE < KERNEL_VERSION(4,8,0)
+static DEFINE_PCI_DEVICE_TABLE(fpga_ids) =
+#else
+static const struct pci_device_id fpga_ids[] =
+#endif
+{
 	{PCI_DEVICE(VENDOR_ID0, PCI_ANY_ID)},
 	{PCI_DEVICE(VENDOR_ID1, PCI_ANY_ID)},
 	{0},
