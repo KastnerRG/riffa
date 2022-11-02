@@ -51,6 +51,7 @@ module chnl_tester #(
 	parameter C_PCI_DATA_WIDTH = 9'd32
 )
 (
+	/*Signals to receive from PC via RIFFA core, transmit to FPGA via this chnl_tester module*/
 	input CLK,
 	input RST,
 	output CHNL_RX_CLK, 
@@ -63,6 +64,7 @@ module chnl_tester #(
 	input CHNL_RX_DATA_VALID, 
 	output CHNL_RX_DATA_REN,
 	
+	/*Signals to transmit to PC via RIFFA core, receive from FPGA via this chnl_tester module*/
 	output CHNL_TX_CLK, 
 	output CHNL_TX, 
 	input CHNL_TX_ACK, 
@@ -70,68 +72,125 @@ module chnl_tester #(
 	output [31:0] CHNL_TX_LEN, 
 	output [30:0] CHNL_TX_OFF, 
 	output [C_PCI_DATA_WIDTH-1:0] CHNL_TX_DATA, 
-	output CHNL_TX_DATA_VALID, 
+	output reg CHNL_TX_DATA_VALID, 
 	input CHNL_TX_DATA_REN
 );
 
 reg [C_PCI_DATA_WIDTH-1:0] rData={C_PCI_DATA_WIDTH{1'b0}};
-reg [31:0] rLen=0;
+reg [C_PCI_DATA_WIDTH-1:0] data_reg={C_PCI_DATA_WIDTH{1'b0}};
+reg [C_PCI_DATA_WIDTH-1:0] tData={C_PCI_DATA_WIDTH{1'b0}};
+
 reg [31:0] rCount=0;
-reg [1:0] rState=0;
+reg [31:0] tCount=0;
+reg [31:0] tCount_prev=0;
+reg [1:0] rState=0;   // Receiver states
+reg [1:0] tState=0;   // Transmitter states
+reg TX_IN_PROGRESS = 0;
 
 assign CHNL_RX_CLK = CLK;
 assign CHNL_RX_ACK = (rState == 2'd1);
-assign CHNL_RX_DATA_REN = (rState == 2'd1);
+assign CHNL_RX_DATA_REN = (rState == 2'd1); 
 
 assign CHNL_TX_CLK = CLK;
-assign CHNL_TX = (rState == 2'd3);
+assign CHNL_TX = (CHNL_RX && !CHNL_RX_DATA_VALID && (tCount_prev != CHNL_TX_LEN)) || (CHNL_RX_DATA_REN && CHNL_RX_DATA_VALID) || TX_IN_PROGRESS;   //  modify the CHNL_TX timing such that (assertion of both CHNL_TX_DATA_REN and CHNL_TX_DATA_VALID signals) are aligned "RIGHT AFTER (not until after all data had been received)" (assertion of both CHNL_RX_DATA_REN and CHNL_RX_DATA_VALID signals).  Please refer to https://i.imgur.com/9a1AYiZ.png (Rx and Tx control signals are not overlapping)
 assign CHNL_TX_LAST = 1'd1;
-assign CHNL_TX_LEN = rLen; // in words
+assign CHNL_TX_LEN = CHNL_RX_LEN; // in words
 assign CHNL_TX_OFF = 0;
-assign CHNL_TX_DATA = rData;
-assign CHNL_TX_DATA_VALID = (rState == 2'd3);
+assign CHNL_TX_DATA = tData;
 
-always @(posedge CLK or posedge RST) begin
+
+always @(posedge CLK) begin
+
 	if (RST) begin
-		rLen <= #1 0;
-		rCount <= #1 0;
 		rState <= #1 0;
-		rData <= #1 0;
+		rCount <= #1 0;
 	end
+	
 	else begin
 		case (rState)
 		
-		2'd0: begin // Wait for start of RX, save length
-			if (CHNL_RX) begin
-				rLen <= #1 CHNL_RX_LEN;
-				rCount <= #1 0;
-				rState <= #1 2'd1;
+			2'd0: begin // Wait for start of RX, save length
+				if (CHNL_RX) begin
+					rCount <= #1 0;
+					rState <= #1 2'd1;
+				end
 			end
-		end
-		
-		2'd1: begin // Wait for last data in RX, save value
-			if (CHNL_RX_DATA_VALID) begin
-				rData <= #1 CHNL_RX_DATA;
-				rCount <= #1 rCount + (C_PCI_DATA_WIDTH/32);
-			end
-			if (rCount >= rLen)
-				rState <= #1 2'd2;
-		end
-
-		2'd2: begin // Prepare for TX
-			rCount <= #1 (C_PCI_DATA_WIDTH/32);
-			rState <= #1 2'd3;
-		end
-
-		2'd3: begin // Start TX with save length and data value
-			if (CHNL_TX_DATA_REN & CHNL_TX_DATA_VALID) begin
-				rData <= #1 {rCount + 4, rCount + 3, rCount + 2, rCount + 1};
-				rCount <= #1 rCount + (C_PCI_DATA_WIDTH/32);
-				if (rCount >= rLen)
+			
+			2'd1: begin // Wait for last data in RX, save value
+				if (CHNL_RX_DATA_VALID) begin
+					rCount <= #1 rCount + (C_PCI_DATA_WIDTH/32);
+				end
+				
+				if (rCount >= CHNL_RX_LEN) begin
 					rState <= #1 2'd0;
+					rCount <= #1 0;
+				end
 			end
-		end
+
+			default: begin
+				rState <= #1 2'd0;
+				rCount <= #1 0;
+			end
 		
+		endcase
+	end
+end
+
+reg rValid, valid_reg;
+
+always @(posedge CLK) begin  // have to modify the logic flow for this always block for non-loopback case
+
+	// for invalidating Tx data when CHNL_RX_DATA_VALID goes low
+	rValid <= CHNL_RX_DATA_VALID;
+	valid_reg <= rValid;
+	CHNL_TX_DATA_VALID <= valid_reg;
+
+	// for timing synchronization of loopback between Rx and Tx due to three clock cycle delay incurred in https://github.com/KastnerRG/riffa/blob/master/fpga/riffa_hdl/tx_port_channel_gate_128.v#L148-L186
+	rData <= CHNL_RX_DATA;
+	data_reg <= rData;
+	tData <= data_reg;	
+end
+
+always @(posedge CLK) tCount_prev <= tCount;
+
+always @(posedge CLK) begin
+
+	if (RST) begin
+		tState <= #1 0;
+		tCount <= #1 0;
+		TX_IN_PROGRESS <= #1 0;
+	end
+	
+	else begin
+		case (tState)
+
+			2'd0: begin // Prepare for TX
+				if(CHNL_TX) begin   // linux driver replied that it is ready for the first piece of data again after acknowledging it can receive the first piece of data (this piece of data is not consumed by linux driver yet until next state). Please refer to Tx timing diagram at http://riffa.ucsd.edu/node/3
+					tState <= #1 2'd1;
+					tCount <= #1 0; //(C_PCI_DATA_WIDTH/32);
+					TX_IN_PROGRESS <=#1 1;  // continues to assert "CHNL_TX" signal until the assertion of "CHNL_TX_ACK"signal
+				end
+			end
+
+			2'd1: begin // Start TX with save length and data value
+				if (CHNL_TX_DATA_REN & CHNL_TX_DATA_VALID) begin
+					tCount <= #1 tCount + (C_PCI_DATA_WIDTH/32);
+					TX_IN_PROGRESS <= #1 1;  // extends "CHNL_TX_DATA_VALID" asserted signal for another "CHNL_TX_LEN" clock cycles AFTER a single "CHNL_TX_ACK" positive pulse
+				end
+
+				if (tCount >= CHNL_TX_LEN) begin
+					tState <= #1 2'd0;
+					tCount <= #1 0;
+					TX_IN_PROGRESS <= #1 0;
+				end
+			end
+
+			default: begin
+				tState <= #1 2'd0;
+				tCount <= #1 0;
+				TX_IN_PROGRESS <= #1 0;
+			end
+			
 		endcase
 	end
 end

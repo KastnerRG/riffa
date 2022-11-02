@@ -32,26 +32,38 @@
 // USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
 // DAMAGE.
 // ----------------------------------------------------------------------
+
+#include <pthread.h>
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include "timer.h"
 #include "riffa.h"
 #define NUM_TESTS 100
 
+struct thread_info {    /* Used as argument to thread_start() */
+
+	// please refer to API of fpga_send() and fpga_recv() at http://riffa.ucsd.edu/node/10 or https://github.com/KastnerRG/riffa/blob/master/driver/linux/riffa.c#L84-L111
+	fpga_t * fpga;       
+	unsigned int chnl;     
+	unsigned int * buffer;
+	unsigned int len;
+	unsigned int offset;
+	unsigned int last;
+	long long timeout;
+};
+
 int main(int argc, char** argv) {
 	fpga_t * fpga;
 	fpga_info_list info;
 	int option;
-	int i;
+	unsigned int i;
 	int id;
 	int chnl;
-	size_t numWords;
-	int sent;
-	int recvd;
-	int failure = 0;
+	unsigned int numWords;
 	unsigned int * sendBuffer;
 	unsigned int * recvBuffer;
-	int err;
+
 	GET_TIME_INIT(3);
 
 	if (argc < 2) {
@@ -69,7 +81,7 @@ int main(int argc, char** argv) {
 			return -1;
 		}
 		printf("Number of devices: %d\n", info.num_fpgas);
-		for (i = 0; i < info.num_fpgas; i++) {
+		for (i = 0; i < (unsigned int)info.num_fpgas; i++) {
 			printf("%d: id:%d\n", i, info.id[i]);
 			printf("%d: num_chnls:%d\n", i, info.num_chnls[i]);
 			printf("%d: name:%s\n", i, info.name[i]);
@@ -104,12 +116,12 @@ int main(int argc, char** argv) {
 			return -1;
 		}
 
-		size_t maxWords, minWords;
+		unsigned int maxWords, minWords;
 		id = atoi(argv[2]);
 		chnl = atoi(argv[3]);
 		minWords = 4; // Must be at least 4 for the channel tester app
 		maxWords = atoi(argv[4]);
-		printf("Running bandwidth test from %zu up to %zu words\n", minWords, maxWords);
+		printf("Running bandwidth test from %d up to %d words\n", minWords, maxWords);
 
 		// Get the device with id
 		fpga = fpga_open(id);
@@ -134,410 +146,105 @@ int main(int argc, char** argv) {
 			return -1;
 		}
 
-		int numWords;
-		for (numWords = minWords; numWords <= maxWords; numWords = numWords*2) {
-			int j;
-			for (j = 0; j < NUM_TESTS + 1; ++j) {
+		for (numWords = minWords; numWords <= maxWords; numWords += (2*numWords <= maxWords) ? numWords : (maxWords-numWords)) { // adaptively change the buffer size for the final iteration, and double the transaction size for every iteration
+			//int j;
+			//for (j = 0; j < NUM_TESTS + 1; ++j) {
 				// Initialize the data
 				for (i = 0; i < numWords; i++) {
 					sendBuffer[i] = i+1;
 					recvBuffer[i] = 0;
 				}
 
+				int NTH = 2;  // number of threads : one fpga_recv() thread, one fpga_send() thread
+
+				pthread_t tid[NTH];
+				struct thread_info tinfo[NTH];
+				/*
+				struct thread_info *tinfo;
+				// Allocate memory for pthread_create() arguments 
+				tinfo = calloc(NTH, sizeof(struct thread_info));
+							if (tinfo == NULL)
+				exit(1);
+				*/
+
+				unsigned int ret_val[NTH]; // retval[0] is number of words sent;  retval[1] is number of words received
+
+				int loop = 0;  // for pthread_join()
+
+				//printf("\n Going to create threads \n");
+				/** Creation of threads*/
+				/*	for(loop=0; loop<NTH; loop++) {
+				pthread_create(&tid[loop], NULL, &sample, &value[loop]);
+				printf("\n value of loop = %d\n", loop);
+				}
+				*/
+
+				unsigned int offset_for_sending = 0;
+				unsigned int is_last_send = 1;
+				unsigned int chnl_timeout = 5;  // timeout is 5ms, for low-latency purpose, please see the description at http://xillybus.com/doc/xillybus-latency
+
+				assert(tinfo != NULL); // null check
+
+				tinfo[0].fpga = fpga;
+				tinfo[0].chnl = chnl;
+				tinfo[0].buffer = sendBuffer;
+				tinfo[0].len = numWords;  // try to send all words before thread switching due to timeout
+				tinfo[0].offset = offset_for_sending;
+				tinfo[0].last = is_last_send;
+				tinfo[0].timeout = chnl_timeout;  
+
+				pthread_create(&tid[0], NULL, &fpga_send, &tinfo[0]);
+				//printf("\n value of loop = %d\n", 0);
+
+				tinfo[1].fpga = fpga;
+				tinfo[1].chnl = chnl;
+				tinfo[1].buffer = recvBuffer;
+				tinfo[1].len = numWords;  // try to receive all words that have been sent before thread switching due to timeout
+				tinfo[1].timeout = chnl_timeout;  
+
+				pthread_create(&tid[1], NULL, &fpga_recv, &tinfo[1]);
+				//printf("\n value of loop = %d\n", 1);
+
+				/** Synch of threads in order to exit normally*/
 				GET_TIME_VAL(0);
 
-				// Send the data
-				sent = fpga_send(fpga, chnl, sendBuffer, numWords, 0, 1, 25000);
-				printf("Test %d: words sent: %d\n", j, sent);
+				for(loop=0; loop<NTH; loop++) {
+					pthread_join(tid[loop], (void**)&ret_val[loop]);
+				}
 
 				GET_TIME_VAL(1);
 
-				if (sent != 0) {
-					// Recv the data
-					recvd = fpga_recv(fpga, chnl, recvBuffer, numWords, 25000);
-					printf("Test %d: words recv: %d\n", j, recvd);
-				}
+				const double MILLI_CONVERSION = 1000.0;  // converts milliseconds to seconds
+				const unsigned int BIRECTION = 2; // two ways, so total number of data transferred is doubled
+				double total_execution_time = ((TIME_VAL_TO_MS(1) - TIME_VAL_TO_MS(0)) / MILLI_CONVERSION);   // in seconds
 
-				GET_TIME_VAL(2);
+				printf("number of words sent = %d\n\r", ret_val[0]);
+				printf("number of words recv = %d\n\r", ret_val[1]);
 
-				// Check the data
-				if (recvd != 0) {
-					for (i = 4; i < recvd; i++) {
+				printf("Total execution time = %f s\n\r", total_execution_time);
+
+				if(ret_val[1] == numWords) 	// number of words sent == number of words received
+				{
+					const int GIGA_CONVERSION = 1000*1000*1000;  // converts Bps to GBps
+					const int BYTES_PER_WORD = 4;	// 32-bit = 4 bytes
+					const int WORDS_PER_TRANSACTION = 4;  // we are using 128-bit PCIe interface. therefore there are 4 32-bit words in each transaction
+
+					// check the data
+					for (i = WORDS_PER_TRANSACTION; i < numWords; i++) {  // the first 4 32-bit words are always corrupted, please refer to explanation given at https://pergamos.lib.uoa.gr/uoa/dl/frontend/file/lib/default/data/1326221/theFile#page=38
 						if (recvBuffer[i] != sendBuffer[i]) {
 							printf("recvBuffer[%d]: %d, expected %d\n", i, recvBuffer[i], sendBuffer[i]);
-							return;
+							return -1;
 						}
 					}
-
-					if (j > 0)
-						printf("send bw: %f\n",
-							sent*4.0/1000/1000/((TIME_VAL_TO_MS(1) - TIME_VAL_TO_MS(0))/1000.0)); //,
-
-					if (j > 0)
-						printf("recv bw: %f\n",
-							recvd*4.0/1000/1000/((TIME_VAL_TO_MS(2) - TIME_VAL_TO_MS(1))/1000.0)); //,
+					printf("Overall bandwidth: %f GBps\n\n", (double)BIRECTION*numWords*(double)BYTES_PER_WORD/(double)GIGA_CONVERSION/total_execution_time);
 				}
-			}
+				
+				if(numWords == maxWords) break; // last iteration, so exit the loop
 		}
+
 		// Done with device
-	        fpga_close(fpga);
+	    fpga_close(fpga);
 	}
-	else if (option == 3) { // Send data, receive data
-		if (argc < 5) {
-			printf("Usage: %s %d <fpga id> <chnl> <num words to transfer>\n", argv[0], option);
-			return -1;
-		}
 
-		size_t maxWords, minWords;
-		id = atoi(argv[2]);
-		chnl = atoi(argv[3]);
-		minWords = 4; // Must be at least 4 for the channel tester app
-		maxWords = atoi(argv[4]);
-		printf("Running receive offset test from %zu up to %zu words\n", minWords, maxWords);
-
-		// Get the device with id
-		fpga = fpga_open(id);
-		if (fpga == NULL) {
-			printf("Could not get FPGA %d\n", id);
-			return -1;
-		}
-
-		// Malloc the arrays (page aligned) 
-		printf("Asked for %zu bytes\n",((maxWords*sizeof(unsigned int)*2 + 4096)/4096)*4096 + 4096);
-		err = posix_memalign((void **)&sendBuffer, 4096, ((maxWords*sizeof(unsigned int)*2 + 4096)/4096)*4096 + 4096);
-		if (sendBuffer == NULL) {
-			printf("Could not malloc memory for sendBuffer\n");
-			fpga_close(fpga);
-			return -1;
-		}
-		err = posix_memalign((void **)&recvBuffer, 4096, ((maxWords*sizeof(unsigned int)*2 + 4096)/4096)*4096 + 4096);
-
-		recvBuffer = (unsigned int *)malloc(((maxWords*sizeof(unsigned int)*2 + 4096)/4096)*4096 + 4096);
-		if (recvBuffer == NULL) {
-			printf("Could not malloc memory for recvBuffer\n");
-			free(sendBuffer);
-			fpga_close(fpga);
-			return -1;
-		}
-
-		int numWords;
-		for (numWords = minWords; numWords <= maxWords; numWords = numWords*2) {
-			int j;
-			for (j = 0; j < 4096/sizeof(unsigned int); j++) {
-				int rxOffset = j;
-				// Initialize the data
-				for (i = 0; i < numWords; i++) {
-					sendBuffer[i+ rxOffset] = i+1;
-					recvBuffer[i] = 0;
-				}
-
-				GET_TIME_VAL(0);
-
-				// Send the data
-				sent = fpga_send(fpga, chnl, &sendBuffer[rxOffset], numWords, 0, 1, 25000);
-				printf("Test %d: words sent from address %p: %d\n", j, &sendBuffer[rxOffset], sent);
-
-				GET_TIME_VAL(1);
-
-				if (sent != 0) {
-					// Recv the data
-					recvd = fpga_recv(fpga, chnl, recvBuffer, numWords, 25000);
-					printf("Test %d: words recv: %d\n", j, recvd);
-				}
-
-				GET_TIME_VAL(2);
-
-				// Check the data
-				if (recvd != 0) {
-					for (i = 4; i < recvd; i++) {
-						if (recvBuffer[i] != sendBuffer[i + rxOffset]) {
-							printf("recvBuffer[%d]: %d, expected %d\n", i, recvBuffer[i], sendBuffer[i + rxOffset]);
-							failure = 1;
-						}
-					}
-
-
-					if (j > 0)
-						printf("send bw: %f\n",
-							sent*4.0/1000/1000/((TIME_VAL_TO_MS(1) - TIME_VAL_TO_MS(0))/1000.0)); //,
-
-					if (j > 0)
-						printf("recv bw: %f\n",
-							recvd*4.0/1000/1000/((TIME_VAL_TO_MS(2) - TIME_VAL_TO_MS(1))/1000.0)); //,
-					if(failure) 
-						return;
-				}
-			}
-		}
-		// Done with device
-	        fpga_close(fpga);
-	}	
-	else if (option == 4) { // Send data, receive data
-		if (argc < 5) {
-			printf("Usage: %s %d <fpga id> <chnl> <num words to transfer>\n", argv[0], option);
-			return -1;
-		}
-
-		size_t maxWords, minWords;
-		id = atoi(argv[2]);
-		chnl = atoi(argv[3]);
-		minWords = 4; // Must be at least 4 for the channel tester app
-		maxWords = atoi(argv[4]);
-		printf("Running tx offset test from %zu up to %zu words\n", minWords, maxWords);
-
-		// Get the device with id
-		fpga = fpga_open(id);
-		if (fpga == NULL) {
-			printf("Could not get FPGA %d\n", id);
-			return -1;
-		}
-
-		// Malloc the arrays (page aligned) 
-		printf("Asked for %zu bytes\n",((maxWords*sizeof(unsigned int)*2 + 4096)/4096)*4096 + 4096);
-
-		err = posix_memalign((void **)&sendBuffer, 4096, ((maxWords*sizeof(unsigned int)*2 + 4096)/4096)*4096 + 4096);
-		if (err) {
-			printf("Could not malloc memory for sendBuffer\n");
-			fpga_close(fpga);
-			return -1;
-		}
-		err = posix_memalign((void **)&recvBuffer, 4096, ((maxWords*sizeof(unsigned int)*2 + 4096)/4096)*4096 + 4096);
-
-		if (err) {
-			printf("Could not malloc memory for recvBuffer\n");
-			free(sendBuffer);
-			fpga_close(fpga);
-			return -1;
-		}
-
-		int numWords;
-		for (numWords = minWords; numWords <= maxWords; numWords = numWords*2) {
-			int j;
-			for (j = 0; j < 4096/sizeof(unsigned int); ++j) {
-				int txOffset = j;
-				// Initialize the data
-				for (i = 0; i < numWords; i++) {
-					sendBuffer[i] = i+1;
-					recvBuffer[i + txOffset] = 0;
-				}
-
-				GET_TIME_VAL(0);
-
-				// Send the data
-				sent = fpga_send(fpga, chnl, sendBuffer, numWords, 0, 1, 25000);
-				printf("Test %d: words sent: %d (Address %p) \n", j, sent, sendBuffer);
-
-				GET_TIME_VAL(1);
-
-				if (sent != 0) {
-					// Recv the data
-					recvd = fpga_recv(fpga, chnl, &recvBuffer[txOffset], numWords, 25000);
-					printf("Test %d: words recv: %d (Address %p) \n", j, recvd, &recvBuffer[txOffset]);
-				}
-
-				GET_TIME_VAL(2);
-
-				// Check the data
-				if (recvd != 0) {
-					for (i = 4; i < recvd; i++) {
-						if (recvBuffer[i + txOffset] != sendBuffer[i]) {
-							printf("recvBuffer[%d]: %d, expected %d\n", i, recvBuffer[i + txOffset], sendBuffer[i]);
-							failure = 1;
-						}
-					}
-
-					if (j > 0)
-						printf("send bw: %f\n",
-							sent*4.0/1000/1000/((TIME_VAL_TO_MS(1) - TIME_VAL_TO_MS(0))/1000.0)); //,
-
-					if (j > 0)
-						printf("recv bw: %f\n",
-							recvd*4.0/1000/1000/((TIME_VAL_TO_MS(2) - TIME_VAL_TO_MS(1))/1000.0)); //,
-					if(failure) 
-						return;
-
-				}
-			}
-		}
-		// Done with device
-	        fpga_close(fpga);
-	}
-	else if (option == 5) { // Send data, receive data
-		if (argc < 7) {
-			printf("Usage: %s %d <fpga id> <chnl> <offset> <num words to transfer> <number of iterations>\n", argv[0], option);
-			return -1;
-		}
-		size_t offset;
-		size_t numWords;
-		unsigned int numIter;
-		id = atoi(argv[2]);
-		chnl = atoi(argv[3]);
-		offset = atoi(argv[4]) % (4096 / sizeof(unsigned int));
-		if(numWords < 4) {
-			printf("Must transfer at least 4 words %d\n", id);
-			return -1;
-		}
-		numWords = atoi(argv[5]);
-		numIter = atoi(argv[6]);
-		printf("Running single test with %zu words, from host-page offset %zu \n", numWords, offset);
-
-		// Get the device with id
-		fpga = fpga_open(id);
-		if (fpga == NULL) {
-			printf("Could not get FPGA %d\n", id);
-			return -1;
-		}
-
-		// Malloc the arrays (page aligned) 
-		printf("Asked for %zu bytes\n",((numWords*sizeof(unsigned int) + 4096)/4096)*4096 + 4096);
-		err = posix_memalign((void **)&sendBuffer, 4096, ((numWords*sizeof(unsigned int)*2 + 4096)/4096)*4096 + 4096);
-		if (err) {
-			printf("Could not malloc memory for sendBuffer\n");
-			fpga_close(fpga);
-			return -1;
-		}
-
-		err = posix_memalign((void **)&recvBuffer, 4096, ((numWords*sizeof(unsigned int)*2 + 4096)/4096)*4096 + 4096);
-		if (err) {
-			printf("Could not malloc memory for recvBuffer\n");
-			free(sendBuffer);
-			fpga_close(fpga);
-			return -1;
-		}
-
-		int j;
-		for (j = 0; j < numIter; ++j) {
-			for (i = 0; i < numWords; i++) {
-				sendBuffer[i + offset] = i+1;
-				recvBuffer[i] = 0;
-			}
-
-			GET_TIME_VAL(0);
-
-			// Send the data
-			sent = fpga_send(fpga, chnl, &sendBuffer[offset], numWords, 0, 1, 25000);
-			printf("words sent: %d\n", sent);
-
-			GET_TIME_VAL(1);
-
-			if (sent != 0) {
-				// Recv the data
-				recvd = fpga_recv(fpga, chnl, recvBuffer, numWords, 25000);
-				printf("words recv: %d\n", recvd);
-			}
-
-			GET_TIME_VAL(2);
-
-			// Check the data
-			if (recvd != 0) {
-				for (i = 4; i < recvd; i++) {
-					if (recvBuffer[i] != sendBuffer[i + offset]) {
-						printf("recvBuffer[%d]: %d, expected %d\n", i, recvBuffer[i], sendBuffer[i + offset]);
-						failure = 1;
-					}
-				}
-
-				printf("send bw: %f\n",
-					sent*4.0/1000/1000/((TIME_VAL_TO_MS(1) - TIME_VAL_TO_MS(0))/1000.0)); //,
-
-				printf("recv bw: %f\n",
-					recvd*4.0/1000/1000/((TIME_VAL_TO_MS(2) - TIME_VAL_TO_MS(1))/1000.0)); //,
-				if(failure) 
-					return;
-
-			}
-		}
-		// Done with device
-	        fpga_close(fpga);
-	}
-	else if (option == 6) { // Send data, receive data
-		if (argc < 7) {
-			printf("Usage: %s %d <fpga id> <chnl> <offset> <num words to transfer> <number of iterations>\n", argv[0], option);
-			return -1;
-		}
-		size_t offset;
-		size_t numWords;
-		unsigned int numIter;
-
-		id = atoi(argv[2]);
-		chnl = atoi(argv[3]);
-		offset = atoi(argv[4]) % (4096 / sizeof(unsigned int));
-		if(numWords < 4) {
-			printf("Must transfer at least 4 words %d\n", id);
-			return -1;
-		}
-		numWords = atoi(argv[5]);
-		numIter = atoi(argv[6]);
-		printf("Running single test with %zu words, to host-page offset %zu \n", numWords, offset);
-
-		// Get the device with id
-		fpga = fpga_open(id);
-		if (fpga == NULL) {
-			printf("Could not get FPGA %d\n", id);
-			return -1;
-		}
-
-		// Malloc the arrays (page aligned) 
-		printf("Asked for %zu bytes\n",((numWords*sizeof(unsigned int) + 4096)/4096)*4096 + 4096);
-		err = posix_memalign((void **)&sendBuffer, 4096, ((numWords*sizeof(unsigned int)*2 + 4096)/4096)*4096 + 4096);
-		if (err) {
-			printf("Could not malloc memory for sendBuffer\n");
-			fpga_close(fpga);
-			return -1;
-		}
-
-		err = posix_memalign((void **)&recvBuffer, 4096, ((numWords*sizeof(unsigned int)*2 + 4096)/4096)*4096 + 4096);
-		if (err) {
-			printf("Could not malloc memory for recvBuffer\n");
-			free(sendBuffer);
-			fpga_close(fpga);
-			return -1;
-		}
-
-		int j;
-		for (j = 0; j < numIter; ++j) {
-			for (i = 0; i < numWords; i++) {
-				sendBuffer[i] = i+1;
-				recvBuffer[i + offset] = 0;
-			}
-
-			GET_TIME_VAL(0);
-
-			// Send the data
-			sent = fpga_send(fpga, chnl, sendBuffer, numWords, 0, 1, 25000);
-			printf("test %d: words sent: %d\n", j, sent);
-
-			GET_TIME_VAL(1);
-
-			if (sent != 0) {
-				// Recv the data
-				recvd = fpga_recv(fpga, chnl, &recvBuffer[offset], numWords, 25000);
-				printf("test %d: words recv: %d (Address %p %p)\n", j, recvd, &recvBuffer[offset], &recvBuffer[offset+numWords]);
-			}
-
-			GET_TIME_VAL(2);
-
-			// Check the data
-			if (recvd != 0) {
-				for (i = 4; i < recvd; i++) {
-					if (recvBuffer[i + offset] != sendBuffer[i]) {
-						printf("recvBuffer[%d]: %d, expected %d\n", i, recvBuffer[i + offset], sendBuffer[i]);
-						failure = 1;
-					}
-				}
-
-				printf("send bw: %f\n",
-					sent*4.0/1000/1000/((TIME_VAL_TO_MS(1) - TIME_VAL_TO_MS(0))/1000.0)); //,
-
-				printf("recv bw: %f\n",
-					recvd*4.0/1000/1000/((TIME_VAL_TO_MS(2) - TIME_VAL_TO_MS(1))/1000.0)); //,
-				if(failure) 
-					return;
-
-			}
-		}
-		// Done with device
-	        fpga_close(fpga);
-	}
 	return 0;
 }

@@ -41,7 +41,7 @@ program_OBJS := $(program_C_OBJS) $(program_CXX_OBJS)
 program_INCLUDE_DIRS :=
 program_LIBRARY_DIRS :=
 program_LIBRARIES := riffa
-CPPFLAGS += -g
+CPPFLAGS += -g -pedantic -Wall -Werror -Wextra -pthread -fsanitize=thread,undefined
 
 CPPFLAGS += $(foreach includedir,$(program_INCLUDE_DIRS),-I$(includedir))
 LDFLAGS += $(foreach librarydir,$(program_LIBRARY_DIRS),-L$(librarydir))

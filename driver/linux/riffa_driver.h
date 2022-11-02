@@ -47,7 +47,7 @@
 
 #include <linux/ioctl.h>
 
-#define DBUG 1
+#define DEBUG 1
 
 #ifdef DEBUG
 #define DEBUG_MSG(...) printk(__VA_ARGS__)

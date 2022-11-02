@@ -45,8 +45,20 @@
 #include <stdlib.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
+#include <pthread.h>
 #include <fcntl.h>
 #include "riffa.h"
+
+struct thread_info {    /* Used as argument to thread_start() */
+	// please refer to API of fpga_send() and fpga_recv() at http://riffa.ucsd.edu/node/10 or https://github.com/KastnerRG/riffa/blob/master/driver/linux/riffa.c#L84-L111
+	fpga_t * fpga;       
+	unsigned int chnl;     
+	unsigned int * buffer;
+	unsigned int len;
+	unsigned int offset;
+	unsigned int last;
+	long long timeout;
+};
 
 struct fpga_t
 {
@@ -81,33 +93,42 @@ void fpga_close(fpga_t * fpga)
 	free(fpga);
 }
 
-int fpga_send(fpga_t * fpga, int chnl, void * data, int len, int destoff, 
-	int last, long long timeout)
+//int fpga_send(fpga_t * fpga, int chnl, void * data, int len, int destoff, int last, long long timeout)
+void* fpga_send(void *arg)
 {
-	fpga_chnl_io io;
+	struct thread_info *tinfo_send = (struct thread_info *) arg;
 
-	io.id = fpga->id;
-	io.chnl = chnl;
-	io.len = len;
-	io.offset = destoff;
-	io.last = last;
-	io.timeout = timeout;
-	io.data = (char *)data;
+	fpga_chnl_io io_send;
 
-	return ioctl(fpga->fd, IOCTL_SEND, &io);
+	io_send.id = tinfo_send->fpga->id;
+	io_send.chnl = tinfo_send->chnl;
+	io_send.len = tinfo_send->len;
+	io_send.offset = tinfo_send->offset;
+	io_send.last = tinfo_send->last;
+	io_send.timeout = tinfo_send->timeout;
+	io_send.data = (char *)(tinfo_send->buffer);
+
+	int number_of_words_sent = ioctl(tinfo_send->fpga->fd, IOCTL_SEND, &io_send);
+
+	pthread_exit((void *)(intptr_t)number_of_words_sent);
 }
 
-int fpga_recv(fpga_t * fpga, int chnl, void * data, int len, long long timeout)
+//int fpga_recv(fpga_t * fpga, int chnl, void * data, int len, long long timeout)
+void* fpga_recv(void *arg)
 {
-	fpga_chnl_io io;
+	struct thread_info *tinfo_recv = (struct thread_info *) arg;
 
-	io.id = fpga->id;
-	io.chnl = chnl;
-	io.len = len;
-	io.timeout = timeout;
-	io.data = (char *)data;
+	fpga_chnl_io io_recv;
 
-	return ioctl(fpga->fd, IOCTL_RECV, &io);
+	io_recv.id = tinfo_recv->fpga->id;
+	io_recv.chnl = tinfo_recv->chnl;
+	io_recv.len = tinfo_recv->len;
+	io_recv.timeout = tinfo_recv->timeout;
+	io_recv.data = (char *)(tinfo_recv->buffer);
+
+	int number_of_words_recv = ioctl(tinfo_recv->fpga->fd, IOCTL_RECV, &io_recv);
+
+	pthread_exit((void *)(intptr_t)number_of_words_recv);
 }
 
 void fpga_reset(fpga_t * fpga)
