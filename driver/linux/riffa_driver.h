@@ -58,10 +58,21 @@
 
 // The major device number. We can't rely on dynamic registration because ioctls
 // need to know it.
+#ifndef MAJOR_NUM
 #define MAJOR_NUM 100
+#endif
+
+#ifndef DEVICE_NAME
 #define DEVICE_NAME "riffa"
+#endif
+
+#ifndef VENDOR_ID0
 #define VENDOR_ID0 0x10EE
+#endif
+
+#ifndef VENDOR_ID1
 #define VENDOR_ID1 0x1172
+#endif
 
 // Message events for readmsgs/writemsgs queues.
 #define EVENT_TXN_LEN				1

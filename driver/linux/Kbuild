@@ -1,0 +1,14 @@
+# Kbuild file for riffa driver
+
+NAME        ?= riffa
+MAJOR_NUM   ?= 100
+VENDOR_ID0  ?= 10EE
+VENDOR_ID1  ?= 1172
+
+ccflags-y := -DMAJOR_NUM=$(MAJOR_NUM) \
+             -DDEVICE_NAME='"$(NAME)"' \
+             -DVENDOR_ID0=0x$(VENDOR_ID0) \
+             -DVENDOR_ID1=0x$(VENDOR_ID1)
+
+obj-m := $(NAME).o
+$(NAME)-y := riffa_driver.o circ_queue.o
