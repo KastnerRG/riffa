@@ -150,6 +150,7 @@ int RIFFACALL fpga_send(fpga_t * fpga, int chnl, void * data, int len,
 			printf("Error in DeviceIoControl: %d\n", GetLastError());
 		}
 	}
+	CloseHandle(evt);
 	return wordsReturned;
 }
 
@@ -198,6 +199,7 @@ int RIFFACALL fpga_recv(fpga_t * fpga, int chnl, void * data, int len,
 			printf("Error in DeviceIoControl: %d\n", GetLastError());
 		}
 	}
+	CloseHandle(evt);
 	return wordsReturned;
 }
 
