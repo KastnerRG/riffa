@@ -76,24 +76,24 @@ module tx_engine
      input                                TX_DATA_VALID,
      input [C_DATA_WIDTH-1:0]             TX_DATA,
      input                                TX_DATA_START_FLAG,
-     input [clog2s(C_DATA_WIDTH/32)-1:0]  TX_DATA_START_OFFSET,
+     input [`clog2s(C_DATA_WIDTH/32)-1:0]  TX_DATA_START_OFFSET,
      input                                TX_DATA_END_FLAG,
-     input [clog2s(C_DATA_WIDTH/32)-1:0]  TX_DATA_END_OFFSET,
+     input [`clog2s(C_DATA_WIDTH/32)-1:0]  TX_DATA_END_OFFSET,
      output                               TX_DATA_READY,
 
      // Interface: TX_PKT
      input                                TX_PKT_READY,
      output [C_DATA_WIDTH-1:0]            TX_PKT,
      output                               TX_PKT_START_FLAG,
-     output [clog2s(C_DATA_WIDTH/32)-1:0] TX_PKT_START_OFFSET,
+     output [`clog2s(C_DATA_WIDTH/32)-1:0] TX_PKT_START_OFFSET,
      output                               TX_PKT_END_FLAG,
-     output [clog2s(C_DATA_WIDTH/32)-1:0] TX_PKT_END_OFFSET,
+     output [`clog2s(C_DATA_WIDTH/32)-1:0] TX_PKT_END_OFFSET,
      output                               TX_PKT_VALID
      );
     localparam C_PIPELINE_HDR_FIFO_INPUT = C_PIPELINE_INPUT;
     localparam C_PIPELINE_HDR_FIFO_OUTPUT = C_PIPELINE_OUTPUT;
     localparam C_PIPELINE_HDR_INPUT = C_PIPELINE_INPUT;
-    localparam C_ACTUAL_HDR_FIFO_DEPTH = (1<<clog2s(C_DEPTH_PACKETS));
+    localparam C_ACTUAL_HDR_FIFO_DEPTH = (1<<`clog2s(C_DEPTH_PACKETS));
     localparam C_USE_COMPUTE_REG = 1;
     localparam C_USE_READY_REG = 1;
     localparam C_USE_FWFT_HDR_FIFO = 1;
@@ -111,7 +111,7 @@ module tx_engine
 
     wire                                  wTxDataReady;
     wire [C_DATA_WIDTH-1:0]               wTxData;
-    wire [clog2s(C_DATA_WIDTH/32)-1:0]    wTxDataEndOffset;
+    wire [`clog2s(C_DATA_WIDTH/32)-1:0]    wTxDataEndOffset;
     wire                                  wTxDataStartFlag;
     wire                                  wTxDataPacketValid;
     wire [(C_DATA_WIDTH/32)-1:0]          wTxDataEndFlags;
@@ -140,9 +140,9 @@ module tx_engine
          .WR_TX_DATA                    (TX_DATA),
          .WR_TX_DATA_VALID              (TX_DATA_VALID),
          .WR_TX_DATA_START_FLAG         (TX_DATA_START_FLAG),
-         .WR_TX_DATA_START_OFFSET       (TX_DATA_START_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
+         .WR_TX_DATA_START_OFFSET       (TX_DATA_START_OFFSET[`clog2s(C_DATA_WIDTH/32)-1:0]),
          .WR_TX_DATA_END_FLAG           (TX_DATA_END_FLAG),
-         .WR_TX_DATA_END_OFFSET         (TX_DATA_END_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
+         .WR_TX_DATA_END_OFFSET         (TX_DATA_END_OFFSET[`clog2s(C_DATA_WIDTH/32)-1:0]),
          /*AUTOINST*/
          // Inputs
          .CLK                           (CLK),
@@ -213,9 +213,9 @@ module tx_engine
          // Outputs
          .TX_PKT                        (TX_PKT[C_DATA_WIDTH-1:0]),
          .TX_PKT_START_FLAG             (TX_PKT_START_FLAG),
-         .TX_PKT_START_OFFSET           (TX_PKT_START_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
+         .TX_PKT_START_OFFSET           (TX_PKT_START_OFFSET[`clog2s(C_DATA_WIDTH/32)-1:0]),
          .TX_PKT_END_FLAG               (TX_PKT_END_FLAG),
-         .TX_PKT_END_OFFSET             (TX_PKT_END_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
+         .TX_PKT_END_OFFSET             (TX_PKT_END_OFFSET[`clog2s(C_DATA_WIDTH/32)-1:0]),
          .TX_PKT_VALID                  (TX_PKT_VALID),
          // Inputs
          .CLK                           (CLK),

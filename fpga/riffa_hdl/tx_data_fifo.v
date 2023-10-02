@@ -123,12 +123,12 @@ module tx_data_fifo
     wire                            wPacketDecrement; 
     wire                            wPacketIncrement;
 
-    //reg [clog2(C_DEPTH_PACKETS+1)-1:0] rPacketCounter,_rPacketCounter;
-    wire [clog2(C_DEPTH_PACKETS+1)-1:0] wPacketCounter;
+    //reg [$clog2(C_DEPTH_PACKETS+1)-1:0] rPacketCounter,_rPacketCounter;
+    wire [$clog2(C_DEPTH_PACKETS+1)-1:0] wPacketCounter;
 
     wire [C_NUM_FIFOS-1:0]              wEFDecrement; 
     wire [C_NUM_FIFOS-1:0]              wEFIncrement;
-    wire [clog2(C_DEPTH_PACKETS+1)-1:0] wEFCounter [C_NUM_FIFOS-1:0];
+    wire [$clog2(C_DEPTH_PACKETS+1)-1:0] wEFCounter [C_NUM_FIFOS-1:0];
     wire [C_NUM_FIFOS-1:0]              wEFValid;
     /*AUTOINPUT*/
     /*AUTOWIRE*/
@@ -295,13 +295,13 @@ module counter_v2
 
      input                              INC,
      input                              DEC,
-     output [clog2s(C_MAX_VALUE+1)-1:0] VALUE);
+     output [`clog2s(C_MAX_VALUE+1)-1:0] VALUE);
     
     wire                                wInc;
     wire                                wDec;
     
-    reg [clog2s(C_MAX_VALUE+1)-1:0]     wCtrValue;
-    reg [clog2s(C_MAX_VALUE+1)-1:0]     rCtrValue;
+    reg [`clog2s(C_MAX_VALUE+1)-1:0]     wCtrValue;
+    reg [`clog2s(C_MAX_VALUE+1)-1:0]     rCtrValue;
     /* verilator lint_off WIDTH */
     assign wInc = INC & (C_SAT_VALUE > rCtrValue);
     assign wDec = DEC & (C_FLR_VALUE < rCtrValue);
@@ -309,7 +309,7 @@ module counter_v2
     assign VALUE = rCtrValue;
     always @(posedge CLK) begin
         if(RST_IN) begin
-            rCtrValue <= C_RST_VALUE[clog2s(C_MAX_VALUE+1)-1:0];
+            rCtrValue <= C_RST_VALUE[`clog2s(C_MAX_VALUE+1)-1:0];
         end else if(wInc & wDec) begin
             rCtrValue <= rCtrValue + 0;
         end else if(wInc) begin

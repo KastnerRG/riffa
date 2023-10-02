@@ -38,13 +38,13 @@ module offset_to_mask
       parameter C_MASK_WIDTH = 4)
     (
      input                            OFFSET_ENABLE,
-     input [clog2s(C_MASK_WIDTH)-1:0] OFFSET,
+     input [`clog2s(C_MASK_WIDTH)-1:0] OFFSET,
      output [C_MASK_WIDTH-1:0]        MASK
      );
 
     reg [7:0]                         _rMask,_rMaskSwap; 
     wire [3:0]                        wSelect;
-    assign wSelect = {OFFSET_ENABLE,{{(3-clog2s(C_MASK_WIDTH)){1'b0}},OFFSET}};
+    assign wSelect = {OFFSET_ENABLE,{{(3-`clog2s(C_MASK_WIDTH)){1'b0}},OFFSET}};
     assign MASK = (C_MASK_SWAP)? _rMaskSwap[7 -: C_MASK_WIDTH]: _rMask[C_MASK_WIDTH-1:0];
     always @(*) begin
         _rMask = 0;

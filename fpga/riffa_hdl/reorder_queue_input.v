@@ -49,8 +49,8 @@ module reorder_queue_input
       parameter C_DATA_ADDR_WIDTH = 10, // Width of stored data address
       // Local parameters
       parameter C_PCI_DATA_WORD = C_PCI_DATA_WIDTH/32,
-      parameter C_PCI_DATA_WORD_WIDTH = clog2s(C_PCI_DATA_WORD),
-      parameter C_PCI_DATA_COUNT_WIDTH = clog2s(C_PCI_DATA_WORD+1),
+      parameter C_PCI_DATA_WORD_WIDTH = `clog2s(C_PCI_DATA_WORD),
+      parameter C_PCI_DATA_COUNT_WIDTH = `clog2s(C_PCI_DATA_WORD+1),
       parameter C_NUM_TAGS = 2**C_TAG_WIDTH)
     (input                                            CLK, // Clock
      input                                            RST, // Synchronous reset
@@ -58,9 +58,9 @@ module reorder_queue_input
      input [C_PCI_DATA_WIDTH-1:0]                     DATA, // Input packet payload data enable
      input [(C_PCI_DATA_WIDTH/32)-1:0]                DATA_EN, // Input packet payload data enable
      input                                            DATA_START_FLAG, // Input packet payload
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]          DATA_START_OFFSET, // Input packet payload data enable count
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]          DATA_START_OFFSET, // Input packet payload data enable count
      input                                            DATA_END_FLAG, // Input packet payload
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]          DATA_END_OFFSET, // Input packet payload data enable count
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]          DATA_END_OFFSET, // Input packet payload data enable count
      input                                            DONE, // Input packet done
      input                                            ERR, // Input packet has error
      input [C_TAG_WIDTH-1:0]                          TAG, // Input packet tag (external tag)

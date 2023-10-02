@@ -68,9 +68,9 @@ module rxr_engine_ultrascale
      output                                   RXR_DATA_VALID,
      output [(C_PCI_DATA_WIDTH/32)-1:0]       RXR_DATA_WORD_ENABLE,
      output                                   RXR_DATA_START_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] RXR_DATA_START_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0] RXR_DATA_START_OFFSET,
      output                                   RXR_DATA_END_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] RXR_DATA_END_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0] RXR_DATA_END_OFFSET,
      
      output [`SIG_FBE_W-1:0]                  RXR_META_FDWBE,
      output [`SIG_LBE_W-1:0]                  RXR_META_LDWBE,
@@ -108,7 +108,7 @@ module rxr_engine_ultrascale
     localparam C_RX_BE_INDEX = C_PCI_DATA_WIDTH*C_RX_INPUT_STAGES;
 
     // Mask width of the calculated SOF/EOF fields
-    localparam C_OFFSET_WIDTH = clog2s(C_PCI_DATA_WIDTH/32);
+    localparam C_OFFSET_WIDTH = `clog2s(C_PCI_DATA_WIDTH/32);
 
     wire                                      wMAxisCqSop;
     wire                                      wMAxisCqTlast;

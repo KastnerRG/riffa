@@ -70,17 +70,17 @@ module txr_engine_classic
      output [C_PCI_DATA_WIDTH-1:0]            TXR_TLP,
      output                                   TXR_TLP_VALID,
      output                                   TXR_TLP_START_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] TXR_TLP_START_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0] TXR_TLP_START_OFFSET,
      output                                   TXR_TLP_END_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0] TXR_TLP_END_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0] TXR_TLP_END_OFFSET,
 
      // Interface: TXR Engine
      input                                    TXR_DATA_VALID,
      input [C_PCI_DATA_WIDTH-1:0]             TXR_DATA,
      input                                    TXR_DATA_START_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_DATA_START_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_DATA_START_OFFSET,
      input                                    TXR_DATA_END_FLAG,
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_DATA_END_OFFSET,
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_DATA_END_OFFSET,
      output                                   TXR_DATA_READY,
 
      input                                    TXR_META_VALID,
@@ -179,9 +179,9 @@ module txr_engine_classic
          .TX_DATA_READY                 (TXR_DATA_READY),
          .TX_PKT                        (TXR_TLP[C_DATA_WIDTH-1:0]),
          .TX_PKT_START_FLAG             (TXR_TLP_START_FLAG),
-         .TX_PKT_START_OFFSET           (TXR_TLP_START_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
+         .TX_PKT_START_OFFSET           (TXR_TLP_START_OFFSET[`clog2s(C_DATA_WIDTH/32)-1:0]),
          .TX_PKT_END_FLAG               (TXR_TLP_END_FLAG),
-         .TX_PKT_END_OFFSET             (TXR_TLP_END_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
+         .TX_PKT_END_OFFSET             (TXR_TLP_END_OFFSET[`clog2s(C_DATA_WIDTH/32)-1:0]),
          .TX_PKT_VALID                  (TXR_TLP_VALID),
          // Inputs
          .TX_HDR_VALID                  (wTxHdrValid),
@@ -193,9 +193,9 @@ module txr_engine_classic
          .TX_DATA_VALID                 (TXR_DATA_VALID),
          .TX_DATA                       (TXR_DATA[C_DATA_WIDTH-1:0]),
          .TX_DATA_START_FLAG            (TXR_DATA_START_FLAG),
-         .TX_DATA_START_OFFSET          (TXR_DATA_START_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
+         .TX_DATA_START_OFFSET          (TXR_DATA_START_OFFSET[`clog2s(C_DATA_WIDTH/32)-1:0]),
          .TX_DATA_END_FLAG              (TXR_DATA_END_FLAG),
-         .TX_DATA_END_OFFSET            (TXR_DATA_END_OFFSET[clog2s(C_DATA_WIDTH/32)-1:0]),
+         .TX_DATA_END_OFFSET            (TXR_DATA_END_OFFSET[`clog2s(C_DATA_WIDTH/32)-1:0]),
          .TX_PKT_READY                  (TXR_TLP_READY),
          /*AUTOINST*/
          // Inputs

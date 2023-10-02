@@ -80,7 +80,8 @@
 
 // The maximum number of alignment blanks that can be inserted in a packet is 7
 `define SIG_NONPAY_W 4
-`define SIG_PACKETLEN_W (clog2s(4096/4) + `SIG_NONPAY_W + 1)
+`define SIG_PACKETLEN_W (10 + `SIG_NONPAY_W + 1)
+// `define SIG_PACKETLEN_W (`clog2s(4096/4) + `SIG_NONPAY_W + 1)
 `define SIG_ALIGN_W 3
 `define SIG_HDRLEN_W 3
 `define SIG_MAXHDR_W 128

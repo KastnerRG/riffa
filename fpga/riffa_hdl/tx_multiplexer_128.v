@@ -85,9 +85,9 @@ module tx_multiplexer_128
      output                                    TXR_DATA_VALID,
      output [C_PCI_DATA_WIDTH-1:0]             TXR_DATA,
      output                                    TXR_DATA_START_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_DATA_START_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_DATA_START_OFFSET,
      output                                    TXR_DATA_END_FLAG,
-     output [clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_DATA_END_OFFSET,
+     output [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]  TXR_DATA_END_OFFSET,
      input                                     TXR_DATA_READY,
 
      output                                    TXR_META_VALID,

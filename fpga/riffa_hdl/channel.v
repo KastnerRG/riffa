@@ -37,7 +37,7 @@ module channel
     #(
       parameter C_DATA_WIDTH = 128,
       parameter C_MAX_READ_REQ = 2, // Max read: 000=128B, 001=256B, 010=512B, 011=1024B, 100=2048B, 101=4096B
-      parameter C_DATA_WORD_WIDTH = clog2((C_DATA_WIDTH/32)+1)
+      parameter C_DATA_WORD_WIDTH = $clog2((C_DATA_WIDTH/32)+1)
       )
     (
      input                         CLK,

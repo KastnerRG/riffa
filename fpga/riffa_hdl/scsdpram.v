@@ -56,11 +56,11 @@ module scsdpram
      input                       CLK,
 
      input                       RD1_EN,
-     input [clog2s(C_DEPTH)-1:0] RD1_ADDR,
+     input [`clog2s(C_DEPTH)-1:0] RD1_ADDR,
      output [C_WIDTH-1:0]        RD1_DATA,
 
      input                       WR1_EN,
-     input [clog2s(C_DEPTH)-1:0] WR1_ADDR,
+     input [`clog2s(C_DEPTH)-1:0] WR1_ADDR,
      input [C_WIDTH-1:0]         WR1_DATA
      );
 

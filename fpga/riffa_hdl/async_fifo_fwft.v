@@ -49,9 +49,9 @@ module async_fifo_fwft #(
 	parameter C_WIDTH = 32,	// Data bus width
 	parameter C_DEPTH = 1024,	// Depth of the FIFO
 	// Local parameters
-	parameter C_REAL_DEPTH = 2**clog2(C_DEPTH),
-	parameter C_DEPTH_BITS = clog2s(C_REAL_DEPTH),
-	parameter C_DEPTH_P1_BITS = clog2s(C_REAL_DEPTH+1)
+	parameter C_REAL_DEPTH = 2**$clog2(C_DEPTH),
+	parameter C_DEPTH_BITS = `clog2s(C_REAL_DEPTH),
+	parameter C_DEPTH_P1_BITS = `clog2s(C_REAL_DEPTH+1)
 )
 (
 	input RD_CLK,							// Read clock
