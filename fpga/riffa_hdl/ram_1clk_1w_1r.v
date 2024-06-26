@@ -52,13 +52,13 @@ module ram_1clk_1w_1r
       )
     (
      input                           CLK,
-     input [clog2s(C_RAM_DEPTH)-1:0] ADDRA,
+     input [`clog2s(C_RAM_DEPTH)-1:0] ADDRA,
      input                           WEA,
-     input [clog2s(C_RAM_DEPTH)-1:0] ADDRB,
+     input [`clog2s(C_RAM_DEPTH)-1:0] ADDRB,
      input [C_RAM_WIDTH-1:0]         DINA,
      output [C_RAM_WIDTH-1:0]        DOUTB
      );
-    localparam C_RAM_ADDR_BITS = clog2s(C_RAM_DEPTH);
+    localparam C_RAM_ADDR_BITS = `clog2s(C_RAM_DEPTH);
     reg [C_RAM_WIDTH-1:0]            rRAM [C_RAM_DEPTH-1:0];
     reg [C_RAM_WIDTH-1:0]            rDout;
     assign DOUTB = rDout;

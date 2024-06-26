@@ -48,7 +48,7 @@ module demux
       )
     (
      input [C_WIDTH-1:0]            WR_DATA,// Inputs
-     input [clog2s(C_OUTPUTS)-1:0]  WR_SEL,// Selector
+     input [`clog2s(C_OUTPUTS)-1:0]  WR_SEL,// Selector
      output [C_OUTPUTS*C_WIDTH-1:0] RD_DATA// Outputs
      );
     genvar                          i;

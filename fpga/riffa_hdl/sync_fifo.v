@@ -50,9 +50,9 @@ module sync_fifo #(
 	parameter C_DEPTH = 1024,	// Depth of the FIFO
 	parameter C_PROVIDE_COUNT = 0, // Include code for counts
 	// Local parameters
-	parameter C_REAL_DEPTH = 2**clog2(C_DEPTH),
-	parameter C_DEPTH_BITS = clog2s(C_REAL_DEPTH),
-	parameter C_DEPTH_P1_BITS = clog2s(C_REAL_DEPTH+1)
+	parameter C_REAL_DEPTH = 2**$clog2(C_DEPTH),
+	parameter C_DEPTH_BITS = `clog2s(C_REAL_DEPTH),
+	parameter C_DEPTH_P1_BITS = `clog2s(C_REAL_DEPTH+1)
 )
 (
 	input CLK,								// Clock

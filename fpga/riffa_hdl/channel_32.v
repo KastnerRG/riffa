@@ -49,7 +49,7 @@ module channel_32 #(
 	parameter C_RX_FIFO_DEPTH = 1024,
 	parameter C_TX_FIFO_DEPTH = 512,
 	parameter C_SG_FIFO_DEPTH = 1024,
-	parameter C_DATA_WORD_WIDTH = clog2((C_DATA_WIDTH/32)+1)
+	parameter C_DATA_WORD_WIDTH = $clog2((C_DATA_WIDTH/32)+1)
 )
 (
 	input CLK,

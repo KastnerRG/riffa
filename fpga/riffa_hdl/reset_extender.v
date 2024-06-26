@@ -40,7 +40,7 @@ module reset_extender
      output RST_OUT,
      output PENDING_RST);
 
-    localparam C_CLOG2_RST_COUNT = clog2s(C_RST_COUNT);
+    localparam C_CLOG2_RST_COUNT = `clog2s(C_RST_COUNT);
     localparam C_CEIL2_RST_COUNT = 1 << C_CLOG2_RST_COUNT;
     localparam C_RST_SHIFTREG_DEPTH = 4;
     

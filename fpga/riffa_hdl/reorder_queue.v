@@ -67,11 +67,11 @@ module reorder_queue
       parameter C_TAG_WIDTH = 5,                       // Number of outstanding requests 
       // Local parameters
       parameter C_PCI_DATA_WORD = C_PCI_DATA_WIDTH/32,
-      parameter C_PCI_DATA_COUNT_WIDTH = clog2(C_PCI_DATA_WORD+1),
+      parameter C_PCI_DATA_COUNT_WIDTH = $clog2(C_PCI_DATA_WORD+1),
       parameter C_NUM_TAGS = 2**C_TAG_WIDTH,
       parameter C_DW_PER_TAG = C_MAX_READ_REQ_BYTES/4,
-      parameter C_TAG_DW_COUNT_WIDTH = clog2s(C_DW_PER_TAG+1),
-      parameter C_DATA_ADDR_STRIDE_WIDTH = clog2s(C_DW_PER_TAG/C_PCI_DATA_WORD), // div by C_PCI_DATA_WORD b/c there are C_PCI_DATA_WORD RAMs
+      parameter C_TAG_DW_COUNT_WIDTH = `clog2s(C_DW_PER_TAG+1),
+      parameter C_DATA_ADDR_STRIDE_WIDTH = `clog2s(C_DW_PER_TAG/C_PCI_DATA_WORD), // div by C_PCI_DATA_WORD b/c there are C_PCI_DATA_WORD RAMs
       parameter C_DATA_ADDR_WIDTH = C_TAG_WIDTH + C_DATA_ADDR_STRIDE_WIDTH
       )
     (
@@ -81,9 +81,9 @@ module reorder_queue
      input [C_PCI_DATA_WIDTH-1:0]                     DATA, // Input packet payload
      input [(C_PCI_DATA_WIDTH/32)-1:0]                DATA_EN, // Input packet payload data enable
      input                                            DATA_START_FLAG, // Input packet payload
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]          DATA_START_OFFSET, // Input packet payload data enable count
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]          DATA_START_OFFSET, // Input packet payload data enable count
      input                                            DATA_END_FLAG, // Input packet payload
-     input [clog2s(C_PCI_DATA_WIDTH/32)-1:0]          DATA_END_OFFSET, // Input packet payload data enable count
+     input [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]          DATA_END_OFFSET, // Input packet payload data enable count
      input                                            DONE, // Input packet done
      input                                            ERR, // Input packet has error
      input [C_TAG_WIDTH-1:0]                          TAG, // Input packet tag (external tag)
@@ -241,9 +241,9 @@ module reorder_queue
          .RST(RST),
          .VALID(VALID),
          .DATA_START_FLAG               (DATA_START_FLAG),
-         .DATA_START_OFFSET             (DATA_START_OFFSET[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .DATA_START_OFFSET             (DATA_START_OFFSET[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .DATA_END_FLAG                 (DATA_END_FLAG),
-         .DATA_END_OFFSET               (DATA_END_OFFSET[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .DATA_END_OFFSET               (DATA_END_OFFSET[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .DATA                          (DATA),
          .DATA_EN                       (DATA_EN),
          .DONE(DONE),

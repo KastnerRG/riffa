@@ -59,7 +59,7 @@ module sg_list_requester #(
 	parameter C_FIFO_DEPTH = 1024,
 	parameter C_MAX_READ_REQ = 2,				// Max read: 000=128B, 001=256B, 010=512B, 011=1024B, 100=2048B, 101=4096B
 	// Local parameters
-	parameter C_FIFO_DEPTH_WIDTH = clog2((2**clog2(C_FIFO_DEPTH))+1),
+	parameter C_FIFO_DEPTH_WIDTH = $clog2((2**$clog2(C_FIFO_DEPTH))+1),
 	parameter C_WORDS_PER_ELEM = 4,
 	parameter C_MAX_ELEMS = 200,
 	parameter C_MAX_ENTRIES = (C_MAX_ELEMS*C_WORDS_PER_ELEM),

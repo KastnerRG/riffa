@@ -140,10 +140,10 @@ module riffa_wrapper_vc707
     wire                                          rxc_data_valid;
     wire                                          rxc_data_start_flag;
     wire [(C_PCI_DATA_WIDTH/32)-1:0]              rxc_data_word_enable;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]        rxc_data_start_offset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]        rxc_data_start_offset;
     wire [`SIG_FBE_W-1:0]                         rxc_meta_fdwbe;
     wire                                          rxc_data_end_flag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]        rxc_data_end_offset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]        rxc_data_end_offset;
     wire [`SIG_LBE_W-1:0]                         rxc_meta_ldwbe;
     wire [`SIG_TAG_W-1:0]                         rxc_meta_tag;
     wire [`SIG_LOWADDR_W-1:0]                     rxc_meta_addr;
@@ -158,10 +158,10 @@ module riffa_wrapper_vc707
     wire                                          rxr_data_valid;
     wire [(C_PCI_DATA_WIDTH/32)-1:0]              rxr_data_word_enable;
     wire                                          rxr_data_start_flag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]        rxr_data_start_offset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]        rxr_data_start_offset;
     wire [`SIG_FBE_W-1:0]                         rxr_meta_fdwbe;
     wire                                          rxr_data_end_flag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]        rxr_data_end_offset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]        rxr_data_end_offset;
     wire [`SIG_LBE_W-1:0]                         rxr_meta_ldwbe;
     wire [`SIG_TC_W-1:0]                          rxr_meta_tc;
     wire [`SIG_ATTR_W-1:0]                        rxr_meta_attr;
@@ -177,9 +177,9 @@ module riffa_wrapper_vc707
     wire                                          txc_data_valid;
     wire [C_PCI_DATA_WIDTH-1:0]                   txc_data;
     wire                                          txc_data_start_flag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]        txc_data_start_offset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]        txc_data_start_offset;
     wire                                          txc_data_end_flag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]        txc_data_end_offset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]        txc_data_end_offset;
     wire                                          txc_data_ready;
 
     wire                                          txc_meta_valid;
@@ -201,9 +201,9 @@ module riffa_wrapper_vc707
     wire                                          txr_data_valid;
     wire [C_PCI_DATA_WIDTH-1:0]                   txr_data;
     wire                                          txr_data_start_flag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]        txr_data_start_offset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]        txr_data_start_offset;
     wire                                          txr_data_end_flag;
-    wire [clog2s(C_PCI_DATA_WIDTH/32)-1:0]        txr_data_end_offset;
+    wire [`clog2s(C_PCI_DATA_WIDTH/32)-1:0]        txr_data_end_offset;
     wire                                          txr_data_ready;
 
     wire                                          txr_meta_valid;
@@ -299,9 +299,9 @@ module riffa_wrapper_vc707
          .RX_TLP                        (rx_tlp[C_PCI_DATA_WIDTH-1:0]),
          .RX_TLP_VALID                  (rx_tlp_valid),
          .RX_TLP_START_FLAG             (rx_tlp_start_flag),
-         .RX_TLP_START_OFFSET           (rx_tlp_start_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .RX_TLP_START_OFFSET           (rx_tlp_start_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .RX_TLP_END_FLAG               (rx_tlp_end_flag),
-         .RX_TLP_END_OFFSET             (rx_tlp_end_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .RX_TLP_END_OFFSET             (rx_tlp_end_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .RX_TLP_BAR_DECODE             (rx_tlp_bar_decode[`SIG_BARDECODE_W-1:0]),
          .TX_TLP_READY                  (tx_tlp_ready),
          .CONFIG_COMPLETER_ID           (config_completer_id[`SIG_CPLID_W-1:0]),
@@ -322,9 +322,9 @@ module riffa_wrapper_vc707
          .TX_TLP                        (tx_tlp[C_PCI_DATA_WIDTH-1:0]),
          .TX_TLP_VALID                  (tx_tlp_valid),
          .TX_TLP_START_FLAG             (tx_tlp_start_flag),
-         .TX_TLP_START_OFFSET           (tx_tlp_start_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TX_TLP_START_OFFSET           (tx_tlp_start_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TX_TLP_END_FLAG               (tx_tlp_end_flag),
-         .TX_TLP_END_OFFSET             (tx_tlp_end_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TX_TLP_END_OFFSET             (tx_tlp_end_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .INTR_MSI_REQUEST              (intr_msi_request),
          /*AUTOINST*/
          // Outputs
@@ -374,10 +374,10 @@ module riffa_wrapper_vc707
          .RXC_DATA_WORD_ENABLE          (rxc_data_word_enable[(C_PCI_DATA_WIDTH/32)-1:0]),
          .RXC_DATA_VALID                (rxc_data_valid),
          .RXC_DATA_START_FLAG           (rxc_data_start_flag),
-         .RXC_DATA_START_OFFSET         (rxc_data_start_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .RXC_DATA_START_OFFSET         (rxc_data_start_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .RXC_META_FDWBE                (rxc_meta_fdwbe[`SIG_FBE_W-1:0]),
          .RXC_DATA_END_FLAG             (rxc_data_end_flag),
-         .RXC_DATA_END_OFFSET           (rxc_data_end_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .RXC_DATA_END_OFFSET           (rxc_data_end_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .RXC_META_LDWBE                (rxc_meta_ldwbe[`SIG_LBE_W-1:0]),
          .RXC_META_TAG                  (rxc_meta_tag[`SIG_TAG_W-1:0]),
          .RXC_META_ADDR                 (rxc_meta_addr[`SIG_LOWADDR_W-1:0]),
@@ -391,9 +391,9 @@ module riffa_wrapper_vc707
          .RXR_DATA_WORD_ENABLE          (rxr_data_word_enable[(C_PCI_DATA_WIDTH/32)-1:0]),
          .RXR_DATA_VALID                (rxr_data_valid),
          .RXR_DATA_START_FLAG           (rxr_data_start_flag),
-         .RXR_DATA_START_OFFSET         (rxr_data_start_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .RXR_DATA_START_OFFSET         (rxr_data_start_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .RXR_DATA_END_FLAG             (rxr_data_end_flag),
-         .RXR_DATA_END_OFFSET           (rxr_data_end_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .RXR_DATA_END_OFFSET           (rxr_data_end_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .RXR_META_FDWBE                (rxr_meta_fdwbe[`SIG_FBE_W-1:0]),
          .RXR_META_LDWBE                (rxr_meta_ldwbe[`SIG_LBE_W-1:0]),
          .RXR_META_TC                   (rxr_meta_tc[`SIG_TC_W-1:0]),
@@ -432,9 +432,9 @@ module riffa_wrapper_vc707
          .TXC_DATA_VALID                (txc_data_valid),
          .TXC_DATA                      (txc_data[C_PCI_DATA_WIDTH-1:0]),
          .TXC_DATA_START_FLAG           (txc_data_start_flag),
-         .TXC_DATA_START_OFFSET         (txc_data_start_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXC_DATA_START_OFFSET         (txc_data_start_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXC_DATA_END_FLAG             (txc_data_end_flag),
-         .TXC_DATA_END_OFFSET           (txc_data_end_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXC_DATA_END_OFFSET           (txc_data_end_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXC_META_VALID                (txc_meta_valid),
          .TXC_META_FDWBE                (txc_meta_fdwbe[`SIG_FBE_W-1:0]),
          .TXC_META_LDWBE                (txc_meta_ldwbe[`SIG_LBE_W-1:0]),
@@ -451,9 +451,9 @@ module riffa_wrapper_vc707
          .TXR_DATA_VALID                (txr_data_valid),
          .TXR_DATA                      (txr_data[C_PCI_DATA_WIDTH-1:0]),
          .TXR_DATA_START_FLAG           (txr_data_start_flag),
-         .TXR_DATA_START_OFFSET         (txr_data_start_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXR_DATA_START_OFFSET         (txr_data_start_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXR_DATA_END_FLAG             (txr_data_end_flag),
-         .TXR_DATA_END_OFFSET           (txr_data_end_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXR_DATA_END_OFFSET           (txr_data_end_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXR_META_VALID                (txr_meta_valid),
          .TXR_META_FDWBE                (txr_meta_fdwbe[`SIG_FBE_W-1:0]),
          .TXR_META_LDWBE                (txr_meta_ldwbe[`SIG_LBE_W-1:0]),
@@ -522,9 +522,9 @@ module riffa_wrapper_vc707
          .TXC_DATA                      (txc_data[C_PCI_DATA_WIDTH-1:0]),
          .TXC_DATA_VALID                (txc_data_valid),
          .TXC_DATA_START_FLAG           (txc_data_start_flag),
-         .TXC_DATA_START_OFFSET         (txc_data_start_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXC_DATA_START_OFFSET         (txc_data_start_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXC_DATA_END_FLAG             (txc_data_end_flag),
-         .TXC_DATA_END_OFFSET           (txc_data_end_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXC_DATA_END_OFFSET           (txc_data_end_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXC_META_VALID                (txc_meta_valid),
          .TXC_META_FDWBE                (txc_meta_fdwbe[`SIG_FBE_W-1:0]),
          .TXC_META_LDWBE                (txc_meta_ldwbe[`SIG_LBE_W-1:0]),
@@ -541,9 +541,9 @@ module riffa_wrapper_vc707
          .TXR_DATA_VALID                (txr_data_valid),
          .TXR_DATA                      (txr_data[C_PCI_DATA_WIDTH-1:0]),
          .TXR_DATA_START_FLAG           (txr_data_start_flag),
-         .TXR_DATA_START_OFFSET         (txr_data_start_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXR_DATA_START_OFFSET         (txr_data_start_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXR_DATA_END_FLAG             (txr_data_end_flag),
-         .TXR_DATA_END_OFFSET           (txr_data_end_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .TXR_DATA_END_OFFSET           (txr_data_end_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .TXR_META_VALID                (txr_meta_valid),
          .TXR_META_FDWBE                (txr_meta_fdwbe[`SIG_FBE_W-1:0]),
          .TXR_META_LDWBE                (txr_meta_ldwbe[`SIG_LBE_W-1:0]),
@@ -561,10 +561,10 @@ module riffa_wrapper_vc707
          .RXR_DATA                      (rxr_data[C_PCI_DATA_WIDTH-1:0]),
          .RXR_DATA_VALID                (rxr_data_valid),
          .RXR_DATA_START_FLAG           (rxr_data_start_flag),
-         .RXR_DATA_START_OFFSET         (rxr_data_start_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .RXR_DATA_START_OFFSET         (rxr_data_start_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .RXR_DATA_WORD_ENABLE          (rxr_data_word_enable[(C_PCI_DATA_WIDTH/32)-1:0]),
          .RXR_DATA_END_FLAG             (rxr_data_end_flag),
-         .RXR_DATA_END_OFFSET           (rxr_data_end_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .RXR_DATA_END_OFFSET           (rxr_data_end_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .RXR_META_FDWBE                (rxr_meta_fdwbe[`SIG_FBE_W-1:0]),
          .RXR_META_LDWBE                (rxr_meta_ldwbe[`SIG_LBE_W-1:0]),
          .RXR_META_TC                   (rxr_meta_tc[`SIG_TC_W-1:0]),
@@ -580,10 +580,10 @@ module riffa_wrapper_vc707
          .RXC_DATA_VALID                (rxc_data_valid),
          .RXC_DATA                      (rxc_data[C_PCI_DATA_WIDTH-1:0]),
          .RXC_DATA_START_FLAG           (rxc_data_start_flag),
-         .RXC_DATA_START_OFFSET         (rxc_data_start_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .RXC_DATA_START_OFFSET         (rxc_data_start_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .RXC_DATA_WORD_ENABLE          (rxc_data_word_enable[(C_PCI_DATA_WIDTH/32)-1:0]),
          .RXC_DATA_END_FLAG             (rxc_data_end_flag),
-         .RXC_DATA_END_OFFSET           (rxc_data_end_offset[clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
+         .RXC_DATA_END_OFFSET           (rxc_data_end_offset[`clog2s(C_PCI_DATA_WIDTH/32)-1:0]),
          .RXC_META_FDWBE                (rxc_meta_fdwbe[`SIG_FBE_W-1:0]),
          .RXC_META_LDWBE                (rxc_meta_ldwbe[`SIG_LBE_W-1:0]),
          .RXC_META_TAG                  (rxc_meta_tag[`SIG_TAG_W-1:0]),

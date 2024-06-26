@@ -48,7 +48,7 @@ module tx_port_buffer_32 #(
 	parameter C_FIFO_DATA_WIDTH = 9'd32,
 	parameter C_FIFO_DEPTH = 512,
 	// Local parameters
-	parameter C_FIFO_DEPTH_WIDTH = clog2((2**clog2(C_FIFO_DEPTH))+1)
+	parameter C_FIFO_DEPTH_WIDTH = $clog2((2**$clog2(C_FIFO_DEPTH))+1)
 )
 (
 	input RST,

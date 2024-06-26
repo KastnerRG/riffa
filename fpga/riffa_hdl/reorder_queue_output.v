@@ -64,8 +64,8 @@ module reorder_queue_output #(
     parameter C_DATA_ADDR_WIDTH = 10,				// Width of stored data address
     // Local parameters
     parameter C_PCI_DATA_WORD = C_PCI_DATA_WIDTH/32,
-    parameter C_PCI_DATA_WORD_WIDTH = clog2s(C_PCI_DATA_WORD),
-    parameter C_PCI_DATA_COUNT_WIDTH = clog2s(C_PCI_DATA_WORD+1),
+    parameter C_PCI_DATA_WORD_WIDTH = `clog2s(C_PCI_DATA_WORD),
+    parameter C_PCI_DATA_COUNT_WIDTH = `clog2s(C_PCI_DATA_WORD+1),
     parameter C_NUM_TAGS = 2**C_TAG_WIDTH
     )
    (
