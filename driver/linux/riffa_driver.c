@@ -92,6 +92,7 @@ struct sg_mapping {
 	unsigned long num_pages;
 	unsigned long long length;
 	unsigned long long overflow;
+	struct sg_mapping * next;
 };
 
 struct chnl_dir {
@@ -100,8 +101,16 @@ struct chnl_dir {
 	struct circ_queue * msgs;
 	void * buf_addr;
 	dma_addr_t buf_hw_addr;
-	struct sg_mapping * sg_map_0;
-	struct sg_mapping * sg_map_1;
+	// All mappings that the FPGA may still be accessing. The data pages of a
+	// mapping MUST stay mapped (and pinned) until the whole transaction is
+	// done, even after the FPGA has read the SG buffer and the buffer has been
+	// reused for the next chunk.
+	struct sg_mapping * sg_live;
+	struct sg_mapping * sg_live_tail;
+	// Mapping whose SG list has been consumed by the FPGA. Its data transfer
+	// is (approximately) complete; it is accounted for when the next batch's
+	// SG list is consumed, or when the transaction ends.
+	struct sg_mapping * sg_in_flight;
 };
 
 struct fpga_state {
@@ -585,6 +594,43 @@ static inline void free_sg_buf(struct fpga_state * sc, struct sg_mapping * sg_ma
 }
 
 /**
+ * Records a scatter gather mapping so that its pages are only unmapped after
+ * the FPGA has finished the entire transaction. The FPGA only guarantees that
+ * it has copied the SG entries out of the shared SG buffer when it signals
+ * SG_BUF_READ; it is still streaming the actual data to/from the pages
+ * referenced by those entries at that point.
+ */
+static inline void track_sg_buf(struct chnl_dir * dir, struct sg_mapping * sg_map)
+{
+	sg_map->next = NULL;
+	if (dir->sg_live_tail == NULL)
+		dir->sg_live = sg_map;
+	else
+		dir->sg_live_tail->next = sg_map;
+	dir->sg_live_tail = sg_map;
+}
+
+/**
+ * Unmaps and frees every scatter gather mapping still outstanding for the
+ * channel. Must only be called once the FPGA is done with the transaction
+ * (TXN_DONE) or when the transaction is being aborted.
+ */
+static inline void free_all_sg_bufs(struct fpga_state * sc, struct chnl_dir * dir)
+{
+	struct sg_mapping * sg_map = dir->sg_live;
+	struct sg_mapping * next;
+
+	while (sg_map != NULL) {
+		next = sg_map->next;
+		free_sg_buf(sc, sg_map);
+		sg_map = next;
+	}
+	dir->sg_live = NULL;
+	dir->sg_live_tail = NULL;
+	dir->sg_in_flight = NULL;
+}
+
+/**
  * Reads data from the FPGA. Will block until all the data is received from the
  * FPGA unless timeout is non-zero. If timeout is non-zero, the function will 
  * block until all the data is received or until the timeout expires. Received 
@@ -618,8 +664,7 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
 	tymeouto = tymeout;
 
 	// Initialize the sg_maps
-	sc->recv[chnl]->sg_map_0 = NULL;
-	sc->recv[chnl]->sg_map_1 = NULL;
+	free_all_sg_bufs(sc, sc->recv[chnl]);
 
 	// Continue until we get a message or timeout.
 	while (1) {
@@ -630,16 +675,14 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
 				tymeout = schedule_timeout(tymeout);
 			finish_wait(&sc->recv[chnl]->waitq, &wait);
 			if (signal_pending(current)) {
-				free_sg_buf(sc, sc->recv[chnl]->sg_map_0);
-				free_sg_buf(sc, sc->recv[chnl]->sg_map_1);
+				free_all_sg_bufs(sc, sc->recv[chnl]);
 				return -ERESTARTSYS;
 			}
 			if (!nomsg)
 				break;
 			if (tymeout == 0) {
 				printk(KERN_ERR "riffa: fpga:%d chnl:%d, recv timed out\n", sc->id, chnl);
-				free_sg_buf(sc, sc->recv[chnl]->sg_map_0);
-				free_sg_buf(sc, sc->recv[chnl]->sg_map_1);
+				free_all_sg_bufs(sc, sc->recv[chnl]);
 				return (unsigned int)(recvd>>2);
 			}
 		}
@@ -680,13 +723,16 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
 			if (length > 0 || overflow > 0) {
 				udata = udata + offset;
 				sg_map = fill_sg_buf(sc, chnl, sc->recv[chnl]->buf_addr, udata, length, overflow, DMA_FROM_DEVICE);
-				if (sg_map == NULL || sg_map->num_sg == 0)
+				if (sg_map == NULL || sg_map->num_sg == 0) {
+					free_sg_buf(sc, sg_map);
+					free_all_sg_bufs(sc, sc->recv[chnl]);
 					return (unsigned int)(recvd>>2);
+				}
 				// Update based on the sg_mapping
 				udata += sg_map->length;
 				length -= sg_map->length;
 				overflow -= sg_map->overflow;
-				sc->recv[chnl]->sg_map_1 = sg_map;
+				track_sg_buf(sc->recv[chnl], sg_map);
 				// Let FPGA know about the scatter gather buffer.
 				write_reg(sc, CHNL_REG(chnl, TX_SG_ADDR_LO_REG_OFF), (sc->recv[chnl]->buf_hw_addr & 0xFFFFFFFF));
 				write_reg(sc, CHNL_REG(chnl, TX_SG_ADDR_HI_REG_OFF), ((sc->recv[chnl]->buf_hw_addr>>32) & 0xFFFFFFFF));
@@ -699,25 +745,26 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
 			// Ignore if we haven't received offlast/len.
 			if (last == -1)
 				break;
-			// Release the previous scatter gather data.
-			if (sc->recv[chnl]->sg_map_0 != NULL)
-				recvd += sc->recv[chnl]->sg_map_0->length;
-			free_sg_buf(sc, sc->recv[chnl]->sg_map_0);
-			sc->recv[chnl]->sg_map_0 = NULL;
+			// The FPGA has copied the SG entries out of the buffer, so the
+			// buffer may be reused. Do NOT unmap the pages here: the FPGA is
+			// still transferring data to/from them. They are released at
+			// TXN_DONE (or on abort).
+			if (sc->recv[chnl]->sg_in_flight != NULL)
+				recvd += sc->recv[chnl]->sg_in_flight->length;
+			sc->recv[chnl]->sg_in_flight = sc->recv[chnl]->sg_live_tail;
 			// Populate the common buffer with more scatter gather data?
 			if (length > 0 || overflow > 0) {
 				sg_map = fill_sg_buf(sc, chnl, sc->recv[chnl]->buf_addr, udata, length, overflow, DMA_FROM_DEVICE);
 				if (sg_map == NULL || sg_map->num_sg == 0) {
-					free_sg_buf(sc, sc->recv[chnl]->sg_map_0);
-					free_sg_buf(sc, sc->recv[chnl]->sg_map_1);
+					free_sg_buf(sc, sg_map);
+					free_all_sg_bufs(sc, sc->recv[chnl]);
 					return (unsigned int)(recvd>>2);
 				}
 				// Update based on the sg_mapping
 				udata += sg_map->length;
 				length -= sg_map->length;
 				overflow -= sg_map->overflow;
-				sc->recv[chnl]->sg_map_0 = sc->recv[chnl]->sg_map_1;
-				sc->recv[chnl]->sg_map_1 = sg_map;
+				track_sg_buf(sc->recv[chnl], sg_map);
 				write_reg(sc, CHNL_REG(chnl, TX_SG_ADDR_LO_REG_OFF), (sc->recv[chnl]->buf_hw_addr & 0xFFFFFFFF));
 				write_reg(sc, CHNL_REG(chnl, TX_SG_ADDR_HI_REG_OFF), ((sc->recv[chnl]->buf_hw_addr>>32) & 0xFFFFFFFF));
 				write_reg(sc, CHNL_REG(chnl, TX_SG_LEN_REG_OFF), 4 * sg_map->num_sg);
@@ -732,10 +779,7 @@ static inline unsigned int chnl_recv(struct fpga_state * sc, int chnl,
 			// Update with the true value of words transferred.
 			recvd = (((unsigned long long)msg)<<2);
 			// Return if this was the last transaction.
-			free_sg_buf(sc, sc->recv[chnl]->sg_map_0);
-			free_sg_buf(sc, sc->recv[chnl]->sg_map_1);
-			sc->recv[chnl]->sg_map_0 = NULL;
-			sc->recv[chnl]->sg_map_1 = NULL;
+			free_all_sg_bufs(sc, sc->recv[chnl]);
 			DEBUG_MSG(KERN_INFO "riffa: fpga:%d chnl:%d, received %d words\n", sc->id, chnl, (unsigned int)(recvd>>2));
 			if (last)
 				return (unsigned int)(recvd>>2);
@@ -815,8 +859,7 @@ static inline unsigned int chnl_send(struct fpga_state * sc, int chnl,
 	while (!pop_circ_queue(sc->send[chnl]->msgs, &msg_type, &msg));
 
 	// Initialize the sg_maps
-	sc->send[chnl]->sg_map_0 = NULL;
-	sc->send[chnl]->sg_map_1 = NULL;
+	free_all_sg_bufs(sc, sc->send[chnl]);
 
 	// Let FPGA know about transfer.
 	DEBUG_MSG(KERN_INFO "riffa: fpga:%d chnl:%d, send (len:%d off:%d last:%d)\n", sc->id, chnl, len, offset, last);
@@ -827,13 +870,15 @@ static inline unsigned int chnl_send(struct fpga_state * sc, int chnl,
 
 	// Use the send common buffer to share the scatter gather data
 	sg_map = fill_sg_buf(sc, chnl, sc->send[chnl]->buf_addr, udata, length, 0, DMA_TO_DEVICE);
-	if (sg_map == NULL || sg_map->num_sg == 0)
+	if (sg_map == NULL || sg_map->num_sg == 0) {
+		free_sg_buf(sc, sg_map);
 		return (unsigned int)(sent>>2);
+	}
 
 	// Update based on the sg_mapping
 	udata += sg_map->length;
 	length -= sg_map->length;
-	sc->send[chnl]->sg_map_1 = sg_map;
+	track_sg_buf(sc->send[chnl], sg_map);
 
 	// Let FPGA know about the scatter gather buffer.
 	write_reg(sc, CHNL_REG(chnl, RX_SG_ADDR_LO_REG_OFF), (sc->send[chnl]->buf_hw_addr & 0xFFFFFFFF));
@@ -850,16 +895,14 @@ static inline unsigned int chnl_send(struct fpga_state * sc, int chnl,
 				tymeout = schedule_timeout(tymeout);
 			finish_wait(&sc->send[chnl]->waitq, &wait);
 			if (signal_pending(current)) {
-				free_sg_buf(sc, sc->send[chnl]->sg_map_0);
-				free_sg_buf(sc, sc->send[chnl]->sg_map_1);
+				free_all_sg_bufs(sc, sc->send[chnl]);
 				return -ERESTARTSYS;
 			}
 			if (!nomsg)
 				break;
 			if (tymeout == 0) {
 				printk(KERN_ERR "riffa: fpga:%d chnl:%d, send timed out\n", sc->id, chnl);
-				free_sg_buf(sc, sc->send[chnl]->sg_map_0);
-				free_sg_buf(sc, sc->send[chnl]->sg_map_1);
+				free_all_sg_bufs(sc, sc->send[chnl]);
 				return (unsigned int)(sent>>2);
 			}
 		}
@@ -868,24 +911,25 @@ static inline unsigned int chnl_send(struct fpga_state * sc, int chnl,
 		// Process the message.
 		switch (msg_type) {
 		case EVENT_SG_BUF_READ:
-			// Release the previous scatter gather data?
-			if (sc->send[chnl]->sg_map_0 != NULL)
-				sent += sc->send[chnl]->sg_map_0->length;
-			free_sg_buf(sc, sc->send[chnl]->sg_map_0);
-			sc->send[chnl]->sg_map_0 = NULL;
+			// The FPGA has copied the SG entries out of the buffer, so the
+			// buffer may be reused. Do NOT unmap the pages here: the FPGA is
+			// still reading data from them. They are released at TXN_DONE
+			// (or on abort).
+			if (sc->send[chnl]->sg_in_flight != NULL)
+				sent += sc->send[chnl]->sg_in_flight->length;
+			sc->send[chnl]->sg_in_flight = sc->send[chnl]->sg_live_tail;
 			// Populate the common buffer with more scatter gather data?
 			if (length > 0) {
 				sg_map = fill_sg_buf(sc, chnl, sc->send[chnl]->buf_addr, udata, length, 0, DMA_TO_DEVICE);
 				if (sg_map == NULL || sg_map->num_sg == 0) {
-					free_sg_buf(sc, sc->send[chnl]->sg_map_0);
-					free_sg_buf(sc, sc->send[chnl]->sg_map_1);
+					free_sg_buf(sc, sg_map);
+					free_all_sg_bufs(sc, sc->send[chnl]);
 					return (unsigned int)(sent>>2);
 				}
 				// Update based on the sg_mapping
 				udata += sg_map->length;
 				length -= sg_map->length;
-				sc->send[chnl]->sg_map_0 = sc->send[chnl]->sg_map_1;
-				sc->send[chnl]->sg_map_1 = sg_map;
+				track_sg_buf(sc->send[chnl], sg_map);
 				write_reg(sc, CHNL_REG(chnl, RX_SG_ADDR_LO_REG_OFF), (sc->send[chnl]->buf_hw_addr & 0xFFFFFFFF));
 				write_reg(sc, CHNL_REG(chnl, RX_SG_ADDR_HI_REG_OFF), ((sc->send[chnl]->buf_hw_addr>>32) & 0xFFFFFFFF));
 				write_reg(sc, CHNL_REG(chnl, RX_SG_LEN_REG_OFF), 4 * sg_map->num_sg);
@@ -897,8 +941,7 @@ static inline unsigned int chnl_send(struct fpga_state * sc, int chnl,
 			// Update with the true value of words transferred.
 			sent = (((unsigned long long)msg)<<2);
 			// Return as this is the end of the transaction.
-			free_sg_buf(sc, sc->send[chnl]->sg_map_0);
-			free_sg_buf(sc, sc->send[chnl]->sg_map_1);
+			free_all_sg_bufs(sc, sc->send[chnl]);
 			DEBUG_MSG(KERN_INFO "riffa: fpga:%d chnl:%d, sent %d words\n", sc->id, chnl, (unsigned int)(sent>>2));
 			return (unsigned int)(sent>>2);
 			break;
